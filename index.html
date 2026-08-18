@@ -244,32 +244,32 @@
       </div>
 
       <div class="card p-5">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="semibold">當月預算控制</h2>
-          <div class="flex items-center gap-2 text-sm">
-            <span style="color:var(--text-muted)">純日常</span>
-            <div id="budgetToggle" class="toggle" onclick="toggleBudgetMode()"></div>
-            <span style="color:var(--text-muted)">含投資</span>
-          </div>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">當月總預算</label>
-            <div class="flex gap-2 mt-1">
-              <input type="number" id="monthlyBudgetInput" class="input" placeholder="50000" />
-              <button onclick="saveMonthlyBudget()" class="btn-primary btn text-sm px-3">儲存</button>
-            </div>
-          </div>
-          <div class="pill p-3">
-            <p class="text-xs" style="color:var(--text-muted)">已花費</p>
-            <p class="text-xl heavy tabular" id="monthSpent">$0</p>
-          </div>
-          <div class="pill p-3">
-            <p class="text-xs" style="color:var(--text-muted)">剩餘可用</p>
-            <p class="text-xl bold tabular" id="monthRemain">$0</p>
-          </div>
-        </div>
-      </div>
+  <div class="flex items-center justify-between mb-4">
+    <h2 class="semibold">當月預算控制</h2>
+    <div class="flex items-center gap-2 text-sm">
+      <span style="color:var(--text-muted)">純日常</span>
+      <div id="budgetToggle" class="toggle" onclick="toggleBudgetMode()"></div>
+      <span style="color:var(--text-muted)">含投資</span>
+    </div>
+  </div>
+        <div class="mb-4">
+    <label class="text-xs" style="color:var(--text-muted)">當月總預算</label>
+    <div class="flex gap-3 mt-1.5 items-center">
+      <input type="number" id="monthlyBudgetInput" class="input flex-1" placeholder="50000" />
+      <button onclick="saveMonthlyBudget()" class="btn-primary btn px-5 py-2.5 whitespace-nowrap">儲存</button>
+    </div>
+  </div>
+          <div class="grid grid-cols-2 gap-3">
+    <div class="pill p-4">
+      <p class="text-xs" style="color:var(--text-muted)">已花費</p>
+      <p class="text-xl heavy tabular mt-1" id="monthSpent">$0</p>
+    </div>
+    <div class="pill p-4">
+      <p class="text-xs" style="color:var(--text-muted)">剩餘可用</p>
+      <p class="text-xl bold tabular mt-1" id="monthRemain">$0</p>
+    </div>
+  </div>
+</div>
 
       <div class="card p-5">
         <h2 class="semibold mb-3">當月什一奉獻</h2>
