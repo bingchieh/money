@@ -3,133 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="theme-color" content="#f5f5f7" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>⛁我的錢錢⛃</title>
-
-  <!-- ========== 你的檔案：App Icon ========== -->
   <link rel="icon" href="icon.png" />
   <link rel="apple-touch-icon" href="icon.png" />
-
-  <!-- ========== 你的檔案：字體 ========== -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
-    @font-face {
-      font-family: 'GenYoMin';
-      src: url('./GenYoMin2TW-H.otf') format('opentype');
-      font-weight: 800;
-      font-display: swap;
-    }
-    @font-face {
-      font-family: 'GenYoMin';
-      src: url('./GenYoMin2TW-B.otf') format('opentype');
-      font-weight: 700;
-      font-display: swap;
-    }
-    @font-face {
-      font-family: 'GenYoMin';
-      src: url('./GenYoMin2TW-SB.otf') format('opentype');
-      font-weight: 600;
-      font-display: swap;
-    }
-    @font-face {
-      font-family: 'GenYoMin';
-      src: url('./GenYoMin2TW-M.otf') format('opentype');
-      font-weight: 500;
-      font-display: swap;
-    }
+    @font-face { font-family: 'GenYoMin'; src: url('./GenYoMin2TW-H.otf') format('opentype'); font-weight: 800; font-display: swap; }
+    @font-face { font-family: 'GenYoMin'; src: url('./GenYoMin2TW-B.otf') format('opentype'); font-weight: 700; font-display: swap; }
+    @font-face { font-family: 'GenYoMin'; src: url('./GenYoMin2TW-SB.otf') format('opentype'); font-weight: 600; font-display: swap; }
+    @font-face { font-family: 'GenYoMin'; src: url('./GenYoMin2TW-M.otf') format('opentype'); font-weight: 500; font-display: swap; }
 
     :root {
-      --bg: #f0f2f5;
-      --card: #ffffff;
-      --card-dark: #1c1c1e;
-      --text: #1c1c1e;
-      --text-muted: #8e8e93;
-      --border: rgba(0,0,0,0.06);
-      --shadow: 0 8px 30px rgba(0,0,0,0.06);
-      --shadow-soft: 0 4px 16px rgba(0,0,0,0.05);
-      --success: #34c759;
-      --danger: #ff3b30;
-      --radius: 20px;
-      --radius-pill: 999px;
+      --bg: #f0f2f5; --card: #ffffff; --card-dark: #1c1c1e;
+      --text: #1c1c1e; --text-muted: #8e8e93; --border: rgba(0,0,0,0.06);
+      --shadow: 0 8px 30px rgba(0,0,0,0.06); --shadow-soft: 0 4px 16px rgba(0,0,0,0.05);
+      --success: #34c759; --danger: #ff3b30; --radius: 20px; --radius-pill: 999px;
     }
     .dark {
-      --bg: #0c0c0e;
-      --card: #1c1c1e;
-      --card-dark: #2c2c2e;
-      --text: #f5f5f7;
-      --text-muted: #8e8e93;
-      --border: rgba(255,255,255,0.08);
-      --shadow: 0 8px 30px rgba(0,0,0,0.4);
-      --shadow-soft: 0 4px 16px rgba(0,0,0,0.3);
+      --bg: #0c0c0e; --card: #1c1c1e; --card-dark: #2c2c2e;
+      --text: #f5f5f7; --text-muted: #8e8e93; --border: rgba(255,255,255,0.08);
+      --shadow: 0 8px 30px rgba(0,0,0,0.4); --shadow-soft: 0 4px 16px rgba(0,0,0,0.3);
     }
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'GenYoMin', 'Noto Serif TC', 'Songti TC', serif;
-      min-height: 100vh;
-      padding-bottom: 110px;
+      margin: 0; background: var(--bg); color: var(--text);
+      font-family: 'GenYoMin', 'Noto Serif TC', serif;
+      min-height: 100vh; padding-bottom: 110px;
       transition: background 0.3s, color 0.3s;
-      -webkit-font-smoothing: antialiased;
     }
     .tabular { font-variant-numeric: tabular-nums; }
     .heavy { font-weight: 800; letter-spacing: 0.04em; }
     .bold { font-weight: 700; }
     .semibold { font-weight: 600; }
     .medium { font-weight: 500; }
-    .card {
-      background: var(--card);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      border: 1px solid var(--border);
-    }
-    .card-dark {
-      background: var(--card-dark);
-      color: #f5f5f7;
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-    }
-    .pill {
-      background: var(--card);
-      border-radius: var(--radius-pill);
-      box-shadow: var(--shadow-soft);
-      border: 1px solid var(--border);
-    }
+    .card { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border: 1px solid var(--border); }
+    .card-dark { background: var(--card-dark); color: #f5f5f7; border-radius: var(--radius); box-shadow: var(--shadow); }
+    .pill { background: var(--card); border-radius: var(--radius-pill); box-shadow: var(--shadow-soft); border: 1px solid var(--border); }
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
-      border-radius: var(--radius-pill);
-      padding: 10px 18px;
-      font-weight: 600;
-      font-size: 14px;
-      border: none;
-      cursor: pointer;
-      transition: transform 0.15s;
-      background: var(--card);
-      color: var(--text);
-      box-shadow: var(--shadow-soft);
-      border: 1px solid var(--border);
+      border-radius: var(--radius-pill); padding: 10px 18px; font-weight: 600; font-size: 14px;
+      border: none; cursor: pointer; transition: transform 0.15s;
+      background: var(--card); color: var(--text); box-shadow: var(--shadow-soft); border: 1px solid var(--border);
     }
     .btn:active { transform: scale(0.96); }
     .btn-primary { background: #1c1c1e; color: #fff; border: none; }
     .dark .btn-primary { background: #f5f5f7; color: #1c1c1e; }
     .input {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 11px 14px;
-      color: var(--text);
-      font-size: 15px;
-      font-family: inherit;
-      outline: none;
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 11px 14px; color: var(--text); font-size: 15px; font-family: inherit; outline: none;
     }
     select.input {
       appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238e8e93' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      padding-right: 32px;
+      background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
     }
     .progress-track { height: 8px; background: var(--bg); border-radius: 999px; overflow: hidden; }
     .progress-fill { height: 100%; border-radius: 999px; transition: width 0.5s; background: #1c1c1e; }
@@ -137,14 +64,11 @@
     .floating-nav {
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
       z-index: 100; display: flex; gap: 2px; padding: 6px 8px; border-radius: 28px;
-      background: rgba(255,255,255,0.72); backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px); box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-      border: 1px solid rgba(255,255,255,0.4); max-width: 96vw; overflow-x: auto;
+      background: rgba(255,255,255,0.72); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12); border: 1px solid rgba(255,255,255,0.4);
+      max-width: 96vw; overflow-x: auto;
     }
-    .dark .floating-nav {
-      background: rgba(28,28,30,0.78);
-      border: 1px solid rgba(255,255,255,0.08);
-    }
+    .dark .floating-nav { background: rgba(28,28,30,0.78); border: 1px solid rgba(255,255,255,0.08); }
     .nav-item {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
       min-width: 56px; padding: 8px 6px; border-radius: 20px; font-size: 10px;
@@ -156,12 +80,12 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(6px);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px);
       z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px;
     }
     .modal-overlay.hidden { display: none; }
     .modal {
-      background: var(--card); border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      background: var(--card); border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
       max-width: 420px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 24px;
       border: 1px solid var(--border);
     }
@@ -185,8 +109,6 @@
     .toggle.on::after { transform: translateX(20px); }
     .dark .toggle.on::after { background: #1c1c1e; }
   </style>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <div class="max-w-3xl mx-auto px-4 pt-6">
@@ -204,15 +126,9 @@
           匯入
           <input type="file" accept=".json" onchange="importData(event)" class="hidden" />
         </label>
-
-        <!-- ========== 深淺模式切換按鈕（你提供的 SVG） ========== -->
         <button id="themeBtn" onclick="toggleTheme()" class="btn w-10 h-10 rounded-full p-0 flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2v2"/>
-            <path d="M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715"/>
-            <path d="M16 12a4 4 0 0 0-4-4"/>
-            <path d="m19 5-1.256 1.256"/>
-            <path d="M20 12h2"/>
+            <path d="M12 2v2"/><path d="M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715"/><path d="M16 12a4 4 0 0 0-4-4"/><path d="m19 5-1.256 1.256"/><path d="M20 12h2"/>
           </svg>
         </button>
       </div>
@@ -239,37 +155,37 @@
       <div class="card p-4 flex flex-wrap gap-2 items-center">
         <button onclick="refreshAllAssets()" class="btn-primary btn text-sm">一鍵全資產即時刷新</button>
         <button onclick="updateJPYRate()" class="btn text-sm">更新日幣</button>
-        <button onclick="updateStockPrices()" class="btn text-sm">更新台股/ETF</button>
         <span id="apiStatus" class="text-xs" style="color:var(--text-muted)"></span>
       </div>
 
+      <!-- 當月預算控制（已修正版） -->
       <div class="card p-5">
-  <div class="flex items-center justify-between mb-5">
-    <h2 class="semibold">當月預算控制</h2>
-    <div class="flex items-center gap-2 text-sm">
-      <span style="color:var(--text-muted)">純日常</span>
-      <div id="budgetToggle" class="toggle" onclick="toggleBudgetMode()"></div>
-      <span style="color:var(--text-muted)">含投資</span>
-    </div>
-  </div>
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="semibold text-[17px]">當月預算控制</h2>
+          <div class="flex items-center gap-2 text-sm">
+            <span style="color:var(--text-muted)">純日常</span>
+            <div id="budgetToggle" class="toggle" onclick="toggleBudgetMode()"></div>
+            <span style="color:var(--text-muted)">含投資</span>
+          </div>
+        </div>
         <div class="mb-5">
-    <label class="text-xs" style="color:var(--text-muted)">當月總預算</label>
-    <div class="flex gap-3 mt-1.5 items-center">
-      <input type="number" id="monthlyBudgetInput" class="input flex-1" placeholder="50000" />
-      <button onclick="saveMonthlyBudget()" class="btn-primary btn px-5 py-2.5 whitespace-nowrap">儲存</button>
-    </div>
-  </div>
-          <div class="grid grid-cols-2 gap-3">
-    <div class="pill px-4 py-3.5 flex flex-col justify-between min-h-[72px]">
-      <p class="text-xs" style="color:var(--text-muted)">已花費</p>
-      <p class="text-xl heavy tabular text-right mt-2" id="monthSpent">$0</p>
-    </div>
-    <div class="pill px-4 py-3.5 flex flex-col justify-between min-h-[72px]">
-      <p class="text-xs" style="color:var(--text-muted)">剩餘可用</p>
-      <p class="text-xl bold tabular text-right mt-2" id="monthRemain">$0</p>
-    </div>
-  </div>
-</div>
+          <label class="text-xs mb-1.5 block" style="color:var(--text-muted)">當月總預算</label>
+          <div class="flex gap-3 items-center">
+            <input type="number" id="monthlyBudgetInput" class="input flex-1" placeholder="50000" />
+            <button onclick="saveMonthlyBudget()" class="btn-primary btn px-5 py-2.5 whitespace-nowrap">儲存</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="pill px-4 py-3.5 flex flex-col justify-between min-h-[72px]">
+            <p class="text-xs" style="color:var(--text-muted)">已花費</p>
+            <p class="text-xl heavy tabular text-right mt-2" id="monthSpent">$0</p>
+          </div>
+          <div class="pill px-4 py-3.5 flex flex-col justify-between min-h-[72px]">
+            <p class="text-xs" style="color:var(--text-muted)">剩餘可用</p>
+            <p class="text-xl bold tabular text-right mt-2" id="monthRemain">$0</p>
+          </div>
+        </div>
+      </div>
 
       <div class="card p-5">
         <h2 class="semibold mb-3">當月什一奉獻</h2>
@@ -302,18 +218,6 @@
       </div>
     </section>
 
-    <!-- 信封 -->
-    <section id="tab-envelopes" class="tab-content space-y-4">
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="semibold">數位信封袋預算</h2>
-          <button onclick="openEnvelopeModal()" class="btn-primary btn text-sm">新增信封</button>
-        </div>
-        <p class="text-xs mb-3" style="color:var(--text-muted)">記帳時選擇分類會自動扣除對應信封</p>
-        <div id="envelopesList" class="space-y-3"></div>
-      </div>
-    </section>
-
     <!-- 記帳 -->
     <section id="tab-transactions" class="tab-content space-y-4">
       <div class="card p-5">
@@ -333,7 +237,7 @@
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">分類</label>
-            <select id="txCategory" class="input mt-1" onchange="onCategoryChange()">
+            <select id="txCategory" class="input mt-1">
               <option value="食">食</option><option value="衣">衣</option><option value="住">住</option>
               <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
               <option value="醫">醫</option><option value="美">美</option><option value="稅">稅</option>
@@ -346,12 +250,8 @@
             <label class="text-xs" style="color:var(--text-muted)">帳戶</label>
             <div class="flex gap-2 mt-1">
               <select id="txAccount" class="input flex-1"></select>
-              <button type="button" onclick="openAccountEditModal()" class="btn text-sm px-3" title="新增/刪除帳戶">＋</button>
+              <button type="button" onclick="openAccountEditModal()" class="btn text-sm px-3">＋</button>
             </div>
-          </div>
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">信封（選填）</label>
-            <select id="txEnvelope" class="input mt-1"><option value="">不指定</option></select>
           </div>
           <div class="flex items-center gap-4 pt-2">
             <label class="flex items-center gap-1.5 text-sm cursor-pointer">
@@ -371,36 +271,16 @@
 
       <div class="card p-5">
         <h2 class="semibold mb-3">帳務明細</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
-          <input type="date" id="filterDateFrom" class="input text-sm" />
-          <input type="date" id="filterDateTo" class="input text-sm" />
-          <select id="filterCategory" class="input text-sm">
-            <option value="">全部分類</option>
-            <option value="食">食</option><option value="衣">衣</option><option value="住">住</option>
-            <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
-            <option value="醫">醫</option><option value="美">美</option><option value="稅">稅</option>
-            <option value="保">保</option><option value="禮">禮</option><option value="雜">雜</option>
-            <option value="提領">提領</option><option value="投">投</option><option value="息">息</option>
-            <option value="折">折</option><option value="收">收</option><option value="什一">什一</option>
-          </select>
-          <select id="filterAccount" class="input text-sm"><option value="">全部帳戶</option></select>
-          <select id="filterNecessary" class="input text-sm">
-            <option value="">全部標籤</option>
-            <option value="necessary">必要</option>
-            <option value="non">非必要</option>
-          </select>
-          <input type="text" id="filterKeyword" class="input text-sm" placeholder="關鍵字" />
-        </div>
         <div class="flex gap-2 mb-3">
-          <button onclick="renderTransactions()" class="btn-primary btn text-sm">篩選</button>
-          <button onclick="clearTxFilters()" class="btn text-sm">清除</button>
+          <button onclick="renderTransactions()" class="btn-primary btn text-sm">重新整理</button>
+          <button onclick="clearAllTransactions()" class="btn text-sm" style="color:var(--danger)">清空所有帳務</button>
         </div>
         <div class="text-sm medium mb-2">小計：<span id="txSubtotal" class="tabular bold">$0</span></div>
         <div class="overflow-x-auto">
           <table>
             <thead>
               <tr>
-                <th>日期</th><th>項目</th><th>金額</th><th>分類</th><th>帳戶</th><th>標籤</th><th>信封</th><th>備註</th><th></th>
+                <th>日期</th><th>項目</th><th>金額</th><th>分類</th><th>帳戶</th><th>標籤</th><th></th>
               </tr>
             </thead>
             <tbody id="txTableBody"></tbody>
@@ -409,202 +289,61 @@
       </div>
     </section>
 
-    <!-- 投資 -->
+    <!-- 其他頁籤簡化顯示 -->
+    <section id="tab-envelopes" class="tab-content space-y-4">
+      <div class="card p-5">
+        <h2 class="semibold mb-3">數位信封袋</h2>
+        <p class="text-sm" style="color:var(--text-muted)">功能開發中，先使用記帳分類即可。</p>
+      </div>
+    </section>
+
     <section id="tab-investments" class="tab-content space-y-4">
       <div class="card p-5">
-        <h2 class="semibold mb-2">月領萬元股息目標</h2>
-        <p class="text-xs mb-3" style="color:var(--text-muted)">依持股殖利率自動預估平均月領</p>
-        <div class="flex justify-between text-sm mb-1">
-          <span>預估月領 <strong class="tabular" id="estMonthlyDividend">$0</strong></span>
-          <span>目標 $10,000 · <strong id="dividendProgressPct">0%</strong></span>
+        <h2 class="semibold mb-3">股票 / 基金</h2>
+        <p class="text-sm mb-4" style="color:var(--text-muted)">目前可先手動新增持股（簡化版）</p>
+        <div class="grid grid-cols-2 gap-3 mb-4">
+          <input type="text" id="stockSymbol" class="input" placeholder="標的（00919）" />
+          <input type="number" id="stockShares" class="input" placeholder="股數" />
+          <input type="number" id="stockCost" class="input" placeholder="成本單價" />
+          <input type="number" id="stockPrice" class="input" placeholder="現價" />
         </div>
-        <div class="progress-track">
-          <div id="dividendProgressBar" class="progress-fill" style="width:0%"></div>
-        </div>
-      </div>
-
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">ETF / 股票</h2>
-          <button onclick="openStockModal()" class="btn-primary btn text-sm">新增標的</button>
-        </div>
-        <div class="overflow-x-auto">
-          <table>
-            <thead>
-              <tr>
-                <th>標的</th><th>股數</th><th>成本</th><th>現價</th><th>市值</th><th>損益</th><th>殖利率</th><th></th>
-              </tr>
-            </thead>
-            <tbody id="stocksTableBody"></tbody>
-          </table>
-        </div>
-        <p class="text-sm medium mt-2">總市值 <span id="stocksTotalValue" class="tabular bold">$0</span></p>
-      </div>
-
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">基金</h2>
-          <button onclick="openFundModal()" class="btn-primary btn text-sm">新增基金</button>
-        </div>
-        <div class="overflow-x-auto">
-          <table>
-            <thead>
-              <tr><th>標的</th><th>單位數</th><th>單價</th><th>匯率</th><th>台幣市值</th><th></th></tr>
-            </thead>
-            <tbody id="fundsTableBody"></tbody>
-          </table>
-        </div>
-        <p class="text-sm medium mt-2">總市值 <span id="fundsTotalValue" class="tabular bold">$0</span></p>
+        <button onclick="addStock()" class="btn-primary btn w-full py-3">新增持股</button>
+        <div id="stocksList" class="mt-4 space-y-2"></div>
       </div>
     </section>
 
-    <!-- 股票交易 -->
     <section id="tab-stockTx" class="tab-content space-y-4">
       <div class="card p-5">
-        <h2 class="semibold mb-3">新增股票交易</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">日期</label>
-            <input type="date" id="stxDate" class="input mt-1" />
-          </div>
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">帳戶</label>
-            <div class="flex gap-2 mt-1">
-              <select id="stxAccount" class="input flex-1"></select>
-              <button type="button" onclick="openAccountEditModal()" class="btn text-sm px-3" title="新增/刪除帳戶">＋</button>
-            </div>
-          </div>
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">類別</label>
-            <select id="stxType" class="input mt-1">
-              <option value="買入">買入</option><option value="賣出">賣出</option>
-              <option value="配息">配息</option><option value="折讓">折讓</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">標的</label>
-            <input type="text" id="stxSymbol" class="input mt-1" placeholder="00919 / 2330" />
-          </div>
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">股數</label>
-            <input type="number" id="stxShares" class="input mt-1 tabular" step="any" />
-          </div>
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">單價</label>
-            <input type="number" id="stxPrice" class="input mt-1 tabular" step="any" />
-          </div>
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">手續費</label>
-            <input type="number" id="stxFee" class="input mt-1 tabular" step="any" value="0" />
-          </div>
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">證交稅</label>
-            <input type="number" id="stxTax" class="input mt-1 tabular" step="any" value="0" />
-          </div>
-          <div class="sm:col-span-2">
-            <label class="text-xs" style="color:var(--text-muted)">備註</label>
-            <input type="text" id="stxNote" class="input mt-1" />
-          </div>
-        </div>
-        <button onclick="addStockTransaction()" class="btn-primary btn w-full mt-4 py-3">新增交易</button>
-      </div>
-
-      <div class="card p-5">
-        <h2 class="semibold mb-3">交易流水帳</h2>
-        <div class="overflow-x-auto">
-          <table>
-            <thead>
-              <tr>
-                <th>日期</th><th>帳戶</th><th>類別</th><th>標的</th><th>股數</th><th>單價</th>
-                <th>總額</th><th>手續費</th><th>證交稅</th><th>總花費</th><th></th>
-              </tr>
-            </thead>
-            <tbody id="stockTxTableBody"></tbody>
-          </table>
-        </div>
+        <h2 class="semibold">股票交易紀錄</h2>
+        <p class="text-sm" style="color:var(--text-muted)">功能可之後再擴充</p>
       </div>
     </section>
 
-    <!-- 固定 / 專案 / 接案 -->
     <section id="tab-fixed" class="tab-content space-y-4">
       <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">固定收支</h2>
-          <button onclick="openFixedModal()" class="btn-primary btn text-sm">新增</button>
-        </div>
-        <div id="fixedList" class="space-y-2"></div>
-      </div>
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">特殊專案</h2>
-          <button onclick="openProjectModal()" class="btn-primary btn text-sm">新增專案</button>
-        </div>
-        <div id="projectsList" class="space-y-3"></div>
-      </div>
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">接案收入追蹤</h2>
-          <button onclick="openFreelanceModal()" class="btn-primary btn text-sm">新增接案</button>
-        </div>
-        <div id="freelanceList" class="space-y-2"></div>
+        <h2 class="semibold">固定收支 / 專案 / 接案</h2>
+        <p class="text-sm" style="color:var(--text-muted)">功能可之後再擴充</p>
       </div>
     </section>
 
-    <!-- 報表 -->
     <section id="tab-charts" class="tab-content space-y-4">
       <div class="card p-5">
-        <h2 class="semibold mb-3">費用分類圓餅圖</h2>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div><canvas id="categoryPieChart" height="220"></canvas></div>
-          <div>
-            <h3 class="text-sm medium mb-2">必要 vs 非必要</h3>
-            <canvas id="necessaryPieChart" height="180"></canvas>
-          </div>
-        </div>
-      </div>
-      <div class="card p-5">
         <h2 class="semibold mb-3">本月摘要</h2>
-        <div id="monthSummary" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
-      </div>
-      <div class="card p-5">
-        <button onclick="resetAllData()" class="btn text-sm" style="color:var(--danger)">清除全部資料</button>
+        <div id="monthSummary" class="grid grid-cols-2 gap-3"></div>
       </div>
     </section>
   </div>
 
   <!-- 底部導航 -->
   <nav class="floating-nav">
-    <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
-      看板
-    </button>
-    <button class="nav-item" data-tab="envelopes" onclick="switchTab('envelopes')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-      信封
-    </button>
-    <button class="nav-item" data-tab="transactions" onclick="switchTab('transactions')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-      記帳
-    </button>
-    <button class="nav-item" data-tab="investments" onclick="switchTab('investments')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
-      投資
-    </button>
-    <button class="nav-item" data-tab="stockTx" onclick="switchTab('stockTx')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
-      交易
-    </button>
-    <button class="nav-item" data-tab="fixed" onclick="switchTab('fixed')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-      固定
-    </button>
-    <button class="nav-item" data-tab="charts" onclick="switchTab('charts')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
-      報表
-    </button>
+    <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">看板</button>
+    <button class="nav-item" data-tab="transactions" onclick="switchTab('transactions')">記帳</button>
+    <button class="nav-item" data-tab="investments" onclick="switchTab('investments')">投資</button>
+    <button class="nav-item" data-tab="envelopes" onclick="switchTab('envelopes')">信封</button>
+    <button class="nav-item" data-tab="charts" onclick="switchTab('charts')">報表</button>
   </nav>
 
-  <!-- 帳戶管理 Modal -->
+  <!-- 帳戶 Modal -->
   <div id="accountModal" class="modal-overlay hidden">
     <div class="modal">
       <h3 class="semibold text-lg mb-4">帳戶管理</h3>
@@ -654,13 +393,8 @@
     function updateStorageStatus() {
       const el = document.getElementById('storageStatus');
       if (!el) return;
-      if (storageAvailable) {
-        el.textContent = 'LocalStorage 自動儲存中';
-        el.style.color = '';
-      } else {
-        el.textContent = '目前為記憶體模式（sandbox，重新整理會遺失）';
-        el.style.color = '#ff9500';
-      }
+      el.textContent = storageAvailable ? 'LocalStorage 自動儲存中' : '目前為記憶體模式（重新整理會遺失）';
+      el.style.color = storageAvailable ? '' : '#ff9500';
     }
 
     // ===================== 資料 =====================
@@ -671,8 +405,7 @@
       jpyCash: 0, jpyRate: 0.22, monthlyBudget: 50000,
       tithePool: 0, titheDonatedThisMonth: 0, lastTitheMonth: '',
       budgetIncludeInvest: false,
-      envelopes: [], transactions: [], stocks: [], funds: [],
-      stockTransactions: [], fixedItems: [], projects: [], freelances: []
+      transactions: [], stocks: []
     };
     let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
 
@@ -719,8 +452,7 @@
     // ===================== 主題 =====================
     function toggleTheme() {
       document.documentElement.classList.toggle('dark');
-      const isDark = document.documentElement.classList.contains('dark');
-      safeSetItem('pf_theme', isDark ? 'dark' : 'light');
+      safeSetItem('pf_theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
     }
     function initTheme() {
       const saved = safeGetItem('pf_theme');
@@ -729,14 +461,13 @@
       }
     }
 
-    // ===================== 帳戶管理 =====================
+    // ===================== 帳戶 =====================
     function populateAccountSelects() {
-      ['txAccount', 'stxAccount', 'filterAccount'].forEach(id => {
+      ['txAccount'].forEach(id => {
         const sel = document.getElementById(id);
         if (!sel) return;
         const cur = sel.value;
-        const isFilter = id === 'filterAccount';
-        sel.innerHTML = isFilter ? '<option value="">全部帳戶</option>' : '';
+        sel.innerHTML = '';
         data.accountList.forEach(a => sel.innerHTML += `<option value="${a}">${a}</option>`);
         if (cur && data.accountList.includes(cur)) sel.value = cur;
       });
@@ -759,8 +490,8 @@
     }
     function addNewAccount() {
       const name = document.getElementById('newAccountName').value.trim();
-      if (!name) { alert('請輸入帳戶名稱'); return; }
-      if (data.accountList.includes(name)) { alert('帳戶已存在'); return; }
+      if (!name) return alert('請輸入帳戶名稱');
+      if (data.accountList.includes(name)) return alert('帳戶已存在');
       data.accountList.push(name);
       data.accounts[name] = 0;
       saveData();
@@ -768,7 +499,7 @@
       populateAccountSelects();
     }
     function removeAccount(name) {
-      if (data.accountList.length <= 1) { alert('至少保留一個帳戶'); return; }
+      if (data.accountList.length <= 1) return alert('至少保留一個帳戶');
       if (!confirm(`確定移除「${name}」？`)) return;
       data.accountList = data.accountList.filter(a => a !== name);
       delete data.accounts[name];
@@ -788,38 +519,125 @@
     }
     function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
 
-    // ===================== 核心功能 =====================
-    function switchTab(tab) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.getElementById('tab-' + tab).classList.add('active');
-      document.querySelectorAll('.nav-item').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
-      if (tab === 'dashboard') renderDashboard();
-      if (tab === 'transactions') {
-        populateAccountSelects();
-        document.getElementById('txDate').value = todayStr();
+    // ===================== 真正可以記帳的功能 =====================
+    function addTransaction() {
+      const date = document.getElementById('txDate').value || todayStr();
+      const name = document.getElementById('txName').value.trim();
+      const amountStr = document.getElementById('txAmount').value;
+      const amount = parseAmount(amountStr);
+      const category = document.getElementById('txCategory').value;
+      const account = document.getElementById('txAccount').value;
+      const necessary = document.querySelector('input[name="txNecessary"]:checked').value;
+      const note = document.getElementById('txNote').value.trim();
+
+      if (!name) return alert('請輸入項目名稱');
+      if (amount === 0 && amountStr.trim() !== '0') return alert('金額格式錯誤');
+
+      // 更新帳戶餘額
+      data.accounts[account] = (data.accounts[account] || 0) + amount;
+
+      // 什一
+      if ((category === '收' || category === '息') && amount > 0) {
+        data.tithePool = (data.tithePool || 0) + Math.round(amount * 0.1);
       }
-      if (tab === 'stockTx') {
-        populateAccountSelects();
-        document.getElementById('stxDate').value = todayStr();
-      }
+
+      data.transactions.push({
+        id: uid(), date, name, amount, category, account, necessary, note
+      });
+
+      saveData();
+
+      // 清空表單
+      document.getElementById('txName').value = '';
+      document.getElementById('txAmount').value = '';
+      document.getElementById('txNote').value = '';
+      document.getElementById('txDate').value = todayStr();
+
+      renderTransactions();
+      renderDashboard();
+      alert('記帳成功！');
     }
 
+    function deleteTransaction(id) {
+      if (!confirm('確定刪除這筆帳務？')) return;
+      const tx = data.transactions.find(t => t.id === id);
+      if (!tx) return;
+
+      // 回滾帳戶
+      data.accounts[tx.account] = (data.accounts[tx.account] || 0) - tx.amount;
+      if ((tx.category === '收' || tx.category === '息') && tx.amount > 0) {
+        data.tithePool = Math.max(0, (data.tithePool || 0) - Math.round(tx.amount * 0.1));
+      }
+
+      data.transactions = data.transactions.filter(t => t.id !== id);
+      saveData();
+      renderTransactions();
+      renderDashboard();
+    }
+
+    function clearAllTransactions() {
+      if (!confirm('確定清空所有帳務？帳戶餘額不會自動回滾。')) return;
+      data.transactions = [];
+      saveData();
+      renderTransactions();
+      renderDashboard();
+    }
+
+    function renderTransactions() {
+      const list = [...data.transactions].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      const subtotal = list.reduce((s, t) => s + t.amount, 0);
+      document.getElementById('txSubtotal').textContent = formatMoney(subtotal);
+
+      const tbody = document.getElementById('txTableBody');
+      tbody.innerHTML = list.map(t => `
+        <tr>
+          <td>${t.date}</td>
+          <td>${t.name}</td>
+          <td class="tabular ${t.amount < 0 ? 'text-red-500' : 'text-green-500'}">${formatMoney(t.amount)}</td>
+          <td>${t.category}</td>
+          <td>${t.account}</td>
+          <td><span class="badge ${t.necessary === 'necessary' ? 'badge-nec' : 'badge-non'}">${t.necessary === 'necessary' ? '必要' : '非必要'}</span></td>
+          <td><button onclick="deleteTransaction('${t.id}')" class="btn text-xs px-2 py-0.5" style="color:var(--danger)">刪</button></td>
+        </tr>
+      `).join('') || '<tr><td colspan="7" class="text-center py-6" style="color:var(--text-muted)">尚無帳務</td></tr>';
+    }
+
+    // ===================== 看板計算 =====================
     function renderDashboard() {
       let cash = data.accountList.reduce((s, a) => s + (parseFloat(data.accounts[a]) || 0), 0);
       cash += (data.jpyCash || 0) * (data.jpyRate || 0.22);
+
       let invest = 0;
       data.stocks.forEach(s => invest += (s.shares || 0) * (s.price || 0));
-      data.funds.forEach(f => invest += (f.units || 0) * (f.price || 0) * (f.rate || 1));
+
       document.getElementById('netWorth').textContent = formatMoney(cash + invest);
       document.getElementById('totalCash').textContent = formatMoney(cash);
       document.getElementById('totalInvest').textContent = formatMoney(invest);
       document.getElementById('jpyRateDisplay').textContent = (data.jpyRate || 0).toFixed(4) + ' TWD';
       document.getElementById('monthlyBudgetInput').value = data.monthlyBudget || '';
-      document.getElementById('monthSpent').textContent = formatMoney(0);
-      document.getElementById('monthRemain').textContent = formatMoney(data.monthlyBudget || 0);
-      document.getElementById('titheShould').textContent = formatMoney(0);
+
+      // 當月花費
+      const cm = currentMonthStr();
+      const monthTxs = data.transactions.filter(t => t.date && t.date.startsWith(cm));
+      const includeInvest = data.budgetIncludeInvest;
+      const spent = monthTxs.reduce((s, t) => {
+        if (t.amount >= 0) return s;
+        if (!includeInvest && t.category === '投') return s;
+        return s + Math.abs(t.amount);
+      }, 0);
+      const remain = (data.monthlyBudget || 0) - spent;
+
+      document.getElementById('monthSpent').textContent = formatMoney(spent);
+      document.getElementById('monthRemain').textContent = formatMoney(remain);
+
+      // 什一
+      const income = monthTxs.filter(t => (t.category === '收' || t.category === '息') && t.amount > 0)
+        .reduce((s, t) => s + t.amount, 0);
+      document.getElementById('titheShould').textContent = formatMoney(Math.round(income * 0.1));
       document.getElementById('titheDone').textContent = formatMoney(data.titheDonatedThisMonth || 0);
       document.getElementById('tithePool').textContent = formatMoney(data.tithePool || 0);
+
+      // 帳戶總覽
       const accDiv = document.getElementById('accountsOverview');
       accDiv.innerHTML = data.accountList.map(name => {
         const bal = data.accounts[name] || 0;
@@ -829,6 +647,116 @@
         </div>`;
       }).join('');
     }
+
+    function saveMonthlyBudget() {
+      data.monthlyBudget = parseFloat(document.getElementById('monthlyBudgetInput').value) || 0;
+      saveData();
+      renderDashboard();
+    }
+    function toggleBudgetMode() {
+      data.budgetIncludeInvest = !data.budgetIncludeInvest;
+      document.getElementById('budgetToggle').classList.toggle('on', data.budgetIncludeInvest);
+      saveData();
+      renderDashboard();
+    }
+    function recordTitheDonation() {
+      const amount = parseFloat(document.getElementById('titheDonateAmount').value);
+      if (!amount || amount <= 0) return alert('請輸入有效金額');
+      data.tithePool = Math.max(0, (data.tithePool || 0) - amount);
+      data.titheDonatedThisMonth = (data.titheDonatedThisMonth || 0) + amount;
+      data.accounts['現金'] = (data.accounts['現金'] || 0) - amount;
+      data.transactions.push({
+        id: uid(), date: todayStr(), name: '什一奉獻', amount: -amount,
+        category: '什一', account: '現金', necessary: 'necessary', note: '從待奉獻池'
+      });
+      saveData();
+      document.getElementById('titheDonateAmount').value = '';
+      renderDashboard();
+      renderTransactions();
+      alert('已記錄奉獻');
+    }
+
+    // ===================== 股票簡化版 =====================
+    function addStock() {
+      const symbol = document.getElementById('stockSymbol').value.trim();
+      const shares = parseFloat(document.getElementById('stockShares').value) || 0;
+      const cost = parseFloat(document.getElementById('stockCost').value) || 0;
+      const price = parseFloat(document.getElementById('stockPrice').value) || 0;
+      if (!symbol) return alert('請輸入標的');
+      data.stocks.push({ id: uid(), symbol, shares, cost, price, yield: 6 });
+      saveData();
+      document.getElementById('stockSymbol').value = '';
+      document.getElementById('stockShares').value = '';
+      document.getElementById('stockCost').value = '';
+      document.getElementById('stockPrice').value = '';
+      renderStocks();
+      renderDashboard();
+      alert('已新增持股');
+    }
+    function renderStocks() {
+      const el = document.getElementById('stocksList');
+      if (!el) return;
+      el.innerHTML = data.stocks.map(s => {
+        const mv = (s.shares || 0) * (s.price || 0);
+        return `<div class="pill p-3 flex justify-between items-center">
+          <div>
+            <div class="semibold">${s.symbol}</div>
+            <div class="text-xs" style="color:var(--text-muted)">${s.shares} 股 · 成本 ${s.cost} · 現價 ${s.price}</div>
+          </div>
+          <div class="text-right">
+            <div class="tabular bold">${formatMoney(mv)}</div>
+            <button onclick="deleteStock('${s.id}')" class="btn text-xs mt-1" style="color:var(--danger)">刪</button>
+          </div>
+        </div>`;
+      }).join('') || '<p class="text-sm" style="color:var(--text-muted)">尚無持股</p>';
+    }
+    function deleteStock(id) {
+      if (!confirm('確定刪除？')) return;
+      data.stocks = data.stocks.filter(s => s.id !== id);
+      saveData();
+      renderStocks();
+      renderDashboard();
+    }
+
+    // ===================== 其他 =====================
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(btn => btn.classList.toggle('active', btn.dataset.tab === tab));
+      if (tab === 'dashboard') renderDashboard();
+      if (tab === 'transactions') {
+        populateAccountSelects();
+        document.getElementById('txDate').value = todayStr();
+        renderTransactions();
+      }
+      if (tab === 'investments') renderStocks();
+      if (tab === 'charts') {
+        const cm = currentMonthStr();
+        const monthTxs = data.transactions.filter(t => t.date && t.date.startsWith(cm));
+        const income = monthTxs.filter(t => t.amount > 0).reduce((s, t) => s + t.amount, 0);
+        const expense = monthTxs.filter(t => t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+        document.getElementById('monthSummary').innerHTML = `
+          <div class="pill p-3 text-center"><p class="text-xs" style="color:var(--text-muted)">本月收入</p><p class="bold tabular text-green-500">${formatMoney(income)}</p></div>
+          <div class="pill p-3 text-center"><p class="text-xs" style="color:var(--text-muted)">本月支出</p><p class="bold tabular text-red-500">${formatMoney(expense)}</p></div>
+        `;
+      }
+    }
+
+    function updateJPYRate() {
+      document.getElementById('apiStatus').textContent = '更新中...';
+      fetch('https://open.er-api.com/v6/latest/JPY')
+        .then(r => r.json())
+        .then(json => {
+          if (json?.rates?.TWD) {
+            data.jpyRate = json.rates.TWD;
+            saveData();
+            document.getElementById('apiStatus').textContent = '日幣已更新';
+            renderDashboard();
+          }
+        })
+        .catch(() => document.getElementById('apiStatus').textContent = '更新失敗');
+    }
+    function refreshAllAssets() { updateJPYRate(); }
 
     function exportData() {
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -853,43 +781,6 @@
       };
       reader.readAsText(file);
     }
-    function resetAllData() {
-      if (!confirm('確定清除全部資料？')) return;
-      data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-      saveData();
-      switchTab('dashboard');
-    }
-
-    // 佔位（完整功能可再擴充）
-    function updateJPYRate() { document.getElementById('apiStatus').textContent = '日幣功能已就緒'; }
-    function updateStockPrices() { document.getElementById('apiStatus').textContent = '台股功能已就緒'; }
-    function refreshAllAssets() { updateJPYRate(); updateStockPrices(); }
-    function saveMonthlyBudget() {
-      data.monthlyBudget = parseFloat(document.getElementById('monthlyBudgetInput').value) || 0;
-      saveData(); renderDashboard();
-    }
-    function toggleBudgetMode() {
-      data.budgetIncludeInvest = !data.budgetIncludeInvest;
-      document.getElementById('budgetToggle').classList.toggle('on', data.budgetIncludeInvest);
-      saveData();
-    }
-    function recordTitheDonation() { alert('什一奉獻功能已就緒'); }
-    function openEnvelopeModal() { alert('信封功能已就緒'); }
-    function openStockModal() { alert('股票功能已就緒'); }
-    function openFundModal() { alert('基金功能已就緒'); }
-    function openFixedModal() { alert('固定收支功能已就緒'); }
-    function openProjectModal() { alert('專案功能已就緒'); }
-    function openFreelanceModal() { alert('接案功能已就緒'); }
-    function addTransaction() { alert('記帳功能已就緒'); }
-    function addStockTransaction() { alert('股票交易功能已就緒'); }
-    function onCategoryChange() {}
-    function clearTxFilters() {}
-    function renderTransactions() {}
-    function renderEnvelopes() {}
-    function renderInvestments() {}
-    function renderStockTransactions() {}
-    function renderFixedSection() {}
-    function renderCharts() {}
 
     // 初始化
     document.addEventListener('DOMContentLoaded', () => {
