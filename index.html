@@ -4,11 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#f5f5f7" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>⛁我的錢錢⛃</title>
+
+  <!-- ========== App Icon ========== -->
   <link rel="icon" href="icon.png" />
   <link rel="apple-touch-icon" href="icon.png" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- ========== 自訂字體 ========== -->
   <style>
     @font-face {
       font-family: 'GenYoMin';
@@ -44,8 +47,10 @@
       --border: rgba(0,0,0,0.06);
       --shadow: 0 8px 30px rgba(0,0,0,0.06);
       --shadow-soft: 0 4px 16px rgba(0,0,0,0.05);
+      --success: #34c759;
       --danger: #ff3b30;
-      --radius: 20px;
+      --radius: 24px;
+      --radius-pill: 999px;
     }
     .dark {
       --bg: #0c0c0e;
@@ -62,10 +67,11 @@
       margin: 0;
       background: var(--bg);
       color: var(--text);
-      font-family: 'GenYoMin', 'Noto Serif TC', serif;
+      font-family: 'GenYoMin', 'Noto Serif TC', 'Songti TC', serif;
       min-height: 100vh;
-      padding-bottom: 110px;
+      padding-bottom: 120px;
       transition: background 0.3s, color 0.3s;
+      -webkit-font-smoothing: antialiased;
     }
     .tabular { font-variant-numeric: tabular-nums; }
     .heavy { font-weight: 800; letter-spacing: 0.04em; }
@@ -86,70 +92,79 @@
     }
     .pill {
       background: var(--card);
-      border-radius: 999px;
+      border-radius: 18px;
       box-shadow: var(--shadow-soft);
       border: 1px solid var(--border);
     }
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
-      border-radius: 999px; padding: 10px 18px; font-weight: 600; font-size: 14px;
-      border: none; cursor: pointer; transition: transform 0.15s;
-      background: var(--card); color: var(--text);
-      box-shadow: var(--shadow-soft); border: 1px solid var(--border);
+      border-radius: var(--radius-pill);
+      padding: 9px 18px;
+      font-weight: 600;
+      font-size: 13px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.15s;
+      background: var(--card);
+      color: var(--text);
+      box-shadow: var(--shadow-soft);
+      border: 1px solid var(--border);
     }
     .btn:active { transform: scale(0.96); }
     .btn-primary { background: #1c1c1e; color: #fff; border: none; }
     .dark .btn-primary { background: #f5f5f7; color: #1c1c1e; }
+    .btn-danger { background: rgba(255, 59, 48, 0.12); color: #ff3b30; border: none; }
     .input {
-      width: 100%; background: var(--bg); border: 1px solid var(--border);
-      border-radius: 12px; padding: 11px 14px; color: var(--text);
-      font-size: 15px; font-family: inherit; outline: none;
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px 16px;
+      color: var(--text);
+      font-size: 15px;
+      font-family: inherit;
+      outline: none;
     }
     select.input {
       appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238e8e93' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+      padding-right: 36px;
     }
-    input[type="date"] {
-  color-scheme: light;
-  color: var(--text);
-}
-.dark input[type="date"] {
-  color-scheme: dark;
-  color: var(--text);
-}
     .progress-track { height: 8px; background: var(--bg); border-radius: 999px; overflow: hidden; }
     .progress-fill { height: 100%; border-radius: 999px; transition: width 0.5s; background: #1c1c1e; }
     .dark .progress-fill { background: #f5f5f7; }
     .floating-nav {
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
       z-index: 100; display: flex; gap: 2px; padding: 6px 8px; border-radius: 28px;
-      background: rgba(255,255,255,0.72); backdrop-filter: blur(20px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.12); border: 1px solid rgba(255,255,255,0.4);
-      max-width: 96vw; overflow-x: auto;
+      background: rgba(255,255,255,0.78); backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px); box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      border: 1px solid rgba(255,255,255,0.4); max-width: 96vw; overflow-x: auto;
     }
     .dark .floating-nav {
-      background: rgba(28,28,30,0.78); border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(28,28,30,0.85);
+      border: 1px solid rgba(255,255,255,0.08);
     }
     .nav-item {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      min-width: 56px; padding: 8px 6px; border-radius: 20px; font-size: 10px;
+      min-width: 52px; padding: 6px 4px; border-radius: 20px; font-size: 10px;
       color: var(--text-muted); background: transparent; border: none; cursor: pointer;
     }
     .nav-item.active { background: var(--card-dark); color: #fff; }
     .dark .nav-item.active { background: #f5f5f7; color: #1c1c1e; }
-    .nav-item svg { width: 20px; height: 20px; margin-bottom: 2px; }
+    .nav-item svg { width: 18px; height: 18px; margin-bottom: 2px; }
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(6px);
       z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px;
     }
     .modal-overlay.hidden { display: none; }
     .modal {
-      background: var(--card); border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
-      max-width: 420px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 24px;
-      border: 1px solid var(--border);
+      background: var(--card); border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      max-width: 440px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 24px;
+      border: 1px solid var(--border); color: var(--text);
     }
     table { width: 100%; border-collapse: collapse; }
     th { font-size: 12px; color: var(--text-muted); font-weight: 600; text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
@@ -158,19 +173,22 @@
     .badge-nec { background: rgba(28,28,30,0.08); color: var(--text); }
     .badge-non { background: rgba(255,149,0,0.12); color: #ff9500; }
     .toggle {
-      width: 48px; height: 28px; background: var(--bg); border-radius: 999px;
+      width: 46px; height: 26px; background: var(--bg); border-radius: 999px;
       position: relative; cursor: pointer; border: 1px solid var(--border);
     }
     .toggle.on { background: #1c1c1e; }
     .dark .toggle.on { background: #f5f5f7; }
     .toggle::after {
-      content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px;
+      content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
       background: #fff; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
       transition: transform 0.2s;
     }
     .toggle.on::after { transform: translateX(20px); }
     .dark .toggle.on::after { background: #1c1c1e; }
   </style>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
   <div class="max-w-3xl mx-auto px-4 pt-6">
@@ -183,14 +201,18 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button onclick="exportData()" class="btn text-xs px-3 py-2">匯出</button>
-        <label class="btn text-xs px-3 py-2 cursor-pointer">
+        <button onclick="exportData()" class="btn text-xs px-3 py-1.5">匯出</button>
+        <label class="btn text-xs px-3 py-1.5 cursor-pointer">
           匯入
           <input type="file" accept=".json" onchange="importData(event)" class="hidden" />
         </label>
-        <button id="themeBtn" onclick="toggleTheme()" class="btn w-10 h-10 rounded-full p-0 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2v2"/><path d="M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715"/><path d="M16 12a4 4 0 0 0-4-4"/><path d="m19 5-1.256 1.256"/><path d="M20 12h2"/>
+        <button id="themeBtn" onclick="toggleTheme()" class="btn w-9 h-9 rounded-full p-0 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2v2"/>
+            <path d="M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715"/>
+            <path d="M16 12a4 4 0 0 0-4-4"/>
+            <path d="m19 5-1.256 1.256"/>
+            <path d="M20 12h2"/>
           </svg>
         </button>
       </div>
@@ -215,62 +237,69 @@
       </div>
 
       <div class="card p-4 flex flex-wrap gap-2 items-center">
-        <button onclick="refreshAllAssets()" class="btn-primary btn text-sm">一鍵全資產即時刷新</button>
-        <button onclick="updateJPYRate()" class="btn text-sm">更新日幣</button>
-        <button onclick="updateStockPrices()" class="btn text-sm">更新台股/ETF</button>
+        <button onclick="refreshAllAssets()" class="btn-primary btn text-xs">一鍵全資產即時刷新</button>
+        <button onclick="updateJPYRate()" class="btn text-xs">更新日幣</button>
+        <button onclick="updateStockPrices()" class="btn text-xs">更新股票/ETF</button>
         <span id="apiStatus" class="text-xs" style="color:var(--text-muted)"></span>
       </div>
 
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-5">
-          <h2 class="semibold text-[17px]">當月預算控制</h2>
-          <div class="flex items-center gap-2 text-sm">
+      <!-- 當月預算控制（完美寬裕留白版） -->
+      <div class="card p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="semibold text-base">當月預算控制</h2>
+          <div class="flex items-center gap-2 text-xs">
             <span style="color:var(--text-muted)">純日常</span>
             <div id="budgetToggle" class="toggle" onclick="toggleBudgetMode()"></div>
             <span style="color:var(--text-muted)">含投資</span>
           </div>
         </div>
-        <div class="mb-5">
-          <label class="text-xs mb-1.5 block" style="color:var(--text-muted)">當月總預算</label>
-          <div class="flex gap-3 items-center">
-            <input type="number" id="monthlyBudgetInput" class="input flex-1" placeholder="50000" />
-            <button onclick="saveMonthlyBudget()" class="btn-primary btn px-5 py-2.5 whitespace-nowrap">儲存</button>
+
+        <div class="space-y-3">
+          <div>
+            <label class="text-xs block mb-1.5" style="color:var(--text-muted)">當月總預算</label>
+            <div class="flex items-center gap-3">
+              <input type="number" id="monthlyBudgetInput" class="input tabular flex-1" placeholder="50000" />
+              <button onclick="saveMonthlyBudget()" class="btn-primary btn px-5 shrink-0 min-w-[76px] whitespace-nowrap">儲存</button>
+            </div>
           </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div class="pill px-4 py-3.5 flex flex-col justify-between min-h-[72px]">
-            <p class="text-xs" style="color:var(--text-muted)">已花費</p>
-            <p class="text-xl heavy tabular text-right mt-2" id="monthSpent">$0</p>
-          </div>
-          <div class="pill px-4 py-3.5 flex flex-col justify-between min-h-[72px]">
-            <p class="text-xs" style="color:var(--text-muted)">剩餘可用</p>
-            <p class="text-xl bold tabular text-right mt-2" id="monthRemain">$0</p>
+
+          <div class="grid grid-cols-2 gap-3 pt-1">
+            <div class="pill p-3.5">
+              <p class="text-xs" style="color:var(--text-muted)">已花費</p>
+              <p class="text-xl heavy tabular mt-1" style="color:var(--danger)" id="monthSpent">$0</p>
+            </div>
+            <div class="pill p-3.5">
+              <p class="text-xs" style="color:var(--text-muted)">剩餘可用</p>
+              <p class="text-xl heavy tabular mt-1" id="monthRemain">$0</p>
+            </div>
           </div>
         </div>
       </div>
 
+      <!-- 什一奉獻 -->
       <div class="card p-5">
         <h2 class="semibold mb-3">當月什一奉獻</h2>
         <div class="grid grid-cols-3 gap-2 mb-3">
           <div class="pill p-3 text-center">
-            <p class="text-xs" style="color:var(--text-muted)">應提撥</p>
-            <p class="text-lg bold tabular" id="titheShould">$0</p>
+            <p class="text-xs" style="color:var(--text-muted)">應提撥 (10%)</p>
+            <p class="text-base bold tabular mt-0.5" id="titheShould">$0</p>
           </div>
           <div class="pill p-3 text-center">
             <p class="text-xs" style="color:var(--text-muted)">已奉獻</p>
-            <p class="text-lg bold tabular" id="titheDone">$0</p>
+            <p class="text-base bold tabular mt-0.5" id="titheDone">$0</p>
           </div>
           <div class="pill p-3 text-center">
             <p class="text-xs" style="color:var(--text-muted)">待奉獻池</p>
-            <p class="text-lg bold tabular" id="tithePool">$0</p>
+            <p class="text-base bold tabular mt-0.5" id="tithePool">$0</p>
           </div>
         </div>
         <div class="flex gap-2">
-          <input type="number" id="titheDonateAmount" class="input" placeholder="本次奉獻金額" />
-          <button onclick="recordTitheDonation()" class="btn-primary btn text-sm whitespace-nowrap">記錄奉獻</button>
+          <input type="number" id="titheDonateAmount" class="input tabular flex-1" placeholder="本次奉獻金額" />
+          <button onclick="recordTitheDonation()" class="btn-primary btn px-4 shrink-0 whitespace-nowrap">記錄奉獻</button>
         </div>
       </div>
 
+      <!-- 帳戶餘額 -->
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3">
           <h2 class="semibold">帳戶餘額</h2>
@@ -285,7 +314,7 @@
       <div class="card p-5">
         <div class="flex items-center justify-between mb-4">
           <h2 class="semibold">數位信封袋預算</h2>
-          <button onclick="openEnvelopeModal()" class="btn-primary btn text-sm">新增信封</button>
+          <button onclick="openEnvelopeModal()" class="btn-primary btn text-xs">新增信封</button>
         </div>
         <p class="text-xs mb-3" style="color:var(--text-muted)">記帳時選擇分類會自動扣除對應信封</p>
         <div id="envelopesList" class="space-y-3"></div>
@@ -295,7 +324,12 @@
     <!-- 記帳 -->
     <section id="tab-transactions" class="tab-content space-y-4">
       <div class="card p-5">
-        <h2 class="semibold mb-3">新增帳務</h2>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="semibold">新增帳務</h2>
+          <button onclick="openScanModal()" class="btn text-xs px-3 py-1.5 flex items-center gap-1">
+            <span>📷</span> 鏡頭掃碼
+          </button>
+        </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="text-xs" style="color:var(--text-muted)">日期</label>
@@ -303,7 +337,7 @@
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">項目名稱</label>
-            <input type="text" id="txName" class="input mt-1" placeholder="午餐、轉帳..." />
+            <input type="text" id="txName" class="input mt-1" placeholder="午餐、鏡頭、轉帳..." />
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">金額（支援 -168+125）</label>
@@ -324,7 +358,7 @@
             <label class="text-xs" style="color:var(--text-muted)">帳戶</label>
             <div class="flex gap-2 mt-1">
               <select id="txAccount" class="input flex-1"></select>
-              <button type="button" onclick="openAccountEditModal()" class="btn text-sm px-3">＋</button>
+              <button type="button" onclick="openAccountEditModal()" class="btn text-sm px-3" title="新增/刪除帳戶">＋</button>
             </div>
           </div>
           <div>
@@ -332,16 +366,20 @@
             <select id="txEnvelope" class="input mt-1"><option value="">不指定</option></select>
           </div>
           <div class="flex items-center gap-4 pt-2">
-            <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+            <label class="flex items-center gap-1.5 text-xs cursor-pointer">
               <input type="radio" name="txNecessary" value="necessary" checked /> 必要
             </label>
-            <label class="flex items-center gap-1.5 text-sm cursor-pointer">
+            <label class="flex items-center gap-1.5 text-xs cursor-pointer">
               <input type="radio" name="txNecessary" value="non" /> 非必要
             </label>
           </div>
+          <div>
+            <label class="text-xs" style="color:var(--text-muted)">📸 拍照/上傳單據收據（選填）</label>
+            <input type="file" id="txReceiptInput" accept="image/*" class="input mt-1 text-xs py-2" />
+          </div>
           <div class="sm:col-span-2">
             <label class="text-xs" style="color:var(--text-muted)">備忘註記</label>
-            <input type="text" id="txNote" class="input mt-1" placeholder="大額細節" />
+            <input type="text" id="txNote" class="input mt-1" placeholder="大額細節、保固說明或備忘" />
           </div>
         </div>
         <button onclick="addTransaction()" class="btn-primary btn w-full mt-4 py-3">新增帳務</button>
@@ -350,9 +388,9 @@
       <div class="card p-5">
         <h2 class="semibold mb-3">帳務明細</h2>
         <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
-          <input type="date" id="filterDateFrom" class="input text-sm" />
-          <input type="date" id="filterDateTo" class="input text-sm" />
-          <select id="filterCategory" class="input text-sm">
+          <input type="date" id="filterDateFrom" class="input text-xs" />
+          <input type="date" id="filterDateTo" class="input text-xs" />
+          <select id="filterCategory" class="input text-xs">
             <option value="">全部分類</option>
             <option value="食">食</option><option value="衣">衣</option><option value="住">住</option>
             <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
@@ -361,24 +399,24 @@
             <option value="提領">提領</option><option value="投">投</option><option value="息">息</option>
             <option value="折">折</option><option value="收">收</option><option value="什一">什一</option>
           </select>
-          <select id="filterAccount" class="input text-sm"><option value="">全部帳戶</option></select>
-          <select id="filterNecessary" class="input text-sm">
+          <select id="filterAccount" class="input text-xs"><option value="">全部帳戶</option></select>
+          <select id="filterNecessary" class="input text-xs">
             <option value="">全部標籤</option>
             <option value="necessary">必要</option>
             <option value="non">非必要</option>
           </select>
-          <input type="text" id="filterKeyword" class="input text-sm" placeholder="關鍵字" />
+          <input type="text" id="filterKeyword" class="input text-xs" placeholder="關鍵字搜尋" />
         </div>
         <div class="flex gap-2 mb-3">
-          <button onclick="renderTransactions()" class="btn-primary btn text-sm">篩選</button>
-          <button onclick="clearTxFilters()" class="btn text-sm">清除</button>
+          <button onclick="renderTransactions()" class="btn-primary btn text-xs">篩選</button>
+          <button onclick="clearTxFilters()" class="btn text-xs">清除</button>
         </div>
-        <div class="text-sm medium mb-2">小計：<span id="txSubtotal" class="tabular bold">$0</span></div>
+        <div class="text-xs semibold mb-2">小計：<span id="txSubtotal" class="tabular bold">$0</span></div>
         <div class="overflow-x-auto">
           <table>
             <thead>
               <tr>
-                <th>日期</th><th>項目</th><th>金額</th><th>分類</th><th>帳戶</th><th>標籤</th><th>信封</th><th>備註</th><th></th>
+                <th>日期</th><th>項目</th><th>金額</th><th>分類</th><th>帳戶</th><th>標籤</th><th>信封</th><th>單據</th><th>備註</th><th></th>
               </tr>
             </thead>
             <tbody id="txTableBody"></tbody>
@@ -387,26 +425,165 @@
       </div>
     </section>
 
-    <!-- 其他頁籤 -->
+    <!-- 投資 -->
     <section id="tab-investments" class="tab-content space-y-4">
-      <div class="card p-5 text-center" style="color:var(--text-muted)">
-        <p>股票與基金功能下一階段補上</p>
+      <div class="card p-5">
+        <h2 class="semibold mb-2">月領萬元股息目標進度</h2>
+        <p class="text-xs mb-3" style="color:var(--text-muted)">根據 00919、00918、00713 等持股與殖利率自動估算</p>
+        <div class="flex justify-between text-xs mb-1">
+          <span>預估月領股息：<strong class="tabular text-sm" id="estMonthlyDividend">$0</strong></span>
+          <span>目標 $10,000 · 達成率 <strong id="dividendProgressPct" class="text-sm">0%</strong></span>
+        </div>
+        <div class="progress-track mt-1">
+          <div id="dividendProgressBar" class="progress-fill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="semibold">ETF / 股票</h2>
+          <button onclick="openStockModal()" class="btn-primary btn text-xs">新增標的</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th>標的</th><th>股數</th><th>成本</th><th>現價</th><th>市值</th><th>損益</th><th>殖利率%</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="stocksTableBody"></tbody>
+          </table>
+        </div>
+        <p class="text-xs semibold mt-2">總市值 <span id="stocksTotalValue" class="tabular bold">$0</span></p>
+      </div>
+
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="semibold">基金</h2>
+          <button onclick="openFundModal()" class="btn-primary btn text-xs">新增基金</button>
+        </div>
+        <div class="overflow-x-auto">
+          <table>
+            <thead>
+              <tr><th>標的</th><th>單位數</th><th>單價</th><th>匯率</th><th>台幣市值</th><th></th></tr>
+            </thead>
+            <tbody id="fundsTableBody"></tbody>
+          </table>
+        </div>
+        <p class="text-xs semibold mt-2">總市值 <span id="fundsTotalValue" class="tabular bold">$0</span></p>
       </div>
     </section>
+
+    <!-- 股票交易 -->
     <section id="tab-stockTx" class="tab-content space-y-4">
-      <div class="card p-5 text-center" style="color:var(--text-muted)">
-        <p>股票交易功能下一階段補上</p>
+      <div class="card p-5">
+        <h2 class="semibold mb-3">新增股票交易</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs" style="color:var(--text-muted)">日期</label>
+            <input type="date" id="stxDate" class="input mt-1" />
+          </div>
+          <div>
+            <label class="text-xs" style="color:var(--text-muted)">帳戶</label>
+            <div class="flex gap-2 mt-1">
+              <select id="stxAccount" class="input flex-1"></select>
+              <button type="button" onclick="openAccountEditModal()" class="btn text-sm px-3" title="新增/刪除帳戶">＋</button>
+            </div>
+          </div>
+          <div>
+            <label class="text-xs" style="color:var(--text-muted)">類別</label>
+            <select id="stxType" class="input mt-1">
+              <option value="買入">買入</option><option value="賣出">賣出</option>
+              <option value="配息">配息</option><option value="折讓">折讓</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs" style="color:var(--text-muted)">標的</label>
+            <input type="text" id="stxSymbol" class="input mt-1" placeholder="00919 / 2330" />
+          </div>
+          <div>
+            <label class="text-xs" style="color:var(--text-muted)">股數</label>
+            <input type="number" id="stxShares" class="input mt-1 tabular" step="any" />
+          </div>
+          <div>
+            <label class="text-xs" style="color:var(--text-muted)">單價</label>
+            <input type="number" id="stxPrice" class="input mt-1 tabular" step="any" />
+          </div>
+          <div>
+            <label class="text-xs" style="color:var(--text-muted)">手續費</label>
+            <input type="number" id="stxFee" class="input mt-1 tabular" step="any" value="0" />
+          </div>
+          <div>
+            <label class="text-xs" style="color:var(--text-muted)">證交稅</label>
+            <input type="number" id="stxTax" class="input mt-1 tabular" step="any" value="0" />
+          </div>
+          <div class="sm:col-span-2">
+            <label class="text-xs" style="color:var(--text-muted)">備註</label>
+            <input type="text" id="stxNote" class="input mt-1" />
+          </div>
+        </div>
+        <button onclick="addStockTransaction()" class="btn-primary btn w-full mt-4 py-3">新增交易</button>
+      </div>
+
+      <div class="card p-5">
+        <h2 class="semibold mb-3">交易流水帳</h2>
+        <div class="overflow-x-auto">
+          <table>
+            <thead>
+              <tr>
+                <th>日期</th><th>帳戶</th><th>類別</th><th>標的</th><th>股數</th><th>單價</th>
+                <th>總額</th><th>手續費</th><th>證交稅</th><th>總花費</th><th></th>
+              </tr>
+            </thead>
+            <tbody id="stockTxTableBody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
+
+    <!-- 固定 / 專案 / 接案 -->
     <section id="tab-fixed" class="tab-content space-y-4">
-      <div class="card p-5 text-center" style="color:var(--text-muted)">
-        <p>固定收支、專案、接案功能下一階段補上</p>
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="semibold">固定收支</h2>
+          <button onclick="openFixedModal()" class="btn-primary btn text-xs">新增</button>
+        </div>
+        <div id="fixedList" class="space-y-2"></div>
+      </div>
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="semibold">特殊專案</h2>
+          <button onclick="openProjectModal()" class="btn-primary btn text-xs">新增專案</button>
+        </div>
+        <div id="projectsList" class="space-y-3"></div>
+      </div>
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="semibold">接案收入追蹤</h2>
+          <button onclick="openFreelanceModal()" class="btn-primary btn text-xs">新增接案</button>
+        </div>
+        <div id="freelanceList" class="space-y-2"></div>
       </div>
     </section>
+
+    <!-- 報表 -->
     <section id="tab-charts" class="tab-content space-y-4">
-      <div class="card p-5 text-center" style="color:var(--text-muted)">
-        <p>圖表功能下一階段補上</p>
-        <button onclick="resetAllData()" class="btn mt-4" style="color:var(--danger)">清除全部資料</button>
+      <div class="card p-5">
+        <h2 class="semibold mb-3">費用分類圓餅圖</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div><canvas id="categoryPieChart" height="220"></canvas></div>
+          <div>
+            <h3 class="text-xs semibold mb-2">必要 vs 非必要</h3>
+            <canvas id="necessaryPieChart" height="180"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="card p-5">
+        <h2 class="semibold mb-3">本月摘要</h2>
+        <div id="monthSummary" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+      </div>
+      <div class="card p-5">
+        <button onclick="resetAllData()" class="btn btn-danger text-xs">清除全部資料</button>
       </div>
     </section>
   </div>
@@ -443,45 +620,275 @@
     </button>
   </nav>
 
-  <!-- 帳戶 Modal -->
+  <!-- ==================== 彈窗 MODALS ==================== -->
+  <!-- 單據照片預覽 Modal -->
+  <div id="receiptModal" class="modal-overlay hidden">
+    <div class="modal text-center">
+      <h3 class="text-base bold mb-3">單據 / 收據照片</h3>
+      <div class="flex justify-center my-2">
+        <img id="receiptImagePreview" src="" alt="單據照片" class="max-h-[60vh] max-w-full rounded-xl object-contain shadow-sm" />
+      </div>
+      <button onclick="closeModal('receiptModal')" class="btn btn-primary w-full mt-3">關閉</button>
+    </div>
+  </div>
+
+  <!-- 鏡頭掃碼 Modal -->
+  <div id="scanModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-2">相機掃描條碼 / QR Code</h3>
+      <div id="reader" class="w-full rounded-xl overflow-hidden bg-black min-h-[240px]"></div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="stopScanner()" class="btn btn-primary flex-1">關閉相機</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 帳戶編輯 Modal -->
   <div id="accountModal" class="modal-overlay hidden">
     <div class="modal">
-      <h3 class="semibold text-lg mb-4">帳戶管理</h3>
+      <h3 class="text-base bold mb-4">帳戶管理</h3>
       <div id="accountEditFields" class="space-y-3"></div>
-      <div class="mt-3">
+      <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800">
         <label class="text-xs" style="color:var(--text-muted)">日幣現金 (JPY)</label>
         <input type="number" id="jpyCashInput" class="input mt-1 tabular" step="any" />
       </div>
       <div class="mt-3">
         <label class="text-xs" style="color:var(--text-muted)">新增帳戶名稱</label>
         <div class="flex gap-2 mt-1">
-          <input type="text" id="newAccountName" class="input" placeholder="例如：玉山" />
-          <button onclick="addNewAccount()" class="btn-primary btn text-sm">新增</button>
+          <input type="text" id="newAccountName" class="input text-xs" placeholder="例如：玉山、街口" />
+          <button onclick="addNewAccount()" class="btn-primary btn text-xs px-4 whitespace-nowrap">新增</button>
         </div>
       </div>
       <div class="flex gap-2 mt-5">
-        <button onclick="saveAccounts()" class="btn-primary btn flex-1 py-2.5">儲存</button>
+        <button onclick="saveAccounts()" class="btn-primary btn flex-1 py-2.5">儲存更新</button>
         <button onclick="closeModal('accountModal')" class="btn flex-1 py-2.5">取消</button>
       </div>
     </div>
   </div>
 
+  <!-- 信封 Modal -->
+  <div id="envelopeModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4" id="envelopeModalTitle">新增信封</h3>
+      <input type="hidden" id="envelopeEditId" />
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs" style="color:var(--text-muted)">信封名稱</label>
+          <input type="text" id="envelopeName" class="input mt-1" placeholder="飲食、行、美、娛樂..." />
+        </div>
+        <div>
+          <label class="text-xs" style="color:var(--text-muted)">每月預算</label>
+          <input type="number" id="envelopeBudget" class="input mt-1 tabular" />
+        </div>
+        <div>
+          <label class="text-xs" style="color:var(--text-muted)">連動分類</label>
+          <select id="envelopeCategory" class="input mt-1">
+            <option value="">不指定</option>
+            <option value="食">食</option><option value="衣">衣</option><option value="住">住</option>
+            <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
+            <option value="醫">醫</option><option value="美">美</option><option value="稅">稅</option>
+            <option value="保">保</option><option value="禮">禮</option><option value="雜">雜</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveEnvelope()" class="btn-primary btn flex-1">儲存</button>
+        <button onclick="closeModal('envelopeModal')" class="btn flex-1">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 股票 Modal -->
+  <div id="stockModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4" id="stockModalTitle">新增持股標的</h3>
+      <input type="hidden" id="stockEditId" />
+      <div class="space-y-2 text-xs">
+        <div>
+          <label style="color:var(--text-muted)">標的代號 / 名稱</label>
+          <input type="text" id="stockSymbol" class="input mt-1" placeholder="00919 / 00918 / 00713" />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">持有股數</label>
+          <input type="number" id="stockShares" class="input mt-1 tabular" step="any" />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">成本單價</label>
+          <input type="number" id="stockCost" class="input mt-1 tabular" step="any" />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">現價</label>
+          <input type="number" id="stockPrice" class="input mt-1 tabular" step="any" />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">預估年化殖利率 %（預估月領股息用）</label>
+          <input type="number" id="stockYield" class="input mt-1 tabular" step="any" value="6" />
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveStock()" class="btn-primary btn flex-1">儲存</button>
+        <button onclick="closeModal('stockModal')" class="btn flex-1">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 基金 Modal -->
+  <div id="fundModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4" id="fundModalTitle">新增基金標的</h3>
+      <input type="hidden" id="fundEditId" />
+      <div class="space-y-2 text-xs">
+        <div>
+          <label style="color:var(--text-muted)">名稱</label>
+          <input type="text" id="fundName" class="input mt-1" placeholder="坦伯頓科技、瑞銀..." />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">單位數</label>
+          <input type="number" id="fundUnits" class="input mt-1 tabular" step="any" />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">單價（原幣淨值）</label>
+          <input type="number" id="fundPrice" class="input mt-1 tabular" step="any" />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">匯率</label>
+          <input type="number" id="fundRate" class="input mt-1 tabular" step="any" value="1" />
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveFund()" class="btn-primary btn flex-1">儲存</button>
+        <button onclick="closeModal('fundModal')" class="btn flex-1">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 固定收支 Modal -->
+  <div id="fixedModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4" id="fixedModalTitle">新增固定項目</h3>
+      <input type="hidden" id="fixedEditId" />
+      <div class="space-y-2 text-xs">
+        <div>
+          <label style="color:var(--text-muted)">名稱</label>
+          <input type="text" id="fixedName" class="input mt-1" placeholder="房租、Adobe 訂閱..." />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">金額（支出為負，如 -15000）</label>
+          <input type="number" id="fixedAmount" class="input mt-1 tabular" step="any" />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">帳戶</label>
+          <select id="fixedAccount" class="input mt-1"></select>
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">分類</label>
+          <select id="fixedCategory" class="input mt-1">
+            <option value="住">住</option><option value="行">行</option><option value="育">育</option>
+            <option value="樂">樂</option><option value="醫">醫</option><option value="美">美</option>
+            <option value="稅">稅</option><option value="保">保</option><option value="禮">禮</option>
+            <option value="雜">雜</option><option value="收">收</option>
+          </select>
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">備註</label>
+          <input type="text" id="fixedNote" class="input mt-1" />
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveFixed()" class="btn-primary btn flex-1">儲存</button>
+        <button onclick="closeModal('fixedModal')" class="btn flex-1">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 專案 Modal -->
+  <div id="projectModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4" id="projectModalTitle">新增專案</h3>
+      <input type="hidden" id="projectEditId" />
+      <div class="space-y-2 text-xs">
+        <div>
+          <label style="color:var(--text-muted)">專案名稱</label>
+          <input type="text" id="projectName" class="input mt-1" placeholder="日本旅遊、婚禮..." />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">預算金額</label>
+          <input type="number" id="projectBudget" class="input mt-1 tabular" />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">已花費</label>
+          <input type="number" id="projectSpent" class="input mt-1 tabular" value="0" />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">備註</label>
+          <input type="text" id="projectNote" class="input mt-1" />
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveProject()" class="btn-primary btn flex-1">儲存</button>
+        <button onclick="closeModal('projectModal')" class="btn flex-1">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 接案 Modal -->
+  <div id="freelanceModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4" id="freelanceModalTitle">新增接案</h3>
+      <input type="hidden" id="freelanceEditId" />
+      <div class="space-y-2 text-xs">
+        <div>
+          <label style="color:var(--text-muted)">案件名稱</label>
+          <input type="text" id="freelanceName" class="input mt-1" placeholder="攝影、海報設計..." />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">金額</label>
+          <input type="number" id="freelanceAmount" class="input mt-1 tabular" />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">狀態</label>
+          <select id="freelanceStatus" class="input mt-1">
+            <option value="進行中">進行中</option>
+            <option value="已完成待收款">已完成待收款</option>
+            <option value="已收款">已收款</option>
+          </select>
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">收款帳戶</label>
+          <select id="freelanceAccount" class="input mt-1"></select>
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">備註</label>
+          <input type="text" id="freelanceNote" class="input mt-1" />
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveFreelance()" class="btn-primary btn flex-1">儲存</button>
+        <button onclick="closeModal('freelanceModal')" class="btn flex-1">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== JAVASCRIPT 全邏輯 ==================== -->
   <script>
     const memoryStore = {};
     let storageAvailable = false;
+    let html5QrCode = null;
+
     function safeGetItem(key) {
       try {
-        if (window.localStorage) {
-          const v = localStorage.getItem(key);
+        if (typeof localStorage !== 'undefined') {
+          const val = localStorage.getItem(key);
           storageAvailable = true;
-          return v;
+          return val;
         }
       } catch (e) { storageAvailable = false; }
       return memoryStore[key] || null;
     }
+
     function safeSetItem(key, value) {
       try {
-        if (window.localStorage) {
+        if (typeof localStorage !== 'undefined') {
           localStorage.setItem(key, value);
           storageAvailable = true;
           return;
@@ -489,11 +896,17 @@
       } catch (e) { storageAvailable = false; }
       memoryStore[key] = value;
     }
+
     function updateStorageStatus() {
       const el = document.getElementById('storageStatus');
       if (!el) return;
-      el.textContent = storageAvailable ? 'LocalStorage 自動儲存中' : '目前為記憶體模式（重新整理會遺失）';
-      el.style.color = storageAvailable ? '' : '#ff9500';
+      if (storageAvailable) {
+        el.textContent = 'LocalStorage 自動儲存中';
+        el.style.color = 'var(--text-muted)';
+      } else {
+        el.textContent = '記憶體模式（若於沙盒預覽重新整理會重置）';
+        el.style.color = '#ff9500';
+      }
     }
 
     const DEFAULT_ACCOUNTS = ['中信','國泰','聯邦','元大','富邦莊敬','富邦仁愛','現金','他人支付'];
@@ -507,10 +920,9 @@
       stockTransactions: [], fixedItems: [], projects: [], freelances: []
     };
     let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    let categoryChart = null, necessaryChart = null;
 
-    function uid() {
-      return Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
-    }
+    function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
     function formatMoney(n) {
       if (n == null || isNaN(n)) return '$0';
       const s = n < 0 ? '-' : '';
@@ -530,20 +942,20 @@
       const d = new Date();
       return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
     }
+
     function saveData() {
       safeSetItem('pf_app_v3', JSON.stringify(data));
       updateStorageStatus();
     }
+
     function loadData() {
       const raw = safeGetItem('pf_app_v3');
       if (raw) {
         try {
           const p = JSON.parse(raw);
           data = Object.assign({}, DEFAULT_DATA, p);
-          if (!data.accountList) data.accountList = [...DEFAULT_ACCOUNTS];
-          data.accountList.forEach(a => {
-            if (data.accounts[a] === undefined) data.accounts[a] = 0;
-          });
+          if (!data.accountList || !data.accountList.length) data.accountList = [...DEFAULT_ACCOUNTS];
+          data.accountList.forEach(a => { if (data.accounts[a] === undefined) data.accounts[a] = 0; });
         } catch {
           data = JSON.parse(JSON.stringify(DEFAULT_DATA));
         }
@@ -559,7 +971,9 @@
 
     function toggleTheme() {
       document.documentElement.classList.toggle('dark');
-      safeSetItem('pf_theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+      const isDark = document.documentElement.classList.contains('dark');
+      safeSetItem('pf_theme', isDark ? 'dark' : 'light');
+      if (document.getElementById('tab-charts').classList.contains('active')) renderCharts();
     }
     function initTheme() {
       const saved = safeGetItem('pf_theme');
@@ -568,49 +982,112 @@
       }
     }
 
-    function populateAccountSelects() {
-      ['txAccount', 'filterAccount'].forEach(id => {
+    function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+    function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      const t = document.getElementById('tab-' + tab);
+      if (t) t.classList.add('active');
+
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        if (btn.dataset.tab === tab) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+
+      populateAllAccountSelects();
+      if (tab === 'dashboard') renderDashboard();
+      if (tab === 'envelopes') renderEnvelopes();
+      if (tab === 'transactions') {
+        populateEnvelopeSelect();
+        renderTransactions();
+        document.getElementById('txDate').value = todayStr();
+      }
+      if (tab === 'investments') renderInvestments();
+      if (tab === 'stockTx') {
+        document.getElementById('stxDate').value = todayStr();
+        renderStockTransactions();
+      }
+      if (tab === 'fixed') renderFixedSection();
+      if (tab === 'charts') renderCharts();
+    }
+
+    function populateAllAccountSelects() {
+      const selects = ['txAccount', 'filterAccount', 'stxAccount', 'fixedAccount', 'freelanceAccount'];
+      selects.forEach(id => {
         const sel = document.getElementById(id);
         if (!sel) return;
         const cur = sel.value;
-        const isFilter = id === 'filterAccount';
-        sel.innerHTML = isFilter ? '<option value="">全部帳戶</option>' : '';
-        data.accountList.forEach(a => {
-          sel.innerHTML += `<option value="${a}">${a}</option>`;
+        sel.innerHTML = id === 'filterAccount' ? '<option value="">全部帳戶</option>' : '';
+        (data.accountList || DEFAULT_ACCOUNTS).forEach(acc => {
+          sel.innerHTML += `<option value="${acc}">${acc}</option>`;
         });
-        if (cur && data.accountList.includes(cur)) sel.value = cur;
+        if (cur && (data.accountList || DEFAULT_ACCOUNTS).includes(cur)) sel.value = cur;
       });
     }
 
+    // ==================== 鏡頭掃碼功能 ====================
+    function openScanModal() {
+      openModal('scanModal');
+      html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 250 } },
+        (decodedText) => {
+          document.getElementById('txNote').value = decodedText;
+          document.getElementById('txName').value = '掃碼支出: ' + decodedText.slice(0, 10);
+          stopScanner();
+          alert('掃碼成功，已自動填入備註！');
+        },
+        () => {}
+      ).catch(() => {
+        alert('無法開啟相機，請檢查瀏覽器相機權限');
+        stopScanner();
+      });
+    }
+
+    function stopScanner() {
+      if (html5QrCode) {
+        html5QrCode.stop().then(() => {
+          html5QrCode.clear();
+          closeModal('scanModal');
+        }).catch(() => {
+          closeModal('scanModal');
+        });
+      } else {
+        closeModal('scanModal');
+      }
+    }
+
+    // ==================== 帳戶與匯率/股價 API ====================
     function openAccountEditModal() {
-      const c = document.getElementById('accountEditFields');
-      c.innerHTML = data.accountList.map(name => `
-        <div class="flex items-center gap-2">
-          <div class="flex-1">
-            <label class="text-xs" style="color:var(--text-muted)">${name}</label>
-            <input type="number" data-account="${name}" class="input mt-1 account-edit-input tabular" value="${data.accounts[name]||0}" step="any" />
-          </div>
-          <button class="btn text-xs mt-5 remove-account-btn" data-name="${name}" style="color:var(--danger)">移除</button>
-        </div>`).join('');
+      const container = document.getElementById('accountEditFields');
+      container.innerHTML = '';
+      (data.accountList || DEFAULT_ACCOUNTS).forEach(name => {
+        container.innerHTML += `
+          <div class="flex items-center gap-2">
+            <div class="flex-1">
+              <label class="text-xs" style="color:var(--text-muted)">${name}</label>
+              <input type="number" data-account="${name}" class="input mt-1 account-edit-input tabular" value="${data.accounts[name] || 0}" step="any" />
+            </div>
+            <button onclick="removeAccount('${name}')" class="btn text-xs mt-5" style="color:var(--danger)">移除</button>
+          </div>`;
+      });
       document.getElementById('jpyCashInput').value = data.jpyCash || 0;
       document.getElementById('newAccountName').value = '';
-      document.getElementById('accountModal').classList.remove('hidden');
-
-      // 綁定移除按鈕
-      document.querySelectorAll('.remove-account-btn').forEach(btn => {
-        btn.onclick = () => removeAccount(btn.dataset.name);
-      });
+      openModal('accountModal');
     }
 
     function addNewAccount() {
       const name = document.getElementById('newAccountName').value.trim();
       if (!name) return alert('請輸入帳戶名稱');
+      if (!data.accountList) data.accountList = [...DEFAULT_ACCOUNTS];
       if (data.accountList.includes(name)) return alert('帳戶已存在');
       data.accountList.push(name);
       data.accounts[name] = 0;
       saveData();
       openAccountEditModal();
-      populateAccountSelects();
+      populateAllAccountSelects();
     }
 
     function removeAccount(name) {
@@ -620,7 +1097,7 @@
       delete data.accounts[name];
       saveData();
       openAccountEditModal();
-      populateAccountSelects();
+      populateAllAccountSelects();
     }
 
     function saveAccounts() {
@@ -630,350 +1107,115 @@
       data.jpyCash = parseFloat(document.getElementById('jpyCashInput').value) || 0;
       saveData();
       closeModal('accountModal');
+      populateAllAccountSelects();
       renderDashboard();
-      populateAccountSelects();
     }
 
-    function closeModal(id) {
-      const el = document.getElementById(id);
-      if (el) el.classList.add('hidden');
+    async function updateJPYRate() {
+      const status = document.getElementById('apiStatus');
+      status.textContent = '更新日幣匯率中…';
+      try {
+        const res = await fetch('https://open.er-api.com/v6/latest/JPY');
+        const json = await res.json();
+        if (json && json.rates && json.rates.TWD) {
+          data.jpyRate = json.rates.TWD;
+          saveData();
+          status.textContent = '日幣匯率已更新：' + data.jpyRate.toFixed(4);
+          renderDashboard();
+          return;
+        }
+      } catch (e) {}
+      status.textContent = '匯率更新失敗，保留目前數值';
     }
 
-    // ===================== 記帳 =====================
-    function addTransaction() {
-      const date = document.getElementById('txDate').value || todayStr();
-      const name = document.getElementById('txName').value.trim();
-      const amountStr = document.getElementById('txAmount').value;
-      const category = document.getElementById('txCategory').value;
-      const account = document.getElementById('txAccount').value;
-      const envelopeId = document.getElementById('txEnvelope').value;
-      const necessary = document.querySelector('input[name="txNecessary"]:checked')?.value || 'necessary';
-      const note = document.getElementById('txNote').value.trim();
-
-      if (!name) return alert('請輸入項目名稱');
-      if (!amountStr) return alert('請輸入金額');
-      const amount = parseAmount(amountStr);
-      if (amount === 0) return alert('金額解析失敗');
-
-      if (account !== '他人支付') {
-        if (data.accounts[account] === undefined) data.accounts[account] = 0;
-        data.accounts[account] += amount;
-      }
-
-      if (category === '收' || category === '息') {
-        data.tithePool = (data.tithePool || 0) + Math.round(Math.abs(amount) * 0.1);
-      }
-
-      if (envelopeId && amount < 0) {
-        const env = data.envelopes.find(e => e.id === envelopeId);
-        if (env) env.spent = (env.spent || 0) + Math.abs(amount);
-      }
-
-      data.transactions.unshift({
-        id: uid(),
-        date,
-        name,
-        amount,
-        category,
-        account,
-        envelopeId: envelopeId || null,
-        necessary,
-        note
-      });
-
-      saveData();
-
-      document.getElementById('txName').value = '';
-      document.getElementById('txAmount').value = '';
-      document.getElementById('txNote').value = '';
-      document.getElementById('txDate').value = todayStr();
-      document.getElementById('txEnvelope').value = '';
-
-      renderDashboard();
-      renderTransactions();
-      if (document.getElementById('tab-envelopes').classList.contains('active')) {
-        renderEnvelopes();
-      }
-      alert('記帳成功！');
-    }
-
-    function renderTransactions() {
-      const from = document.getElementById('filterDateFrom')?.value || '';
-      const to = document.getElementById('filterDateTo')?.value || '';
-      const cat = document.getElementById('filterCategory')?.value || '';
-      const acc = document.getElementById('filterAccount')?.value || '';
-      const nec = document.getElementById('filterNecessary')?.value || '';
-      const kw = (document.getElementById('filterKeyword')?.value || '').toLowerCase();
-
-      let list = data.transactions.filter(t => {
-        if (from && t.date < from) return false;
-        if (to && t.date > to) return false;
-        if (cat && t.category !== cat) return false;
-        if (acc && t.account !== acc) return false;
-        if (nec && t.necessary !== nec) return false;
-        if (kw && !(t.name + (t.note || '') + t.category).toLowerCase().includes(kw)) return false;
-        return true;
-      });
-
-      const tbody = document.getElementById('txTableBody');
-      let subtotal = 0;
-
-      tbody.innerHTML = list.map(t => {
-        if (t.account !== '他人支付') subtotal += t.amount;
-        const envName = t.envelopeId ? (data.envelopes.find(e => e.id === t.envelopeId)?.name || '') : '';
-        return `
-          <tr>
-            <td>${t.date}</td>
-            <td>${t.name}</td>
-            <td class="tabular">${formatMoney(t.amount)}</td>
-            <td>${t.category}</td>
-            <td>${t.account}</td>
-            <td><span class="badge ${t.necessary === 'necessary' ? 'badge-nec' : 'badge-non'}">${t.necessary === 'necessary' ? '必要' : '非必要'}</span></td>
-            <td>${envName}</td>
-            <td class="text-xs">${t.note || ''}</td>
-            <td>
-              <button class="btn text-xs delete-tx-btn" data-id="${t.id}" style="color:var(--danger)">刪</button>
-            </td>
-          </tr>`;
-      }).join('');
-
-      document.getElementById('txSubtotal').textContent = formatMoney(subtotal);
-
-      // 綁定刪除按鈕（用事件委派比較穩定）
-      tbody.querySelectorAll('.delete-tx-btn').forEach(btn => {
-        btn.onclick = function() {
-          deleteTransaction(this.getAttribute('data-id'));
-        };
-      });
-    }
-
-    function deleteTransaction(id) {
-      if (!confirm('確定刪除這筆帳務？')) return;
-
-      const tx = data.transactions.find(t => t.id === id);
-      if (!tx) {
-        alert('找不到這筆資料');
+    async function updateStockPrices() {
+      const status = document.getElementById('apiStatus');
+      if (!data.stocks.length) {
+        status.textContent = '尚無持股標的可更新';
         return;
       }
-
-      if (tx.account !== '他人支付' && data.accounts[tx.account] !== undefined) {
-        data.accounts[tx.account] -= tx.amount;
+      status.textContent = '更新股票現價中…';
+      let updatedCount = 0;
+      for (let s of data.stocks) {
+        try {
+          const sym = s.symbol.trim();
+          const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}.TW`;
+          const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+          const res = await fetch(proxyUrl);
+          const json = await res.json();
+          const meta = json?.chart?.result?.[0]?.meta;
+          const curPrice = meta?.regularMarketPrice || meta?.previousClose;
+          if (curPrice) {
+            s.price = curPrice;
+            updatedCount++;
+          }
+        } catch (err) {}
       }
+      saveData();
+      renderInvestments();
+      renderDashboard();
+      status.textContent = `已完成現價更新（${updatedCount}/${data.stocks.length} 檔）`;
+    }
 
-      if (tx.envelopeId && tx.amount < 0) {
-        const env = data.envelopes.find(e => e.id === tx.envelopeId);
-        if (env) {
-          env.spent = Math.max(0, (env.spent || 0) - Math.abs(tx.amount));
-        }
-      }
+    async function refreshAllAssets() {
+      await updateJPYRate();
+      await updateStockPrices();
+    }
 
-      if (tx.category === '收' || tx.category === '息') {
-        data.tithePool = Math.max(0, (data.tithePool || 0) - Math.round(Math.abs(tx.amount) * 0.1));
-      }
-
-      data.transactions = data.transactions.filter(t => t.id !== id);
+    // ==================== 看板預算與什一 ====================
+    function toggleBudgetMode() {
+      data.budgetIncludeInvest = !data.budgetIncludeInvest;
+      document.getElementById('budgetToggle').classList.toggle('on', data.budgetIncludeInvest);
       saveData();
       renderDashboard();
-      renderTransactions();
-      if (document.getElementById('tab-envelopes').classList.contains('active')) {
-        renderEnvelopes();
+    }
+
+    function saveMonthlyBudget() {
+      const val = parseFloat(document.getElementById('monthlyBudgetInput').value);
+      if (!isNaN(val)) {
+        data.monthlyBudget = val;
+        saveData();
+        renderDashboard();
       }
     }
 
-    function clearTxFilters() {
-      ['filterDateFrom','filterDateTo','filterCategory','filterAccount','filterNecessary','filterKeyword'].forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.value = '';
-      });
-      renderTransactions();
-    }
-
-    // ===================== 信封 =====================
-    function openEnvelopeModal(editId = null) {
-      let modal = document.getElementById('envelopeModal');
-      if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'envelopeModal';
-        modal.className = 'modal-overlay hidden';
-        modal.innerHTML = `
-          <div class="modal">
-            <h3 class="semibold text-lg mb-4" id="envelopeModalTitle">新增信封</h3>
-            <div class="space-y-3">
-              <div>
-                <label class="text-xs" style="color:var(--text-muted)">信封名稱</label>
-                <input type="text" id="envName" class="input mt-1" placeholder="例如：飲食、交通" />
-              </div>
-              <div>
-                <label class="text-xs" style="color:var(--text-muted)">每月預算</label>
-                <input type="number" id="envBudget" class="input mt-1 tabular" placeholder="5000" />
-              </div>
-              <div>
-                <label class="text-xs" style="color:var(--text-muted)">對應分類（選填）</label>
-                <select id="envCategory" class="input mt-1">
-                  <option value="">不指定</option>
-                  <option value="食">食</option><option value="衣">衣</option><option value="住">住</option>
-                  <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
-                  <option value="醫">醫</option><option value="美">美</option><option value="稅">稅</option>
-                  <option value="保">保</option><option value="禮">禮</option><option value="雜">雜</option>
-                </select>
-              </div>
-            </div>
-            <div class="flex gap-2 mt-5">
-              <button onclick="saveEnvelope()" class="btn-primary btn flex-1 py-2.5">儲存</button>
-              <button onclick="closeModal('envelopeModal')" class="btn flex-1 py-2.5">取消</button>
-            </div>
-          </div>`;
-        document.body.appendChild(modal);
-      }
-
-      document.getElementById('envName').value = '';
-      document.getElementById('envBudget').value = '';
-      document.getElementById('envCategory').value = '';
-      modal.dataset.editId = editId || '';
-      document.getElementById('envelopeModalTitle').textContent = editId ? '編輯信封' : '新增信封';
-
-      if (editId) {
-        const env = data.envelopes.find(e => e.id === editId);
-        if (env) {
-          document.getElementById('envName').value = env.name;
-          document.getElementById('envBudget').value = env.budget;
-          document.getElementById('envCategory').value = env.category || '';
-        }
-      }
-      modal.classList.remove('hidden');
-    }
-
-    function saveEnvelope() {
-      const name = document.getElementById('envName').value.trim();
-      const budget = parseFloat(document.getElementById('envBudget').value) || 0;
-      const category = document.getElementById('envCategory').value;
-      const editId = document.getElementById('envelopeModal').dataset.editId;
-
-      if (!name) return alert('請輸入信封名稱');
-
-      if (editId) {
-        const env = data.envelopes.find(e => e.id === editId);
-        if (env) {
-          env.name = name;
-          env.budget = budget;
-          env.category = category;
-        }
-      } else {
-        data.envelopes.push({
-          id: uid(),
-          name,
-          budget,
-          category,
-          spent: 0
-        });
-      }
-
-      saveData();
-      closeModal('envelopeModal');
-      renderEnvelopes();
-      populateEnvelopeSelect();
-    }
-
-    function deleteEnvelope(id) {
-      if (!confirm('確定刪除這個信封？')) return;
-      data.envelopes = data.envelopes.filter(e => e.id !== id);
-      saveData();
-      renderEnvelopes();
-      populateEnvelopeSelect();
-    }
-
-    function renderEnvelopes() {
-      const container = document.getElementById('envelopesList');
-      if (!container) return;
-
-      if (data.envelopes.length === 0) {
-        container.innerHTML = `<p class="text-sm py-6 text-center" style="color:var(--text-muted)">尚未建立任何信封</p>`;
-        return;
-      }
-
-      container.innerHTML = data.envelopes.map(env => {
-        const remain = (env.budget || 0) - (env.spent || 0);
-        const percent = env.budget > 0 ? Math.min(100, Math.round((env.spent || 0) / env.budget * 100)) : 0;
-        const isOver = remain < 0;
-
-        return `
-          <div class="card p-5">
-            <div class="flex items-start justify-between gap-3 mb-4">
-              <div>
-                <p class="semibold text-base">${env.name}</p>
-                <p class="text-xs mt-1" style="color:var(--text-muted)">
-                  ${env.category ? '對應分類：' + env.category : '無自動對應'}
-                </p>
-              </div>
-              <div class="flex gap-2 shrink-0">
-                <button class="btn text-xs px-3 py-1.5 edit-env-btn" data-id="${env.id}">編輯</button>
-                <button class="btn text-xs px-3 py-1.5 delete-env-btn" data-id="${env.id}" style="color:var(--danger)">刪除</button>
-              </div>
-            </div>
-            <div class="flex justify-between text-sm mb-2">
-              <span style="color:var(--text-muted)">已使用</span>
-              <span class="tabular">${formatMoney(env.spent || 0)}</span>
-            </div>
-            <div class="flex justify-between text-sm mb-3">
-              <span style="color:var(--text-muted)">剩餘</span>
-              <span class="tabular ${isOver ? 'text-red-500' : ''}">${formatMoney(remain)}</span>
-            </div>
-            <div class="progress-track mb-2">
-              <div class="progress-fill" style="width:${percent}%;${isOver ? 'background:var(--danger)' : ''}"></div>
-            </div>
-            <p class="text-xs text-right" style="color:var(--text-muted)">預算 ${formatMoney(env.budget)}</p>
-          </div>
-        `;
-      }).join('');
-
-      // 綁定編輯與刪除按鈕
-      container.querySelectorAll('.edit-env-btn').forEach(btn => {
-        btn.onclick = function() {
-          openEnvelopeModal(this.getAttribute('data-id'));
-        };
-      });
-      container.querySelectorAll('.delete-env-btn').forEach(btn => {
-        btn.onclick = function() {
-          deleteEnvelope(this.getAttribute('data-id'));
-        };
-      });
-    }
-
-    function populateEnvelopeSelect() {
-      const sel = document.getElementById('txEnvelope');
-      if (!sel) return;
-      const cur = sel.value;
-      sel.innerHTML = '<option value="">不指定</option>';
-      data.envelopes.forEach(env => {
-        sel.innerHTML += `<option value="${env.id}">${env.name}</option>`;
-      });
-      if (cur) sel.value = cur;
-    }
-
-    function onCategoryChange() {
-      const cat = document.getElementById('txCategory').value;
-      const matched = data.envelopes.find(e => e.category === cat);
-      if (matched) {
-        document.getElementById('txEnvelope').value = matched.id;
-      }
-    }
-
-    // ===================== 看板 =====================
-    function getMonthSpent() {
+    function calcMonthSpent() {
       const cm = currentMonthStr();
       return data.transactions
-        .filter(t => t.date.startsWith(cm) && t.amount < 0 && t.account !== '他人支付')
-        .filter(t => data.budgetIncludeInvest ? true : t.category !== '投')
-        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+        .filter(t => {
+          if (!t.date || !t.date.startsWith(cm)) return false;
+          if (!data.budgetIncludeInvest && t.category === '投') return false;
+          return true;
+        })
+        .reduce((sum, t) => t.amount < 0 ? sum + Math.abs(t.amount) : sum, 0);
     }
-    function getMonthTitheShould() {
+
+    function calcTitheShould() {
       const cm = currentMonthStr();
-      return data.transactions
-        .filter(t => t.date.startsWith(cm) && (t.category === '收' || t.category === '息'))
-        .reduce((sum, t) => sum + Math.round(Math.abs(t.amount) * 0.1), 0);
+      const income = data.transactions
+        .filter(t => t.date && t.date.startsWith(cm) && (t.category === '收' || t.category === '息') && t.amount > 0)
+        .reduce((s, t) => s + t.amount, 0);
+      return Math.round(income * 0.1);
     }
+
+    function recordTitheDonation() {
+      const amount = parseFloat(document.getElementById('titheDonateAmount').value);
+      if (!amount || amount <= 0) return alert('請輸入奉獻金額');
+      data.tithePool = Math.max(0, (data.tithePool || 0) - amount);
+      data.titheDonatedThisMonth = (data.titheDonatedThisMonth || 0) + amount;
+      data.transactions.push({
+        id: uid(), date: todayStr(), name: '什一奉獻',
+        amount: -amount, category: '什一', account: '現金', necessary: 'necessary', note: '奉獻池提撥', envelopeId: '', receipt: ''
+      });
+      data.accounts['現金'] = (data.accounts['現金'] || 0) - amount;
+      saveData();
+      document.getElementById('titheDonateAmount').value = '';
+      renderDashboard();
+      alert('已記錄奉獻 $' + amount.toLocaleString());
+    }
+
     function renderDashboard() {
-      let cash = data.accountList.reduce((s, a) => s + (parseFloat(data.accounts[a]) || 0), 0);
+      let cash = (data.accountList || DEFAULT_ACCOUNTS).reduce((s, a) => s + (parseFloat(data.accounts[a]) || 0), 0);
       cash += (data.jpyCash || 0) * (data.jpyRate || 0.22);
 
       let invest = 0;
@@ -983,122 +1225,757 @@
       document.getElementById('netWorth').textContent = formatMoney(cash + invest);
       document.getElementById('totalCash').textContent = formatMoney(cash);
       document.getElementById('totalInvest').textContent = formatMoney(invest);
-      document.getElementById('jpyRateDisplay').textContent = (data.jpyRate || 0).toFixed(4) + ' TWD';
+      document.getElementById('jpyRateDisplay').textContent = (data.jpyRate || 0.22).toFixed(4) + ' TWD';
+
       document.getElementById('monthlyBudgetInput').value = data.monthlyBudget || '';
+      document.getElementById('budgetToggle').classList.toggle('on', !!data.budgetIncludeInvest);
 
-      const spent = getMonthSpent();
-      const budget = data.monthlyBudget || 0;
+      const spent = calcMonthSpent();
+      const remain = (data.monthlyBudget || 0) - spent;
       document.getElementById('monthSpent').textContent = formatMoney(spent);
-      document.getElementById('monthRemain').textContent = formatMoney(budget - spent);
+      document.getElementById('monthRemain').textContent = formatMoney(remain);
+      document.getElementById('monthRemain').style.color = remain >= 0 ? 'var(--text)' : 'var(--danger)';
 
-      document.getElementById('titheShould').textContent = formatMoney(getMonthTitheShould());
+      document.getElementById('titheShould').textContent = formatMoney(calcTitheShould());
       document.getElementById('titheDone').textContent = formatMoney(data.titheDonatedThisMonth || 0);
       document.getElementById('tithePool').textContent = formatMoney(data.tithePool || 0);
 
-      const toggle = document.getElementById('budgetToggle');
-      if (toggle) toggle.classList.toggle('on', data.budgetIncludeInvest);
-
       const accDiv = document.getElementById('accountsOverview');
-      if (accDiv) {
-        accDiv.innerHTML = data.accountList.map(name => `
+      accDiv.innerHTML = (data.accountList || DEFAULT_ACCOUNTS).map(name => {
+        const bal = data.accounts[name] || 0;
+        return `
           <div class="pill p-2.5 text-center">
-            <p class="text-xs" style="color:var(--text-muted)">${name}</p>
-            <p class="semibold text-sm tabular">${formatMoney(data.accounts[name] || 0)}</p>
-          </div>`).join('');
+            <p class="text-[11px]" style="color:var(--text-muted)">${name}</p>
+            <p class="semibold text-xs tabular mt-0.5 ${bal < 0 ? 'text-red-500' : ''}">${formatMoney(bal)}</p>
+          </div>`;
+      }).join('') + `
+        <div class="pill p-2.5 text-center">
+          <p class="text-[11px]" style="color:var(--text-muted)">日幣現金</p>
+          <p class="semibold text-xs tabular mt-0.5">¥${(data.jpyCash || 0).toLocaleString()}</p>
+        </div>`;
+    }
+
+    // ==================== 信封袋 ====================
+    function openEnvelopeModal(id = null) {
+      document.getElementById('envelopeEditId').value = id || '';
+      document.getElementById('envelopeModalTitle').textContent = id ? '編輯信封' : '新增信封';
+      if (id) {
+        const e = data.envelopes.find(x => x.id === id);
+        if (e) {
+          document.getElementById('envelopeName').value = e.name;
+          document.getElementById('envelopeBudget').value = e.budget;
+          document.getElementById('envelopeCategory').value = e.category || '';
+        }
+      } else {
+        document.getElementById('envelopeName').value = '';
+        document.getElementById('envelopeBudget').value = '';
+        document.getElementById('envelopeCategory').value = '';
+      }
+      openModal('envelopeModal');
+    }
+
+    function saveEnvelope() {
+      const id = document.getElementById('envelopeEditId').value;
+      const name = document.getElementById('envelopeName').value.trim();
+      const budget = parseFloat(document.getElementById('envelopeBudget').value) || 0;
+      const category = document.getElementById('envelopeCategory').value;
+      if (!name) return alert('請輸入信封名稱');
+      if (id) {
+        const e = data.envelopes.find(x => x.id === id);
+        if (e) { e.name = name; e.budget = budget; e.category = category; }
+      } else {
+        data.envelopes.push({ id: uid(), name, budget, category });
+      }
+      saveData();
+      closeModal('envelopeModal');
+      renderEnvelopes();
+      populateEnvelopeSelect();
+    }
+
+    function deleteEnvelope(id) {
+      if (!confirm('確定刪除此信封？')) return;
+      data.envelopes = data.envelopes.filter(e => e.id !== id);
+      saveData();
+      renderEnvelopes();
+      populateEnvelopeSelect();
+    }
+
+    function renderEnvelopes() {
+      const cm = currentMonthStr();
+      const list = document.getElementById('envelopesList');
+      if (!data.envelopes.length) {
+        list.innerHTML = '<p class="text-xs text-center py-4" style="color:var(--text-muted)">尚未建立任何信封袋</p>';
+        return;
+      }
+      list.innerHTML = data.envelopes.map(e => {
+        const spent = data.transactions
+          .filter(t => t.envelopeId === e.id && t.date && t.date.startsWith(cm) && t.amount < 0)
+          .reduce((s, t) => s + Math.abs(t.amount), 0);
+        const remain = e.budget - spent;
+        const pct = e.budget > 0 ? Math.min(100, (spent / e.budget) * 100) : 0;
+        return `
+          <div class="pill p-4 space-y-2">
+            <div class="flex justify-between items-center">
+              <div>
+                <span class="semibold text-sm">${e.name}</span>
+                <span class="text-xs ml-1" style="color:var(--text-muted)">(${e.category || '未指定'})</span>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="openEnvelopeModal('${e.id}')" class="text-xs" style="color:var(--text-muted)">編輯</button>
+                <button onclick="deleteEnvelope('${e.id}')" class="text-xs" style="color:var(--danger)">刪除</button>
+              </div>
+            </div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width:${pct}%; ${remain < 0 ? 'background:var(--danger)' : ''}"></div>
+            </div>
+            <div class="flex justify-between text-xs tabular">
+              <span style="color:var(--text-muted)">已用 ${formatMoney(spent)} / 預算 ${formatMoney(e.budget)}</span>
+              <span class="semibold" style="color:${remain < 0 ? 'var(--danger)' : 'var(--text)'}">剩餘 ${formatMoney(remain)}</span>
+            </div>
+          </div>`;
+      }).join('');
+    }
+
+    function populateEnvelopeSelect() {
+      const sel = document.getElementById('txEnvelope');
+      if (!sel) return;
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">不指定</option>';
+      data.envelopes.forEach(e => sel.innerHTML += `<option value="${e.id}">${e.name}</option>`);
+      sel.value = cur;
+    }
+
+    // ==================== 記帳與流水明細 ====================
+    function onCategoryChange() {
+      const cat = document.getElementById('txCategory').value;
+      const env = data.envelopes.find(e => e.category === cat);
+      if (env) document.getElementById('txEnvelope').value = env.id;
+    }
+
+    async function addTransaction() {
+      const date = document.getElementById('txDate').value || todayStr();
+      const name = document.getElementById('txName').value.trim();
+      const amountStr = document.getElementById('txAmount').value;
+      const amount = parseAmount(amountStr);
+      const category = document.getElementById('txCategory').value;
+      const account = document.getElementById('txAccount').value;
+      const envelopeId = document.getElementById('txEnvelope').value;
+      const necessary = document.querySelector('input[name="txNecessary"]:checked').value;
+      const note = document.getElementById('txNote').value.trim();
+      const fileInput = document.getElementById('txReceiptInput');
+
+      if (!name) return alert('請輸入項目名稱');
+      if (amount === 0 && amountStr.trim() !== '0') return alert('金額輸入有誤');
+
+      let receiptData = '';
+      if (fileInput && fileInput.files && fileInput.files[0]) {
+        receiptData = await new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (e) => resolve(e.target.result);
+          reader.readAsDataURL(fileInput.files[0]);
+        });
+      }
+
+      data.accounts[account] = (data.accounts[account] || 0) + amount;
+      if ((category === '收' || category === '息') && amount > 0) {
+        data.tithePool = (data.tithePool || 0) + Math.round(amount * 0.1);
+      }
+
+      data.transactions.push({
+        id: uid(), date, name, amount, category, account, necessary, note, envelopeId, receipt: receiptData
+      });
+      saveData();
+
+      document.getElementById('txName').value = '';
+      document.getElementById('txAmount').value = '';
+      document.getElementById('txNote').value = '';
+      if (fileInput) fileInput.value = '';
+      renderTransactions();
+      renderDashboard();
+    }
+
+    function viewReceipt(id) {
+      const tx = data.transactions.find(t => t.id === id);
+      if (tx && tx.receipt) {
+        document.getElementById('receiptImagePreview').src = tx.receipt;
+        openModal('receiptModal');
       }
     }
 
-    function saveMonthlyBudget() {
-      data.monthlyBudget = parseFloat(document.getElementById('monthlyBudgetInput').value) || 0;
+    function deleteTransaction(id) {
+      if (!confirm('確定刪除此筆記錄？帳戶餘額將自動回滾')) return;
+      const tx = data.transactions.find(t => t.id === id);
+      if (!tx) return;
+      data.accounts[tx.account] = (data.accounts[tx.account] || 0) - tx.amount;
+      if ((tx.category === '收' || tx.category === '息') && tx.amount > 0) {
+        data.tithePool = Math.max(0, (data.tithePool || 0) - Math.round(tx.amount * 0.1));
+      }
+      data.transactions = data.transactions.filter(t => t.id !== id);
       saveData();
-      renderDashboard();
-    }
-    function toggleBudgetMode() {
-      data.budgetIncludeInvest = !data.budgetIncludeInvest;
-      document.getElementById('budgetToggle').classList.toggle('on', data.budgetIncludeInvest);
-      saveData();
-      renderDashboard();
-    }
-    function recordTitheDonation() {
-      const amount = parseFloat(document.getElementById('titheDonateAmount').value) || 0;
-      if (amount <= 0) return alert('請輸入有效金額');
-      data.titheDonatedThisMonth = (data.titheDonatedThisMonth || 0) + amount;
-      data.tithePool = Math.max(0, (data.tithePool || 0) - amount);
-      document.getElementById('titheDonateAmount').value = '';
-      saveData();
+      renderTransactions();
       renderDashboard();
     }
 
-    function switchTab(tab) {
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.getElementById('tab-' + tab).classList.add('active');
-      document.querySelectorAll('.nav-item').forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.tab === tab);
+    function clearTxFilters() {
+      document.getElementById('filterDateFrom').value = '';
+      document.getElementById('filterDateTo').value = '';
+      document.getElementById('filterCategory').value = '';
+      document.getElementById('filterAccount').value = '';
+      document.getElementById('filterNecessary').value = '';
+      document.getElementById('filterKeyword').value = '';
+      renderTransactions();
+    }
+
+    function renderTransactions() {
+      const from = document.getElementById('filterDateFrom').value;
+      const to = document.getElementById('filterDateTo').value;
+      const cat = document.getElementById('filterCategory').value;
+      const acc = document.getElementById('filterAccount').value;
+      const nec = document.getElementById('filterNecessary').value;
+      const kw = document.getElementById('filterKeyword').value.trim().toLowerCase();
+
+      let list = [...data.transactions].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      if (from) list = list.filter(t => t.date >= from);
+      if (to) list = list.filter(t => t.date <= to);
+      if (cat) list = list.filter(t => t.category === cat);
+      if (acc) list = list.filter(t => t.account === acc);
+      if (nec) list = list.filter(t => t.necessary === nec);
+      if (kw) list = list.filter(t => (t.name || '').toLowerCase().includes(kw) || (t.note || '').toLowerCase().includes(kw));
+
+      const subtotal = list.reduce((s, t) => s + t.amount, 0);
+      document.getElementById('txSubtotal').textContent = formatMoney(subtotal);
+
+      const tbody = document.getElementById('txTableBody');
+      tbody.innerHTML = list.map(t => {
+        const env = data.envelopes.find(e => e.id === t.envelopeId);
+        const receiptBtn = t.receipt ? `<button onclick="viewReceipt('${t.id}')" class="text-xs px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800">📸 查看</button>` : '<span style="color:var(--text-muted)">-</span>';
+        return `
+          <tr>
+            <td class="tabular" style="color:var(--text-muted)">${t.date.slice(5)}</td>
+            <td class="semibold">${t.name}</td>
+            <td class="tabular semibold ${t.amount < 0 ? '' : 'text-emerald-500'}">${formatMoney(t.amount)}</td>
+            <td>${t.category}</td>
+            <td>${t.account}</td>
+            <td><span class="badge ${t.necessary === 'necessary' ? 'badge-nec' : 'badge-non'}">${t.necessary === 'necessary' ? '必要' : '非必要'}</span></td>
+            <td style="color:var(--text-muted)">${env ? env.name : ''}</td>
+            <td>${receiptBtn}</td>
+            <td style="color:var(--text-muted)">${t.note || ''}</td>
+            <td><button onclick="deleteTransaction('${t.id}')" class="btn-danger btn text-xs px-2 py-0.5">刪</button></td>
+          </tr>`;
+      }).join('') || '<tr><td colspan="10" class="text-center py-6 text-xs" style="color:var(--text-muted)">尚無明細紀錄</td></tr>';
+    }
+
+    // ==================== 投資組合與股息預估 ====================
+    function openStockModal(id = null) {
+      document.getElementById('stockEditId').value = id || '';
+      document.getElementById('stockModalTitle').textContent = id ? '編輯標的' : '新增標的';
+      if (id) {
+        const s = data.stocks.find(x => x.id === id);
+        if (s) {
+          document.getElementById('stockSymbol').value = s.symbol;
+          document.getElementById('stockShares').value = s.shares;
+          document.getElementById('stockCost').value = s.cost;
+          document.getElementById('stockPrice').value = s.price;
+          document.getElementById('stockYield').value = s.yield || 6;
+        }
+      } else {
+        document.getElementById('stockSymbol').value = '';
+        document.getElementById('stockShares').value = '';
+        document.getElementById('stockCost').value = '';
+        document.getElementById('stockPrice').value = '';
+        document.getElementById('stockYield').value = '6';
+      }
+      openModal('stockModal');
+    }
+
+    function saveStock() {
+      const id = document.getElementById('stockEditId').value;
+      const symbol = document.getElementById('stockSymbol').value.trim();
+      const shares = parseFloat(document.getElementById('stockShares').value) || 0;
+      const cost = parseFloat(document.getElementById('stockCost').value) || 0;
+      const price = parseFloat(document.getElementById('stockPrice').value) || 0;
+      const yld = parseFloat(document.getElementById('stockYield').value) || 0;
+      if (!symbol) return alert('請輸入標的代號');
+      if (id) {
+        const s = data.stocks.find(x => x.id === id);
+        if (s) { s.symbol = symbol; s.shares = shares; s.cost = cost; s.price = price; s.yield = yld; }
+      } else {
+        data.stocks.push({ id: uid(), symbol, shares, cost, price, yield: yld });
+      }
+      saveData();
+      closeModal('stockModal');
+      renderInvestments();
+      renderDashboard();
+    }
+
+    function deleteStock(id) {
+      if (!confirm('確定刪除？')) return;
+      data.stocks = data.stocks.filter(s => s.id !== id);
+      saveData();
+      renderInvestments();
+      renderDashboard();
+    }
+
+    function openFundModal(id = null) {
+      document.getElementById('fundEditId').value = id || '';
+      document.getElementById('fundModalTitle').textContent = id ? '編輯基金' : '新增基金';
+      if (id) {
+        const f = data.funds.find(x => x.id === id);
+        if (f) {
+          document.getElementById('fundName').value = f.name;
+          document.getElementById('fundUnits').value = f.units;
+          document.getElementById('fundPrice').value = f.price;
+          document.getElementById('fundRate').value = f.rate;
+        }
+      } else {
+        document.getElementById('fundName').value = '';
+        document.getElementById('fundUnits').value = '';
+        document.getElementById('fundPrice').value = '';
+        document.getElementById('fundRate').value = '1';
+      }
+      openModal('fundModal');
+    }
+
+    function saveFund() {
+      const id = document.getElementById('fundEditId').value;
+      const name = document.getElementById('fundName').value.trim();
+      const units = parseFloat(document.getElementById('fundUnits').value) || 0;
+      const price = parseFloat(document.getElementById('fundPrice').value) || 0;
+      const rate = parseFloat(document.getElementById('fundRate').value) || 1;
+      if (!name) return alert('請輸入基金名稱');
+      if (id) {
+        const f = data.funds.find(x => x.id === id);
+        if (f) { f.name = name; f.units = units; f.price = price; f.rate = rate; }
+      } else {
+        data.funds.push({ id: uid(), name, units, price, rate });
+      }
+      saveData();
+      closeModal('fundModal');
+      renderInvestments();
+      renderDashboard();
+    }
+
+    function deleteFund(id) {
+      if (!confirm('確定刪除？')) return;
+      data.funds = data.funds.filter(f => f.id !== id);
+      saveData();
+      renderInvestments();
+      renderDashboard();
+    }
+
+    function renderInvestments() {
+      let estMonthly = 0;
+      data.stocks.forEach(s => {
+        const mv = (s.shares || 0) * (s.price || 0);
+        estMonthly += mv * ((s.yield || 6) / 100) / 12;
+      });
+      const pct = Math.min(100, (estMonthly / 10000) * 100);
+      document.getElementById('estMonthlyDividend').textContent = formatMoney(Math.round(estMonthly));
+      document.getElementById('dividendProgressPct').textContent = pct.toFixed(1) + '%';
+      document.getElementById('dividendProgressBar').style.width = pct + '%';
+
+      let stocksTotal = 0;
+      document.getElementById('stocksTableBody').innerHTML = data.stocks.map(s => {
+        const mv = (s.shares || 0) * (s.price || 0);
+        const costTotal = (s.shares || 0) * (s.cost || 0);
+        const pl = mv - costTotal;
+        stocksTotal += mv;
+        return `
+          <tr>
+            <td class="semibold">${s.symbol}</td>
+            <td class="tabular">${s.shares}</td>
+            <td class="tabular">${s.cost}</td>
+            <td class="tabular">${s.price}</td>
+            <td class="tabular semibold">${formatMoney(mv)}</td>
+            <td class="tabular ${pl >= 0 ? 'text-emerald-500' : 'text-red-500'}">${formatMoney(pl)}</td>
+            <td class="tabular">${s.yield || 0}%</td>
+            <td>
+              <button onclick="openStockModal('${s.id}')" class="text-xs mr-1" style="color:var(--text-muted)">編</button>
+              <button onclick="deleteStock('${s.id}')" class="text-xs" style="color:var(--danger)">刪</button>
+            </td>
+          </tr>`;
+      }).join('') || '<tr><td colspan="8" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無股票標的</td></tr>';
+      document.getElementById('stocksTotalValue').textContent = formatMoney(stocksTotal);
+
+      let fundsTotal = 0;
+      document.getElementById('fundsTableBody').innerHTML = data.funds.map(f => {
+        const mv = (f.units || 0) * (f.price || 0) * (f.rate || 1);
+        fundsTotal += mv;
+        return `
+          <tr>
+            <td class="semibold">${f.name}</td>
+            <td class="tabular">${f.units}</td>
+            <td class="tabular">${f.price}</td>
+            <td class="tabular">${f.rate}</td>
+            <td class="tabular semibold">${formatMoney(mv)}</td>
+            <td>
+              <button onclick="openFundModal('${f.id}')" class="text-xs mr-1" style="color:var(--text-muted)">編</button>
+              <button onclick="deleteFund('${f.id}')" class="text-xs" style="color:var(--danger)">刪</button>
+            </td>
+          </tr>`;
+      }).join('') || '<tr><td colspan="6" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無基金標的</td></tr>';
+      document.getElementById('fundsTotalValue').textContent = formatMoney(fundsTotal);
+    }
+
+    // ==================== 股票流水 ====================
+    function addStockTransaction() {
+      const date = document.getElementById('stxDate').value || todayStr();
+      const account = document.getElementById('stxAccount').value;
+      const type = document.getElementById('stxType').value;
+      const symbol = document.getElementById('stxSymbol').value.trim();
+      const shares = parseFloat(document.getElementById('stxShares').value) || 0;
+      const price = parseFloat(document.getElementById('stxPrice').value) || 0;
+      const fee = parseFloat(document.getElementById('stxFee').value) || 0;
+      const tax = parseFloat(document.getElementById('stxTax').value) || 0;
+      const note = document.getElementById('stxNote').value.trim();
+
+      if (!symbol) return alert('請輸入標的');
+      const total = shares * price;
+      let totalCost = 0;
+
+      if (type === '買入') {
+        totalCost = total + fee + tax;
+        data.accounts[account] = (data.accounts[account] || 0) - totalCost;
+        let stock = data.stocks.find(s => s.symbol === symbol);
+        if (stock) {
+          const oldCost = stock.shares * stock.cost;
+          stock.shares += shares;
+          stock.cost = stock.shares > 0 ? (oldCost + totalCost) / stock.shares : price;
+          stock.price = price;
+        } else {
+          data.stocks.push({ id: uid(), symbol, shares, cost: price, price, yield: 6 });
+        }
+      } else if (type === '賣出') {
+        totalCost = total - fee - tax;
+        data.accounts[account] = (data.accounts[account] || 0) + totalCost;
+        let stock = data.stocks.find(s => s.symbol === symbol);
+        if (stock) {
+          stock.shares = Math.max(0, stock.shares - shares);
+          if (stock.shares === 0) data.stocks = data.stocks.filter(s => s.id !== stock.id);
+        }
+      } else if (type === '配息') {
+        const div = total || shares;
+        data.accounts[account] = (data.accounts[account] || 0) + div;
+        data.transactions.push({
+          id: uid(), date, name: symbol + ' 配息', amount: div, category: '息', account, necessary: 'necessary', note: note || '股息入帳', envelopeId: '', receipt: ''
+        });
+        data.tithePool = (data.tithePool || 0) + Math.round(div * 0.1);
+        totalCost = div;
+      } else if (type === '折讓') {
+        totalCost = total;
+        data.accounts[account] = (data.accounts[account] || 0) + totalCost;
+      }
+
+      data.stockTransactions.push({ id: uid(), date, account, type, symbol, shares, price, total, fee, tax, totalCost, note });
+      saveData();
+      renderStockTransactions();
+      renderInvestments();
+      renderDashboard();
+    }
+
+    function deleteStockTransaction(id) {
+      if (!confirm('確定刪除流水？持股與帳戶需手動微調')) return;
+      data.stockTransactions = data.stockTransactions.filter(t => t.id !== id);
+      saveData();
+      renderStockTransactions();
+    }
+
+    function renderStockTransactions() {
+      const list = [...data.stockTransactions].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      document.getElementById('stockTxTableBody').innerHTML = list.map(t => `
+        <tr>
+          <td class="tabular" style="color:var(--text-muted)">${t.date}</td>
+          <td>${t.account}</td>
+          <td><span class="badge ${t.type === '買入' ? 'badge-nec' : 'badge-non'}">${t.type}</span></td>
+          <td class="semibold">${t.symbol}</td>
+          <td class="tabular">${t.shares || 0}</td>
+          <td class="tabular">${t.price || 0}</td>
+          <td class="tabular">${formatMoney(t.total)}</td>
+          <td class="tabular">${formatMoney(t.fee)}</td>
+          <td class="tabular">${formatMoney(t.tax)}</td>
+          <td class="tabular semibold">${formatMoney(t.totalCost)}</td>
+          <td><button onclick="deleteStockTransaction('${t.id}')" class="btn-danger btn text-xs px-2 py-0.5">刪</button></td>
+        </tr>
+      `).join('') || '<tr><td colspan="11" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無交易紀錄</td></tr>';
+    }
+
+    // ==================== 固定/專案/接案 ====================
+    function openFixedModal(id = null) {
+      document.getElementById('fixedEditId').value = id || '';
+      document.getElementById('fixedModalTitle').textContent = id ? '編輯固定項目' : '新增固定項目';
+      if (id) {
+        const f = data.fixedItems.find(x => x.id === id);
+        if (f) {
+          document.getElementById('fixedName').value = f.name;
+          document.getElementById('fixedAmount').value = f.amount;
+          document.getElementById('fixedAccount').value = f.account;
+          document.getElementById('fixedCategory').value = f.category;
+          document.getElementById('fixedNote').value = f.note || '';
+        }
+      } else {
+        document.getElementById('fixedName').value = '';
+        document.getElementById('fixedAmount').value = '';
+        document.getElementById('fixedNote').value = '';
+      }
+      openModal('fixedModal');
+    }
+    function saveFixed() {
+      const id = document.getElementById('fixedEditId').value;
+      const name = document.getElementById('fixedName').value.trim();
+      const amount = parseFloat(document.getElementById('fixedAmount').value) || 0;
+      const account = document.getElementById('fixedAccount').value;
+      const category = document.getElementById('fixedCategory').value;
+      const note = document.getElementById('fixedNote').value.trim();
+      if (!name) return alert('請輸入名稱');
+      if (id) {
+        const f = data.fixedItems.find(x => x.id === id);
+        if (f) { f.name = name; f.amount = amount; f.account = account; f.category = category; f.note = note; }
+      } else {
+        data.fixedItems.push({ id: uid(), name, amount, account, category, note });
+      }
+      saveData(); closeModal('fixedModal'); renderFixedSection();
+    }
+    function deleteFixed(id) { data.fixedItems = data.fixedItems.filter(f => f.id !== id); saveData(); renderFixedSection(); }
+    function applyFixed(id) {
+      const f = data.fixedItems.find(x => x.id === id);
+      if (!f) return;
+      data.accounts[f.account] = (data.accounts[f.account] || 0) + f.amount;
+      data.transactions.push({ id: uid(), date: todayStr(), name: f.name + '（固定）', amount: f.amount, category: f.category, account: f.account, necessary: 'necessary', note: f.note || '', envelopeId: '', receipt: '' });
+      saveData(); renderDashboard(); alert('已計入本月帳務');
+    }
+
+    function openProjectModal(id = null) {
+      document.getElementById('projectEditId').value = id || '';
+      document.getElementById('projectModalTitle').textContent = id ? '編輯專案' : '新增專案';
+      if (id) {
+        const p = data.projects.find(x => x.id === id);
+        if (p) {
+          document.getElementById('projectName').value = p.name;
+          document.getElementById('projectBudget').value = p.budget;
+          document.getElementById('projectSpent').value = p.spent;
+          document.getElementById('projectNote').value = p.note || '';
+        }
+      } else {
+        document.getElementById('projectName').value = '';
+        document.getElementById('projectBudget').value = '';
+        document.getElementById('projectSpent').value = '0';
+        document.getElementById('projectNote').value = '';
+      }
+      openModal('projectModal');
+    }
+    function saveProject() {
+      const id = document.getElementById('projectEditId').value;
+      const name = document.getElementById('projectName').value.trim();
+      const budget = parseFloat(document.getElementById('projectBudget').value) || 0;
+      const spent = parseFloat(document.getElementById('projectSpent').value) || 0;
+      const note = document.getElementById('projectNote').value.trim();
+      if (!name) return alert('請輸入專案名稱');
+      if (id) {
+        const p = data.projects.find(x => x.id === id);
+        if (p) { p.name = name; p.budget = budget; p.spent = spent; p.note = note; }
+      } else {
+        data.projects.push({ id: uid(), name, budget, spent, note });
+      }
+      saveData(); closeModal('projectModal'); renderFixedSection();
+    }
+    function deleteProject(id) { data.projects = data.projects.filter(p => p.id !== id); saveData(); renderFixedSection(); }
+
+    function openFreelanceModal(id = null) {
+      document.getElementById('freelanceEditId').value = id || '';
+      document.getElementById('freelanceModalTitle').textContent = id ? '編輯接案' : '新增接案';
+      if (id) {
+        const f = data.freelances.find(x => x.id === id);
+        if (f) {
+          document.getElementById('freelanceName').value = f.name;
+          document.getElementById('freelanceAmount').value = f.amount;
+          document.getElementById('freelanceStatus').value = f.status;
+          document.getElementById('freelanceAccount').value = f.account;
+          document.getElementById('freelanceNote').value = f.note || '';
+        }
+      } else {
+        document.getElementById('freelanceName').value = '';
+        document.getElementById('freelanceAmount').value = '';
+        document.getElementById('freelanceStatus').value = '進行中';
+        document.getElementById('freelanceNote').value = '';
+      }
+      openModal('freelanceModal');
+    }
+    function saveFreelance() {
+      const id = document.getElementById('freelanceEditId').value;
+      const name = document.getElementById('freelanceName').value.trim();
+      const amount = parseFloat(document.getElementById('freelanceAmount').value) || 0;
+      const status = document.getElementById('freelanceStatus').value;
+      const account = document.getElementById('freelanceAccount').value;
+      const note = document.getElementById('freelanceNote').value.trim();
+      if (!name) return alert('請輸入案件名稱');
+      if (id) {
+        const f = data.freelances.find(x => x.id === id);
+        if (f) {
+          if (status === '已收款' && f.status !== '已收款') {
+            data.accounts[account] = (data.accounts[account] || 0) + amount;
+            data.tithePool = (data.tithePool || 0) + Math.round(amount * 0.1);
+            data.transactions.push({ id: uid(), date: todayStr(), name: name + '（接案收款）', amount, category: '收', account, necessary: 'necessary', note, envelopeId: '', receipt: '' });
+          }
+          f.name = name; f.amount = amount; f.status = status; f.account = account; f.note = note;
+        }
+      } else {
+        data.freelances.push({ id: uid(), name, amount, status, account, note });
+        if (status === '已收款') {
+          data.accounts[account] = (data.accounts[account] || 0) + amount;
+          data.tithePool = (data.tithePool || 0) + Math.round(amount * 0.1);
+          data.transactions.push({ id: uid(), date: todayStr(), name: name + '（接案收款）', amount, category: '收', account, necessary: 'necessary', note, envelopeId: '', receipt: '' });
+        }
+      }
+      saveData(); closeModal('freelanceModal'); renderFixedSection(); renderDashboard();
+    }
+    function deleteFreelance(id) { data.freelances = data.freelances.filter(f => f.id !== id); saveData(); renderFixedSection(); }
+
+    function renderFixedSection() {
+      document.getElementById('fixedList').innerHTML = data.fixedItems.map(f => `
+        <div class="pill p-3 flex justify-between items-center text-xs">
+          <div>
+            <span class="semibold">${f.name}</span>
+            <span class="tabular font-medium ml-2 ${f.amount < 0 ? '' : 'text-emerald-500'}">${formatMoney(f.amount)}</span>
+            <span class="ml-2" style="color:var(--text-muted)">${f.account} · ${f.category}</span>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="applyFixed('${f.id}')" class="semibold text-xs">計入本月</button>
+            <button onclick="openFixedModal('${f.id}')" style="color:var(--text-muted)">編</button>
+            <button onclick="deleteFixed('${f.id}')" style="color:var(--danger)">刪</button>
+          </div>
+        </div>
+      `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未設定固定收支</p>';
+
+      document.getElementById('projectsList').innerHTML = data.projects.map(p => {
+        const remain = p.budget - p.spent;
+        return `
+          <div class="pill p-4 space-y-2 text-xs">
+            <div class="flex justify-between items-center">
+              <span class="semibold text-sm">${p.name}</span>
+              <div class="flex gap-2">
+                <button onclick="openProjectModal('${p.id}')" style="color:var(--text-muted)">編</button>
+                <button onclick="deleteProject('${p.id}')" style="color:var(--danger)">刪</button>
+              </div>
+            </div>
+            <div class="flex justify-between tabular" style="color:var(--text-muted)">
+              <span>預算 ${formatMoney(p.budget)} · 已花 ${formatMoney(p.spent)}</span>
+              <span class="semibold" style="color:${remain < 0 ? 'var(--danger)' : 'var(--text)'}">剩餘 ${formatMoney(remain)}</span>
+            </div>
+          </div>`;
+      }).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未建立專案</p>';
+
+      document.getElementById('freelanceList').innerHTML = data.freelances.map(f => `
+        <div class="pill p-3 flex justify-between items-center text-xs">
+          <div>
+            <span class="semibold">${f.name}</span>
+            <span class="tabular font-medium text-emerald-500 ml-2">${formatMoney(f.amount)}</span>
+            <span class="badge badge-nec ml-2">${f.status}</span>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="openFreelanceModal('${f.id}')" style="color:var(--text-muted)">編</button>
+            <button onclick="deleteFreelance('${f.id}')" style="color:var(--danger)">刪</button>
+          </div>
+        </div>
+      `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚無接案紀錄</p>';
+    }
+
+    // ==================== 統計圖表 ====================
+    function renderCharts() {
+      const cm = currentMonthStr();
+      const monthTxs = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount < 0);
+      const catMap = {};
+      monthTxs.forEach(t => catMap[t.category] = (catMap[t.category] || 0) + Math.abs(t.amount));
+
+      let nec = 0, non = 0;
+      monthTxs.forEach(t => t.necessary === 'necessary' ? nec += Math.abs(t.amount) : non += Math.abs(t.amount));
+
+      if (categoryChart) categoryChart.destroy();
+      if (necessaryChart) necessaryChart.destroy();
+
+      const isDark = document.documentElement.classList.contains('dark');
+      const textColor = isDark ? '#8e8e93' : '#1c1c1e';
+
+      categoryChart = new Chart(document.getElementById('categoryPieChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(catMap).length ? Object.keys(catMap) : ['無支出'],
+          datasets: [{
+            data: Object.values(catMap).length ? Object.values(catMap) : [1],
+            backgroundColor: ['#1c1c1e','#3a3a3c','#636366','#8e8e93','#aeaeb2','#c7c7cc','#d1d1d6']
+          }]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 } } } },
+          cutout: '65%'
+        }
       });
 
-      if (tab === 'dashboard') renderDashboard();
-      if (tab === 'envelopes') {
-        renderEnvelopes();
-        populateEnvelopeSelect();
-      }
-      if (tab === 'transactions') {
-        populateAccountSelects();
-        populateEnvelopeSelect();
-        document.getElementById('txDate').value = todayStr();
-        renderTransactions();
-      }
+      necessaryChart = new Chart(document.getElementById('necessaryPieChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+          labels: ['必要', '非必要'],
+          datasets: [{
+            data: [nec || 0.1, non || 0.1],
+            backgroundColor: ['#1c1c1e', '#8e8e93']
+          }]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 } } } }
+        }
+      });
+
+      const inc = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount > 0).reduce((s, t) => s + t.amount, 0);
+      const exp = monthTxs.reduce((s, t) => s + Math.abs(t.amount), 0);
+      document.getElementById('monthSummary').innerHTML = `
+        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">本月收入</p><p class="tabular bold text-sm text-emerald-500 mt-0.5">${formatMoney(inc)}</p></div>
+        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">本月支出</p><p class="tabular bold text-sm mt-0.5">${formatMoney(exp)}</p></div>
+        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">必要支出</p><p class="tabular bold text-sm mt-0.5">${formatMoney(nec)}</p></div>
+        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">非必要</p><p class="tabular bold text-sm mt-0.5" style="color:var(--text-muted)">${formatMoney(non)}</p></div>`;
     }
 
+    // ==================== 備份與重置 ====================
     function exportData() {
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
       const a = document.createElement('a');
       a.href = URL.createObjectURL(blob);
-      a.download = '我的錢錢備份_' + todayStr() + '.json';
+      a.download = '資產財務備份_' + todayStr() + '.json';
       a.click();
     }
+
     function importData(event) {
       const file = event.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = e => {
+      reader.onload = function(e) {
         try {
-          const imported = JSON.parse(e.target.result);
-          if (!confirm('匯入將覆蓋目前所有資料，確定嗎？')) return;
-          data = Object.assign({}, DEFAULT_DATA, imported);
+          data = JSON.parse(e.target.result);
           saveData();
+          populateAllAccountSelects();
           switchTab('dashboard');
-          alert('匯入成功！');
-        } catch {
-          alert('檔案解析失敗');
+          alert('資料匯入成功！');
+        } catch (err) {
+          alert('解析失敗：' + err.message);
         }
       };
       reader.readAsText(file);
+      event.target.value = '';
     }
+
     function resetAllData() {
-      if (!confirm('確定要清除全部資料嗎？此動作無法復原！')) return;
+      if (!confirm('確定要清除全部資料？此動作無法復原！')) return;
       data = JSON.parse(JSON.stringify(DEFAULT_DATA));
       saveData();
+      populateAllAccountSelects();
       switchTab('dashboard');
+      alert('已重置為初始狀態');
     }
 
-    function updateJPYRate() {
-      document.getElementById('apiStatus').textContent = '日幣功能待完善';
-    }
-    function updateStockPrices() {
-      document.getElementById('apiStatus').textContent = '股價功能待完善';
-    }
-    function refreshAllAssets() {
-      updateJPYRate();
-      updateStockPrices();
-    }
-
+    // ==================== 啟動 ====================
     document.addEventListener('DOMContentLoaded', () => {
       initTheme();
       loadData();
-      populateAccountSelects();
-      populateEnvelopeSelect();
+      populateAllAccountSelects();
       switchTab('dashboard');
-      updateStorageStatus();
     });
   </script>
 </body>
