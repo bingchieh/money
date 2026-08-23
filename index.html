@@ -4,14 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <meta name="theme-color" content="#f5f5f7" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>⛁我的錢錢⛃</title>
-
-  <!-- ========== 你的檔案：App Icon ========== -->
   <link rel="icon" href="icon.png" />
   <link rel="apple-touch-icon" href="icon.png" />
-
-  <!-- ========== 你的檔案：字體 ========== -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     @font-face {
       font-family: 'GenYoMin';
@@ -47,10 +44,8 @@
       --border: rgba(0,0,0,0.06);
       --shadow: 0 8px 30px rgba(0,0,0,0.06);
       --shadow-soft: 0 4px 16px rgba(0,0,0,0.05);
-      --success: #34c759;
       --danger: #ff3b30;
       --radius: 20px;
-      --radius-pill: 999px;
     }
     .dark {
       --bg: #0c0c0e;
@@ -67,11 +62,10 @@
       margin: 0;
       background: var(--bg);
       color: var(--text);
-      font-family: 'GenYoMin', 'Noto Serif TC', 'Songti TC', serif;
+      font-family: 'GenYoMin', 'Noto Serif TC', serif;
       min-height: 100vh;
       padding-bottom: 110px;
       transition: background 0.3s, color 0.3s;
-      -webkit-font-smoothing: antialiased;
     }
     .tabular { font-variant-numeric: tabular-nums; }
     .heavy { font-weight: 800; letter-spacing: 0.04em; }
@@ -92,45 +86,32 @@
     }
     .pill {
       background: var(--card);
-      border-radius: var(--radius-pill);
+      border-radius: 999px;
       box-shadow: var(--shadow-soft);
       border: 1px solid var(--border);
     }
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
-      border-radius: var(--radius-pill);
-      padding: 10px 18px;
-      font-weight: 600;
-      font-size: 14px;
-      border: none;
-      cursor: pointer;
-      transition: transform 0.15s;
-      background: var(--card);
-      color: var(--text);
-      box-shadow: var(--shadow-soft);
-      border: 1px solid var(--border);
+      border-radius: 999px; padding: 10px 18px; font-weight: 600; font-size: 14px;
+      border: none; cursor: pointer; transition: transform 0.15s;
+      background: var(--card); color: var(--text);
+      box-shadow: var(--shadow-soft); border: 1px solid var(--border);
     }
     .btn:active { transform: scale(0.96); }
     .btn-primary { background: #1c1c1e; color: #fff; border: none; }
     .dark .btn-primary { background: #f5f5f7; color: #1c1c1e; }
     .input {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 11px 14px;
-      color: var(--text);
-      font-size: 15px;
-      font-family: inherit;
-      outline: none;
+      width: 100%; background: var(--bg); border: 1px solid var(--border);
+      border-radius: 12px; padding: 11px 14px; color: var(--text);
+      font-size: 15px; font-family: inherit; outline: none;
     }
     select.input {
       appearance: none;
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238e8e93' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 12px center;
-      padding-right: 32px;
+      background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
     }
+    input[type="date"] { color-scheme: light dark; }
+    .dark input[type="date"] { color-scheme: dark; }
     .progress-track { height: 8px; background: var(--bg); border-radius: 999px; overflow: hidden; }
     .progress-fill { height: 100%; border-radius: 999px; transition: width 0.5s; background: #1c1c1e; }
     .dark .progress-fill { background: #f5f5f7; }
@@ -138,12 +119,11 @@
       position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
       z-index: 100; display: flex; gap: 2px; padding: 6px 8px; border-radius: 28px;
       background: rgba(255,255,255,0.72); backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px); box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-      border: 1px solid rgba(255,255,255,0.4); max-width: 96vw; overflow-x: auto;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12); border: 1px solid rgba(255,255,255,0.4);
+      max-width: 96vw; overflow-x: auto;
     }
     .dark .floating-nav {
-      background: rgba(28,28,30,0.78);
-      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(28,28,30,0.78); border: 1px solid rgba(255,255,255,0.08);
     }
     .nav-item {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -156,12 +136,12 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(6px);
+      position: fixed; inset: 0; background: rgba(0,0,0,0.45); backdrop-filter: blur(6px);
       z-index: 200; display: flex; align-items: center; justify-content: center; padding: 16px;
     }
     .modal-overlay.hidden { display: none; }
     .modal {
-      background: var(--card); border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      background: var(--card); border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.25);
       max-width: 420px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 24px;
       border: 1px solid var(--border);
     }
@@ -185,8 +165,6 @@
     .toggle.on::after { transform: translateX(20px); }
     .dark .toggle.on::after { background: #1c1c1e; }
   </style>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
   <div class="max-w-3xl mx-auto px-4 pt-6">
@@ -204,22 +182,9 @@
           匯入
           <input type="file" accept=".json" onchange="importData(event)" class="hidden" />
         </label>
-/* 讓日期選擇器的 icon 在深色模式也能看到 */
-input[type="date"] {
-  color-scheme: light dark;
-}
-.dark input[type="date"] {
-  color-scheme: dark;
-}
-
-        <!-- ========== 深淺模式切換按鈕（你提供的 SVG） ========== -->
         <button id="themeBtn" onclick="toggleTheme()" class="btn w-10 h-10 rounded-full p-0 flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2v2"/>
-            <path d="M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715"/>
-            <path d="M16 12a4 4 0 0 0-4-4"/>
-            <path d="m19 5-1.256 1.256"/>
-            <path d="M20 12h2"/>
+            <path d="M12 2v2"/><path d="M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715"/><path d="M16 12a4 4 0 0 0-4-4"/><path d="m19 5-1.256 1.256"/><path d="M20 12h2"/>
           </svg>
         </button>
       </div>
@@ -251,32 +216,32 @@ input[type="date"] {
       </div>
 
       <div class="card p-5">
-  <div class="flex items-center justify-between mb-5">
-    <h2 class="semibold">當月預算控制</h2>
-    <div class="flex items-center gap-2 text-sm">
-      <span style="color:var(--text-muted)">純日常</span>
-      <div id="budgetToggle" class="toggle" onclick="toggleBudgetMode()"></div>
-      <span style="color:var(--text-muted)">含投資</span>
-    </div>
-  </div>
+        <div class="flex items-center justify-between mb-5">
+          <h2 class="semibold text-[17px]">當月預算控制</h2>
+          <div class="flex items-center gap-2 text-sm">
+            <span style="color:var(--text-muted)">純日常</span>
+            <div id="budgetToggle" class="toggle" onclick="toggleBudgetMode()"></div>
+            <span style="color:var(--text-muted)">含投資</span>
+          </div>
+        </div>
         <div class="mb-5">
-    <label class="text-xs" style="color:var(--text-muted)">當月總預算</label>
-    <div class="flex gap-3 mt-1.5 items-center">
-      <input type="number" id="monthlyBudgetInput" class="input flex-1" placeholder="50000" />
-      <button onclick="saveMonthlyBudget()" class="btn-primary btn px-5 py-2.5 whitespace-nowrap">儲存</button>
-    </div>
-  </div>
-          <div class="grid grid-cols-2 gap-3">
-    <div class="pill px-4 py-3.5 flex flex-col justify-between min-h-[72px]">
-      <p class="text-xs" style="color:var(--text-muted)">已花費</p>
-      <p class="text-xl heavy tabular text-right mt-2" id="monthSpent">$0</p>
-    </div>
-    <div class="pill px-4 py-3.5 flex flex-col justify-between min-h-[72px]">
-      <p class="text-xs" style="color:var(--text-muted)">剩餘可用</p>
-      <p class="text-xl bold tabular text-right mt-2" id="monthRemain">$0</p>
-    </div>
-  </div>
-</div>
+          <label class="text-xs mb-1.5 block" style="color:var(--text-muted)">當月總預算</label>
+          <div class="flex gap-3 items-center">
+            <input type="number" id="monthlyBudgetInput" class="input flex-1" placeholder="50000" />
+            <button onclick="saveMonthlyBudget()" class="btn-primary btn px-5 py-2.5 whitespace-nowrap">儲存</button>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="pill px-4 py-3.5 flex flex-col justify-between min-h-[72px]">
+            <p class="text-xs" style="color:var(--text-muted)">已花費</p>
+            <p class="text-xl heavy tabular text-right mt-2" id="monthSpent">$0</p>
+          </div>
+          <div class="pill px-4 py-3.5 flex flex-col justify-between min-h-[72px]">
+            <p class="text-xs" style="color:var(--text-muted)">剩餘可用</p>
+            <p class="text-xl bold tabular text-right mt-2" id="monthRemain">$0</p>
+          </div>
+        </div>
+      </div>
 
       <div class="card p-5">
         <h2 class="semibold mb-3">當月什一奉獻</h2>
@@ -353,7 +318,7 @@ input[type="date"] {
             <label class="text-xs" style="color:var(--text-muted)">帳戶</label>
             <div class="flex gap-2 mt-1">
               <select id="txAccount" class="input flex-1"></select>
-              <button type="button" onclick="openAccountEditModal()" class="btn text-sm px-3" title="新增/刪除帳戶">＋</button>
+              <button type="button" onclick="openAccountEditModal()" class="btn text-sm px-3">＋</button>
             </div>
           </div>
           <div>
@@ -416,165 +381,26 @@ input[type="date"] {
       </div>
     </section>
 
-    <!-- 投資 -->
+    <!-- 其他頁籤 -->
     <section id="tab-investments" class="tab-content space-y-4">
-      <div class="card p-5">
-        <h2 class="semibold mb-2">月領萬元股息目標</h2>
-        <p class="text-xs mb-3" style="color:var(--text-muted)">依持股殖利率自動預估平均月領</p>
-        <div class="flex justify-between text-sm mb-1">
-          <span>預估月領 <strong class="tabular" id="estMonthlyDividend">$0</strong></span>
-          <span>目標 $10,000 · <strong id="dividendProgressPct">0%</strong></span>
-        </div>
-        <div class="progress-track">
-          <div id="dividendProgressBar" class="progress-fill" style="width:0%"></div>
-        </div>
-      </div>
-
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">ETF / 股票</h2>
-          <button onclick="openStockModal()" class="btn-primary btn text-sm">新增標的</button>
-        </div>
-        <div class="overflow-x-auto">
-          <table>
-            <thead>
-              <tr>
-                <th>標的</th><th>股數</th><th>成本</th><th>現價</th><th>市值</th><th>損益</th><th>殖利率</th><th></th>
-              </tr>
-            </thead>
-            <tbody id="stocksTableBody"></tbody>
-          </table>
-        </div>
-        <p class="text-sm medium mt-2">總市值 <span id="stocksTotalValue" class="tabular bold">$0</span></p>
-      </div>
-
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">基金</h2>
-          <button onclick="openFundModal()" class="btn-primary btn text-sm">新增基金</button>
-        </div>
-        <div class="overflow-x-auto">
-          <table>
-            <thead>
-              <tr><th>標的</th><th>單位數</th><th>單價</th><th>匯率</th><th>台幣市值</th><th></th></tr>
-            </thead>
-            <tbody id="fundsTableBody"></tbody>
-          </table>
-        </div>
-        <p class="text-sm medium mt-2">總市值 <span id="fundsTotalValue" class="tabular bold">$0</span></p>
+      <div class="card p-5 text-center" style="color:var(--text-muted)">
+        <p>股票與基金功能下一階段補上</p>
       </div>
     </section>
-
-    <!-- 股票交易 -->
     <section id="tab-stockTx" class="tab-content space-y-4">
-      <div class="card p-5">
-        <h2 class="semibold mb-3">新增股票交易</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">日期</label>
-            <input type="date" id="stxDate" class="input mt-1" />
-          </div>
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">帳戶</label>
-            <div class="flex gap-2 mt-1">
-              <select id="stxAccount" class="input flex-1"></select>
-              <button type="button" onclick="openAccountEditModal()" class="btn text-sm px-3" title="新增/刪除帳戶">＋</button>
-            </div>
-          </div>
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">類別</label>
-            <select id="stxType" class="input mt-1">
-              <option value="買入">買入</option><option value="賣出">賣出</option>
-              <option value="配息">配息</option><option value="折讓">折讓</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">標的</label>
-            <input type="text" id="stxSymbol" class="input mt-1" placeholder="00919 / 2330" />
-          </div>
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">股數</label>
-            <input type="number" id="stxShares" class="input mt-1 tabular" step="any" />
-          </div>
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">單價</label>
-            <input type="number" id="stxPrice" class="input mt-1 tabular" step="any" />
-          </div>
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">手續費</label>
-            <input type="number" id="stxFee" class="input mt-1 tabular" step="any" value="0" />
-          </div>
-          <div>
-            <label class="text-xs" style="color:var(--text-muted)">證交稅</label>
-            <input type="number" id="stxTax" class="input mt-1 tabular" step="any" value="0" />
-          </div>
-          <div class="sm:col-span-2">
-            <label class="text-xs" style="color:var(--text-muted)">備註</label>
-            <input type="text" id="stxNote" class="input mt-1" />
-          </div>
-        </div>
-        <button onclick="addStockTransaction()" class="btn-primary btn w-full mt-4 py-3">新增交易</button>
-      </div>
-
-      <div class="card p-5">
-        <h2 class="semibold mb-3">交易流水帳</h2>
-        <div class="overflow-x-auto">
-          <table>
-            <thead>
-              <tr>
-                <th>日期</th><th>帳戶</th><th>類別</th><th>標的</th><th>股數</th><th>單價</th>
-                <th>總額</th><th>手續費</th><th>證交稅</th><th>總花費</th><th></th>
-              </tr>
-            </thead>
-            <tbody id="stockTxTableBody"></tbody>
-          </table>
-        </div>
+      <div class="card p-5 text-center" style="color:var(--text-muted)">
+        <p>股票交易功能下一階段補上</p>
       </div>
     </section>
-
-    <!-- 固定 / 專案 / 接案 -->
     <section id="tab-fixed" class="tab-content space-y-4">
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">固定收支</h2>
-          <button onclick="openFixedModal()" class="btn-primary btn text-sm">新增</button>
-        </div>
-        <div id="fixedList" class="space-y-2"></div>
-      </div>
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">特殊專案</h2>
-          <button onclick="openProjectModal()" class="btn-primary btn text-sm">新增專案</button>
-        </div>
-        <div id="projectsList" class="space-y-3"></div>
-      </div>
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">接案收入追蹤</h2>
-          <button onclick="openFreelanceModal()" class="btn-primary btn text-sm">新增接案</button>
-        </div>
-        <div id="freelanceList" class="space-y-2"></div>
+      <div class="card p-5 text-center" style="color:var(--text-muted)">
+        <p>固定收支、專案、接案功能下一階段補上</p>
       </div>
     </section>
-
-    <!-- 報表 -->
     <section id="tab-charts" class="tab-content space-y-4">
-      <div class="card p-5">
-        <h2 class="semibold mb-3">費用分類圓餅圖</h2>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div><canvas id="categoryPieChart" height="220"></canvas></div>
-          <div>
-            <h3 class="text-sm medium mb-2">必要 vs 非必要</h3>
-            <canvas id="necessaryPieChart" height="180"></canvas>
-          </div>
-        </div>
-      </div>
-      <div class="card p-5">
-        <h2 class="semibold mb-3">本月摘要</h2>
-        <div id="monthSummary" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
-      </div>
-      <div class="card p-5">
-        <button onclick="resetAllData()" class="btn text-sm" style="color:var(--danger)">清除全部資料</button>
+      <div class="card p-5 text-center" style="color:var(--text-muted)">
+        <p>圖表功能下一階段補上</p>
+        <button onclick="resetAllData()" class="btn mt-4" style="color:var(--danger)">清除全部資料</button>
       </div>
     </section>
   </div>
@@ -611,7 +437,7 @@ input[type="date"] {
     </button>
   </nav>
 
-  <!-- 帳戶管理 Modal -->
+  <!-- 帳戶 Modal -->
   <div id="accountModal" class="modal-overlay hidden">
     <div class="modal">
       <h3 class="semibold text-lg mb-4">帳戶管理</h3>
@@ -634,548 +460,640 @@ input[type="date"] {
     </div>
   </div>
 
-<script>
-  // ===================== 安全儲存 =====================
-  const memoryStore = {};
-  let storageAvailable = false;
-  function safeGetItem(key) {
-    try {
-      if (window.localStorage) {
-        const v = localStorage.getItem(key);
-        storageAvailable = true;
-        return v;
-      }
-    } catch (e) { storageAvailable = false; }
-    return memoryStore[key] || null;
-  }
-  function safeSetItem(key, value) {
-    try {
-      if (window.localStorage) {
-        localStorage.setItem(key, value);
-        storageAvailable = true;
-        return;
-      }
-    } catch (e) { storageAvailable = false; }
-    memoryStore[key] = value;
-  }
-  function updateStorageStatus() {
-    const el = document.getElementById('storageStatus');
-    if (!el) return;
-    if (storageAvailable) {
-      el.textContent = 'LocalStorage 自動儲存中';
-      el.style.color = '';
-    } else {
-      el.textContent = '目前為記憶體模式（重新整理會遺失）';
-      el.style.color = '#ff9500';
-    }
-  }
-
-  // ===================== 資料結構 =====================
-  const DEFAULT_ACCOUNTS = ['中信','國泰','聯邦','元大','富邦莊敬','富邦仁愛','現金','他人支付'];
-  const DEFAULT_DATA = {
-    accounts: Object.fromEntries(DEFAULT_ACCOUNTS.map(a => [a, 0])),
-    accountList: [...DEFAULT_ACCOUNTS],
-    jpyCash: 0,
-    jpyRate: 0.22,
-    monthlyBudget: 50000,
-    tithePool: 0,
-    titheDonatedThisMonth: 0,
-    lastTitheMonth: '',
-    budgetIncludeInvest: false,
-    envelopes: [],
-    transactions: [],
-    stocks: [],
-    funds: [],
-    stockTransactions: [],
-    fixedItems: [],
-    projects: [],
-    freelances: []
-  };
-  let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-
-  // ===================== 工具函式 =====================
-  function uid() {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  }
-  function formatMoney(n) {
-    if (n == null || isNaN(n)) return '$0';
-    const s = n < 0 ? '-' : '';
-    return s + '$' + Math.abs(Math.round(n)).toLocaleString('zh-TW');
-  }
-  function parseAmount(str) {
-    if (!str || typeof str !== 'string') return 0;
-    str = str.trim().replace(/,/g, '');
-    try {
-      if (!/^[\d\s+\-*/().]+$/.test(str)) return parseFloat(str) || 0;
-      const r = Function('"use strict"; return (' + str + ')')();
-      return typeof r === 'number' && isFinite(r) ? r : 0;
-    } catch {
-      return parseFloat(str) || 0;
-    }
-  }
-  function todayStr() {
-    return new Date().toISOString().slice(0, 10);
-  }
-  function currentMonthStr() {
-    const d = new Date();
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
-  }
-  function saveData() {
-    safeSetItem('pf_app_v3', JSON.stringify(data));
-    updateStorageStatus();
-  }
-  function loadData() {
-    const raw = safeGetItem('pf_app_v3');
-    if (raw) {
+  <script>
+    const memoryStore = {};
+    let storageAvailable = false;
+    function safeGetItem(key) {
       try {
-        const p = JSON.parse(raw);
-        data = Object.assign({}, DEFAULT_DATA, p);
-        if (!data.accountList) data.accountList = [...DEFAULT_ACCOUNTS];
-        data.accountList.forEach(a => {
-          if (data.accounts[a] === undefined) data.accounts[a] = 0;
-        });
-      } catch {
-        data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        if (window.localStorage) {
+          const v = localStorage.getItem(key);
+          storageAvailable = true;
+          return v;
+        }
+      } catch (e) { storageAvailable = false; }
+      return memoryStore[key] || null;
+    }
+    function safeSetItem(key, value) {
+      try {
+        if (window.localStorage) {
+          localStorage.setItem(key, value);
+          storageAvailable = true;
+          return;
+        }
+      } catch (e) { storageAvailable = false; }
+      memoryStore[key] = value;
+    }
+    function updateStorageStatus() {
+      const el = document.getElementById('storageStatus');
+      if (!el) return;
+      el.textContent = storageAvailable ? 'LocalStorage 自動儲存中' : '目前為記憶體模式（重新整理會遺失）';
+      el.style.color = storageAvailable ? '' : '#ff9500';
+    }
+
+    const DEFAULT_ACCOUNTS = ['中信','國泰','聯邦','元大','富邦莊敬','富邦仁愛','現金','他人支付'];
+    const DEFAULT_DATA = {
+      accounts: Object.fromEntries(DEFAULT_ACCOUNTS.map(a => [a, 0])),
+      accountList: [...DEFAULT_ACCOUNTS],
+      jpyCash: 0, jpyRate: 0.22, monthlyBudget: 50000,
+      tithePool: 0, titheDonatedThisMonth: 0, lastTitheMonth: '',
+      budgetIncludeInvest: false,
+      envelopes: [], transactions: [], stocks: [], funds: [],
+      stockTransactions: [], fixedItems: [], projects: [], freelances: []
+    };
+    let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+
+    function uid() {
+      return Date.now().toString(36) + Math.random().toString(36).slice(2, 9);
+    }
+    function formatMoney(n) {
+      if (n == null || isNaN(n)) return '$0';
+      const s = n < 0 ? '-' : '';
+      return s + '$' + Math.abs(Math.round(n)).toLocaleString('zh-TW');
+    }
+    function parseAmount(str) {
+      if (!str || typeof str !== 'string') return 0;
+      str = str.trim().replace(/,/g, '');
+      try {
+        if (!/^[\d\s+\-*/().]+$/.test(str)) return parseFloat(str) || 0;
+        const r = Function('"use strict";return(' + str + ')')();
+        return typeof r === 'number' && isFinite(r) ? r : 0;
+      } catch { return parseFloat(str) || 0; }
+    }
+    function todayStr() { return new Date().toISOString().slice(0, 10); }
+    function currentMonthStr() {
+      const d = new Date();
+      return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    }
+    function saveData() {
+      safeSetItem('pf_app_v3', JSON.stringify(data));
+      updateStorageStatus();
+    }
+    function loadData() {
+      const raw = safeGetItem('pf_app_v3');
+      if (raw) {
+        try {
+          const p = JSON.parse(raw);
+          data = Object.assign({}, DEFAULT_DATA, p);
+          if (!data.accountList) data.accountList = [...DEFAULT_ACCOUNTS];
+          data.accountList.forEach(a => {
+            if (data.accounts[a] === undefined) data.accounts[a] = 0;
+          });
+        } catch {
+          data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+        }
+      }
+      const cm = currentMonthStr();
+      if (data.lastTitheMonth !== cm) {
+        data.titheDonatedThisMonth = 0;
+        data.lastTitheMonth = cm;
+        saveData();
+      }
+      updateStorageStatus();
+    }
+
+    function toggleTheme() {
+      document.documentElement.classList.toggle('dark');
+      safeSetItem('pf_theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+    }
+    function initTheme() {
+      const saved = safeGetItem('pf_theme');
+      if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
       }
     }
-    const cm = currentMonthStr();
-    if (data.lastTitheMonth !== cm) {
-      data.titheDonatedThisMonth = 0;
-      data.lastTitheMonth = cm;
-      saveData();
-    }
-    updateStorageStatus();
-  }
 
-  // ===================== 主題 =====================
-  function toggleTheme() {
-    document.documentElement.classList.toggle('dark');
-    const isDark = document.documentElement.classList.contains('dark');
-    safeSetItem('pf_theme', isDark ? 'dark' : 'light');
-  }
-  function initTheme() {
-    const saved = safeGetItem('pf_theme');
-    if (saved === 'dark' || (!saved && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-      document.documentElement.classList.add('dark');
-    }
-  }
-
-  // ===================== 帳戶管理 =====================
-  function populateAccountSelects() {
-    ['txAccount', 'stxAccount', 'filterAccount'].forEach(id => {
-      const sel = document.getElementById(id);
-      if (!sel) return;
-      const cur = sel.value;
-      const isFilter = id === 'filterAccount';
-      sel.innerHTML = isFilter ? '<option value="">全部帳戶</option>' : '';
-      data.accountList.forEach(a => {
-        sel.innerHTML += `<option value="${a}">${a}</option>`;
+    function populateAccountSelects() {
+      ['txAccount', 'filterAccount'].forEach(id => {
+        const sel = document.getElementById(id);
+        if (!sel) return;
+        const cur = sel.value;
+        const isFilter = id === 'filterAccount';
+        sel.innerHTML = isFilter ? '<option value="">全部帳戶</option>' : '';
+        data.accountList.forEach(a => {
+          sel.innerHTML += `<option value="${a}">${a}</option>`;
+        });
+        if (cur && data.accountList.includes(cur)) sel.value = cur;
       });
-      if (cur && data.accountList.includes(cur)) sel.value = cur;
-    });
-  }
-  function openAccountEditModal() {
-    const c = document.getElementById('accountEditFields');
-    c.innerHTML = '';
-    data.accountList.forEach(name => {
-      c.innerHTML += `
+    }
+
+    function openAccountEditModal() {
+      const c = document.getElementById('accountEditFields');
+      c.innerHTML = data.accountList.map(name => `
         <div class="flex items-center gap-2">
           <div class="flex-1">
             <label class="text-xs" style="color:var(--text-muted)">${name}</label>
             <input type="number" data-account="${name}" class="input mt-1 account-edit-input tabular" value="${data.accounts[name]||0}" step="any" />
           </div>
-          <button onclick="removeAccount('${name}')" class="btn text-xs mt-5" style="color:var(--danger)">移除</button>
-        </div>`;
-    });
-    document.getElementById('jpyCashInput').value = data.jpyCash || 0;
-    document.getElementById('newAccountName').value = '';
-    document.getElementById('accountModal').classList.remove('hidden');
-  }
-  function addNewAccount() {
-    const name = document.getElementById('newAccountName').value.trim();
-    if (!name) return alert('請輸入帳戶名稱');
-    if (data.accountList.includes(name)) return alert('帳戶已存在');
-    data.accountList.push(name);
-    data.accounts[name] = 0;
-    saveData();
-    openAccountEditModal();
-    populateAccountSelects();
-  }
-  function removeAccount(name) {
-    if (data.accountList.length <= 1) return alert('至少保留一個帳戶');
-    if (!confirm(`確定移除「${name}」？`)) return;
-    data.accountList = data.accountList.filter(a => a !== name);
-    delete data.accounts[name];
-    saveData();
-    openAccountEditModal();
-    populateAccountSelects();
-  }
-  function saveAccounts() {
-    document.querySelectorAll('.account-edit-input').forEach(inp => {
-      data.accounts[inp.dataset.account] = parseFloat(inp.value) || 0;
-    });
-    data.jpyCash = parseFloat(document.getElementById('jpyCashInput').value) || 0;
-    saveData();
-    closeModal('accountModal');
-    renderDashboard();
-    populateAccountSelects();
-  }
-  function closeModal(id) {
-    document.getElementById(id).classList.add('hidden');
-  }
+          <button class="btn text-xs mt-5 remove-account-btn" data-name="${name}" style="color:var(--danger)">移除</button>
+        </div>`).join('');
+      document.getElementById('jpyCashInput').value = data.jpyCash || 0;
+      document.getElementById('newAccountName').value = '';
+      document.getElementById('accountModal').classList.remove('hidden');
 
-  // ===================== 核心：記帳 =====================
-  function addTransaction() {
-  const date = document.getElementById('txDate').value || todayStr();
-  const name = document.getElementById('txName').value.trim();
-  const amountStr = document.getElementById('txAmount').value;
-  const category = document.getElementById('txCategory').value;
-  const account = document.getElementById('txAccount').value;
-  const envelopeId = document.getElementById('txEnvelope').value;
-  const necessary = document.querySelector('input[name="txNecessary"]:checked')?.value || 'necessary';
-  const note = document.getElementById('txNote').value.trim();
-
-  if (!name) return alert('請輸入項目名稱');
-  if (!amountStr) return alert('請輸入金額');
-
-  const amount = parseAmount(amountStr);
-  if (amount === 0) return alert('金額解析失敗，請檢查格式');
-
-  // 「他人支付」不影響任何帳戶餘額，只做記錄
-  if (account !== '他人支付') {
-    if (data.accounts[account] === undefined) data.accounts[account] = 0;
-    data.accounts[account] += amount;
-  }
-
-  // 什一
-  if (category === '收' || category === '息') {
-    data.tithePool = (data.tithePool || 0) + Math.round(Math.abs(amount) * 0.1);
-  }
-
-  // 信封扣除（只扣支出）
-  if (envelopeId && amount < 0) {
-    const env = data.envelopes.find(e => e.id === envelopeId);
-    if (env) env.spent = (env.spent || 0) + Math.abs(amount);
-  }
-
-  data.transactions.unshift({
-    id: uid(),
-    date,
-    name,
-    amount,
-    category,
-    account,
-    envelopeId: envelopeId || null,
-    necessary,
-    note
-  });
-
-  saveData();
-
-  // ★ 清空表單
-  document.getElementById('txName').value = '';
-  document.getElementById('txAmount').value = '';
-  document.getElementById('txNote').value = '';
-  document.getElementById('txDate').value = todayStr();
-  document.getElementById('txEnvelope').value = '';
-  // 分類與帳戶保持上次選擇，比較方便連續記帳
-
-  renderDashboard();
-  renderTransactions();
-  if (document.getElementById('tab-envelopes').classList.contains('active')) {
-    renderEnvelopes();
-  }
-  alert('記帳成功！');
-}
-
-  function renderTransactions() {
-    const from = document.getElementById('filterDateFrom')?.value || '';
-    const to = document.getElementById('filterDateTo')?.value || '';
-    const cat = document.getElementById('filterCategory')?.value || '';
-    const acc = document.getElementById('filterAccount')?.value || '';
-    const nec = document.getElementById('filterNecessary')?.value || '';
-    const kw = (document.getElementById('filterKeyword')?.value || '').toLowerCase();
-
-    let list = data.transactions.filter(t => {
-      if (from && t.date < from) return false;
-      if (to && t.date > to) return false;
-      if (cat && t.category !== cat) return false;
-      if (acc && t.account !== acc) return false;
-      if (nec && t.necessary !== nec) return false;
-      if (kw && !(t.name + t.note + t.category).toLowerCase().includes(kw)) return false;
-      return true;
-    });
-
-    const tbody = document.getElementById('txTableBody');
-    if (!tbody) return;
-
-    let subtotal = 0;
-    tbody.innerHTML = list.map(t => {
-      subtotal += t.amount;
-      const envName = t.envelopeId ? (data.envelopes.find(e => e.id === t.envelopeId)?.name || '') : '';
-      return `
-        <tr>
-          <td>${t.date}</td>
-          <td>${t.name}</td>
-          <td class="tabular ${t.amount < 0 ? 'text-red-500' : ''}">${formatMoney(t.amount)}</td>
-          <td>${t.category}</td>
-          <td>${t.account}</td>
-          <td><span class="badge ${t.necessary === 'necessary' ? 'badge-nec' : 'badge-non'}">${t.necessary === 'necessary' ? '必要' : '非必要'}</span></td>
-          <td>${envName}</td>
-          <td class="text-xs">${t.note || ''}</td>
-          <td><button onclick="deleteTransaction('${t.id}')" class="btn text-xs" style="color:var(--danger)">刪</button></td>
-        </tr>`;
-    }).join('');
-
-    document.getElementById('txSubtotal').textContent = formatMoney(subtotal);
-  }
-
-  function deleteTransaction(id) {
-    if (!confirm('確定刪除這筆帳務？')) return;
-    const tx = data.transactions.find(t => t.id === id);
-    if (!tx) return;
-
-    // 回滾帳戶
-    if (tx.account !== '他人支付' && data.accounts[tx.account] !== undefined) {
-    data.accounts[tx.account] -= tx.amount;
-  }
-    // 回滾信封
-    if (tx.envelopeId && tx.amount < 0) {
-    const env = data.envelopes.find(e => e.id === tx.envelopeId);
-    if (env) {
-      env.spent = Math.max(0, (env.spent || 0) - Math.abs(tx.amount));
+      // 綁定移除按鈕
+      document.querySelectorAll('.remove-account-btn').forEach(btn => {
+        btn.onclick = () => removeAccount(btn.dataset.name);
+      });
     }
-  }
 
- if (tx.category === '收' || tx.category === '息') {
-    data.tithePool = Math.max(0, (data.tithePool || 0) - Math.round(Math.abs(tx.amount) * 0.1));
-  }
-
-  data.transactions = data.transactions.filter(t => t.id !== id);
-  saveData();
-  renderDashboard();
-  renderTransactions();
-  if (document.getElementById('tab-envelopes').classList.contains('active')) {
-    renderEnvelopes();
-  }
-}
-
-  function clearTxFilters() {
-    document.getElementById('filterDateFrom').value = '';
-    document.getElementById('filterDateTo').value = '';
-    document.getElementById('filterCategory').value = '';
-    document.getElementById('filterAccount').value = '';
-    document.getElementById('filterNecessary').value = '';
-    document.getElementById('filterKeyword').value = '';
-    renderTransactions();
-  }
-
-  function onCategoryChange() {
-    // 可選：自動對應信封
-  }
-
-  // ===================== 看板計算 =====================
-  function getMonthSpent() {
-    const cm = currentMonthStr();
-    return data.transactions
-      .filter(t => t.date.startsWith(cm) && t.amount < 0)
-      .filter(t => data.budgetIncludeInvest ? true : t.category !== '投')
-      .reduce((sum, t) => sum + Math.abs(t.amount), 0);
-  }
-
-  function getMonthTitheShould() {
-    const cm = currentMonthStr();
-    return data.transactions
-      .filter(t => t.date.startsWith(cm) && (t.category === '收' || t.category === '息'))
-      .reduce((sum, t) => sum + Math.round(Math.abs(t.amount) * 0.1), 0);
-  }
-
-  function renderDashboard() {
-    let cash = data.accountList.reduce((s, a) => s + (parseFloat(data.accounts[a]) || 0), 0);
-    cash += (data.jpyCash || 0) * (data.jpyRate || 0.22);
-
-    let invest = 0;
-    data.stocks.forEach(s => invest += (s.shares || 0) * (s.price || 0));
-    data.funds.forEach(f => invest += (f.units || 0) * (f.price || 0) * (f.rate || 1));
-
-    document.getElementById('netWorth').textContent = formatMoney(cash + invest);
-    document.getElementById('totalCash').textContent = formatMoney(cash);
-    document.getElementById('totalInvest').textContent = formatMoney(invest);
-    document.getElementById('jpyRateDisplay').textContent = (data.jpyRate || 0).toFixed(4) + ' TWD';
-
-    document.getElementById('monthlyBudgetInput').value = data.monthlyBudget || '';
-
-    const spent = getMonthSpent();
-    const budget = data.monthlyBudget || 0;
-    document.getElementById('monthSpent').textContent = formatMoney(spent);
-    document.getElementById('monthRemain').textContent = formatMoney(budget - spent);
-
-    document.getElementById('titheShould').textContent = formatMoney(getMonthTitheShould());
-    document.getElementById('titheDone').textContent = formatMoney(data.titheDonatedThisMonth || 0);
-    document.getElementById('tithePool').textContent = formatMoney(data.tithePool || 0);
-
-    // 預算開關狀態
-    const toggle = document.getElementById('budgetToggle');
-    if (toggle) toggle.classList.toggle('on', data.budgetIncludeInvest);
-
-    // 帳戶總覽
-    const accDiv = document.getElementById('accountsOverview');
-    if (accDiv) {
-      accDiv.innerHTML = data.accountList.map(name => {
-        const bal = data.accounts[name] || 0;
-        return `
-          <div class="pill p-2.5 text-center">
-            <p class="text-xs" style="color:var(--text-muted)">${name}</p>
-            <p class="semibold text-sm tabular">${formatMoney(bal)}</p>
-          </div>`;
-      }).join('');
-    }
-  }
-
-  // ===================== 其他功能 =====================
-  function saveMonthlyBudget() {
-    data.monthlyBudget = parseFloat(document.getElementById('monthlyBudgetInput').value) || 0;
-    saveData();
-    renderDashboard();
-  }
-  function toggleBudgetMode() {
-    data.budgetIncludeInvest = !data.budgetIncludeInvest;
-    document.getElementById('budgetToggle').classList.toggle('on', data.budgetIncludeInvest);
-    saveData();
-    renderDashboard();
-  }
-  function recordTitheDonation() {
-    const amount = parseFloat(document.getElementById('titheDonateAmount').value) || 0;
-    if (amount <= 0) return alert('請輸入有效金額');
-    data.titheDonatedThisMonth = (data.titheDonatedThisMonth || 0) + amount;
-    data.tithePool = Math.max(0, (data.tithePool || 0) - amount);
-    document.getElementById('titheDonateAmount').value = '';
-    saveData();
-    renderDashboard();
-  }
-
-  function switchTab(tab) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.getElementById('tab-' + tab).classList.add('active');
-    document.querySelectorAll('.nav-item').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.tab === tab);
-    });
-
-    if (tab === 'dashboard') renderDashboard();
-    if (tab === 'transactions') {
+    function addNewAccount() {
+      const name = document.getElementById('newAccountName').value.trim();
+      if (!name) return alert('請輸入帳戶名稱');
+      if (data.accountList.includes(name)) return alert('帳戶已存在');
+      data.accountList.push(name);
+      data.accounts[name] = 0;
+      saveData();
+      openAccountEditModal();
       populateAccountSelects();
+    }
+
+    function removeAccount(name) {
+      if (data.accountList.length <= 1) return alert('至少保留一個帳戶');
+      if (!confirm(`確定移除「${name}」？`)) return;
+      data.accountList = data.accountList.filter(a => a !== name);
+      delete data.accounts[name];
+      saveData();
+      openAccountEditModal();
+      populateAccountSelects();
+    }
+
+    function saveAccounts() {
+      document.querySelectorAll('.account-edit-input').forEach(inp => {
+        data.accounts[inp.dataset.account] = parseFloat(inp.value) || 0;
+      });
+      data.jpyCash = parseFloat(document.getElementById('jpyCashInput').value) || 0;
+      saveData();
+      closeModal('accountModal');
+      renderDashboard();
+      populateAccountSelects();
+    }
+
+    function closeModal(id) {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    }
+
+    // ===================== 記帳 =====================
+    function addTransaction() {
+      const date = document.getElementById('txDate').value || todayStr();
+      const name = document.getElementById('txName').value.trim();
+      const amountStr = document.getElementById('txAmount').value;
+      const category = document.getElementById('txCategory').value;
+      const account = document.getElementById('txAccount').value;
+      const envelopeId = document.getElementById('txEnvelope').value;
+      const necessary = document.querySelector('input[name="txNecessary"]:checked')?.value || 'necessary';
+      const note = document.getElementById('txNote').value.trim();
+
+      if (!name) return alert('請輸入項目名稱');
+      if (!amountStr) return alert('請輸入金額');
+      const amount = parseAmount(amountStr);
+      if (amount === 0) return alert('金額解析失敗');
+
+      if (account !== '他人支付') {
+        if (data.accounts[account] === undefined) data.accounts[account] = 0;
+        data.accounts[account] += amount;
+      }
+
+      if (category === '收' || category === '息') {
+        data.tithePool = (data.tithePool || 0) + Math.round(Math.abs(amount) * 0.1);
+      }
+
+      if (envelopeId && amount < 0) {
+        const env = data.envelopes.find(e => e.id === envelopeId);
+        if (env) env.spent = (env.spent || 0) + Math.abs(amount);
+      }
+
+      data.transactions.unshift({
+        id: uid(),
+        date,
+        name,
+        amount,
+        category,
+        account,
+        envelopeId: envelopeId || null,
+        necessary,
+        note
+      });
+
+      saveData();
+
+      document.getElementById('txName').value = '';
+      document.getElementById('txAmount').value = '';
+      document.getElementById('txNote').value = '';
       document.getElementById('txDate').value = todayStr();
+      document.getElementById('txEnvelope').value = '';
+
+      renderDashboard();
+      renderTransactions();
+      if (document.getElementById('tab-envelopes').classList.contains('active')) {
+        renderEnvelopes();
+      }
+      alert('記帳成功！');
+    }
+
+    function renderTransactions() {
+      const from = document.getElementById('filterDateFrom')?.value || '';
+      const to = document.getElementById('filterDateTo')?.value || '';
+      const cat = document.getElementById('filterCategory')?.value || '';
+      const acc = document.getElementById('filterAccount')?.value || '';
+      const nec = document.getElementById('filterNecessary')?.value || '';
+      const kw = (document.getElementById('filterKeyword')?.value || '').toLowerCase();
+
+      let list = data.transactions.filter(t => {
+        if (from && t.date < from) return false;
+        if (to && t.date > to) return false;
+        if (cat && t.category !== cat) return false;
+        if (acc && t.account !== acc) return false;
+        if (nec && t.necessary !== nec) return false;
+        if (kw && !(t.name + (t.note || '') + t.category).toLowerCase().includes(kw)) return false;
+        return true;
+      });
+
+      const tbody = document.getElementById('txTableBody');
+      let subtotal = 0;
+
+      tbody.innerHTML = list.map(t => {
+        if (t.account !== '他人支付') subtotal += t.amount;
+        const envName = t.envelopeId ? (data.envelopes.find(e => e.id === t.envelopeId)?.name || '') : '';
+        return `
+          <tr>
+            <td>${t.date}</td>
+            <td>${t.name}</td>
+            <td class="tabular">${formatMoney(t.amount)}</td>
+            <td>${t.category}</td>
+            <td>${t.account}</td>
+            <td><span class="badge ${t.necessary === 'necessary' ? 'badge-nec' : 'badge-non'}">${t.necessary === 'necessary' ? '必要' : '非必要'}</span></td>
+            <td>${envName}</td>
+            <td class="text-xs">${t.note || ''}</td>
+            <td>
+              <button class="btn text-xs delete-tx-btn" data-id="${t.id}" style="color:var(--danger)">刪</button>
+            </td>
+          </tr>`;
+      }).join('');
+
+      document.getElementById('txSubtotal').textContent = formatMoney(subtotal);
+
+      // 綁定刪除按鈕（用事件委派比較穩定）
+      tbody.querySelectorAll('.delete-tx-btn').forEach(btn => {
+        btn.onclick = function() {
+          deleteTransaction(this.getAttribute('data-id'));
+        };
+      });
+    }
+
+    function deleteTransaction(id) {
+      if (!confirm('確定刪除這筆帳務？')) return;
+
+      const tx = data.transactions.find(t => t.id === id);
+      if (!tx) {
+        alert('找不到這筆資料');
+        return;
+      }
+
+      if (tx.account !== '他人支付' && data.accounts[tx.account] !== undefined) {
+        data.accounts[tx.account] -= tx.amount;
+      }
+
+      if (tx.envelopeId && tx.amount < 0) {
+        const env = data.envelopes.find(e => e.id === tx.envelopeId);
+        if (env) {
+          env.spent = Math.max(0, (env.spent || 0) - Math.abs(tx.amount));
+        }
+      }
+
+      if (tx.category === '收' || tx.category === '息') {
+        data.tithePool = Math.max(0, (data.tithePool || 0) - Math.round(Math.abs(tx.amount) * 0.1));
+      }
+
+      data.transactions = data.transactions.filter(t => t.id !== id);
+      saveData();
+      renderDashboard();
+      renderTransactions();
+      if (document.getElementById('tab-envelopes').classList.contains('active')) {
+        renderEnvelopes();
+      }
+    }
+
+    function clearTxFilters() {
+      ['filterDateFrom','filterDateTo','filterCategory','filterAccount','filterNecessary','filterKeyword'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+      });
       renderTransactions();
     }
-    if (tab === 'stockTx') {
-      populateAccountSelects();
-      document.getElementById('stxDate').value = todayStr();
-    }
-  }
 
-  function exportData() {
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = '我的錢錢備份_' + todayStr() + '.json';
-    a.click();
-  }
-  function importData(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = e => {
-      try {
-        const imported = JSON.parse(e.target.result);
-        if (!confirm('匯入將覆蓋目前所有資料，確定嗎？')) return;
-        data = Object.assign({}, DEFAULT_DATA, imported);
-        saveData();
-        switchTab('dashboard');
-        alert('匯入成功！');
-      } catch {
-        alert('檔案解析失敗');
+    // ===================== 信封 =====================
+    function openEnvelopeModal(editId = null) {
+      let modal = document.getElementById('envelopeModal');
+      if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'envelopeModal';
+        modal.className = 'modal-overlay hidden';
+        modal.innerHTML = `
+          <div class="modal">
+            <h3 class="semibold text-lg mb-4" id="envelopeModalTitle">新增信封</h3>
+            <div class="space-y-3">
+              <div>
+                <label class="text-xs" style="color:var(--text-muted)">信封名稱</label>
+                <input type="text" id="envName" class="input mt-1" placeholder="例如：飲食、交通" />
+              </div>
+              <div>
+                <label class="text-xs" style="color:var(--text-muted)">每月預算</label>
+                <input type="number" id="envBudget" class="input mt-1 tabular" placeholder="5000" />
+              </div>
+              <div>
+                <label class="text-xs" style="color:var(--text-muted)">對應分類（選填）</label>
+                <select id="envCategory" class="input mt-1">
+                  <option value="">不指定</option>
+                  <option value="食">食</option><option value="衣">衣</option><option value="住">住</option>
+                  <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
+                  <option value="醫">醫</option><option value="美">美</option><option value="稅">稅</option>
+                  <option value="保">保</option><option value="禮">禮</option><option value="雜">雜</option>
+                </select>
+              </div>
+            </div>
+            <div class="flex gap-2 mt-5">
+              <button onclick="saveEnvelope()" class="btn-primary btn flex-1 py-2.5">儲存</button>
+              <button onclick="closeModal('envelopeModal')" class="btn flex-1 py-2.5">取消</button>
+            </div>
+          </div>`;
+        document.body.appendChild(modal);
       }
-    };
-    reader.readAsText(file);
-  }
-  function resetAllData() {
-    if (!confirm('確定要清除全部資料嗎？此動作無法復原！')) return;
-    data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-    saveData();
-    switchTab('dashboard');
-  }
 
-  // 暫時保留的空函式（之後可再擴充股票、信封、圖表）
-  function updateJPYRate() { document.getElementById('apiStatus').textContent = '日幣匯率更新功能待完善'; }
-  function updateStockPrices() { document.getElementById('apiStatus').textContent = '股價更新功能待完善'; }
-  function refreshAllAssets() { updateJPYRate(); updateStockPrices(); }
-  function openEnvelopeModal() { alert('信封功能即將完善'); }
-  function openStockModal() { alert('股票功能即將完善'); }
-  function openFundModal() { alert('基金功能即將完善'); }
-  function openFixedModal() { alert('固定收支功能即將完善'); }
-  function openProjectModal() { alert('專案功能即將完善'); }
-  function openFreelanceModal() { alert('接案功能即將完善'); }
-  function addStockTransaction() { alert('股票交易功能即將完善'); }
-  function renderEnvelopes() {
-  const container = document.getElementById('envelopesList');
-  if (!container) return;
+      document.getElementById('envName').value = '';
+      document.getElementById('envBudget').value = '';
+      document.getElementById('envCategory').value = '';
+      modal.dataset.editId = editId || '';
+      document.getElementById('envelopeModalTitle').textContent = editId ? '編輯信封' : '新增信封';
 
-  if (data.envelopes.length === 0) {
-    container.innerHTML = `<p class="text-sm py-6 text-center" style="color:var(--text-muted)">尚未建立任何信封</p>`;
-    return;
-  }
+      if (editId) {
+        const env = data.envelopes.find(e => e.id === editId);
+        if (env) {
+          document.getElementById('envName').value = env.name;
+          document.getElementById('envBudget').value = env.budget;
+          document.getElementById('envCategory').value = env.category || '';
+        }
+      }
+      modal.classList.remove('hidden');
+    }
 
-  container.innerHTML = data.envelopes.map(env => {
-    const remain = (env.budget || 0) - (env.spent || 0);
-    const percent = env.budget > 0 ? Math.min(100, Math.round((env.spent || 0) / env.budget * 100)) : 0;
-    const isOver = remain < 0;
+    function saveEnvelope() {
+      const name = document.getElementById('envName').value.trim();
+      const budget = parseFloat(document.getElementById('envBudget').value) || 0;
+      const category = document.getElementById('envCategory').value;
+      const editId = document.getElementById('envelopeModal').dataset.editId;
 
-    return `
-      <div class="card p-5">
-        <div class="flex items-start justify-between gap-3 mb-4">
-          <div>
-            <p class="semibold text-base">${env.name}</p>
-            <p class="text-xs mt-1" style="color:var(--text-muted)">
-              ${env.category ? '對應分類：' + env.category : '無自動對應'}
-            </p>
+      if (!name) return alert('請輸入信封名稱');
+
+      if (editId) {
+        const env = data.envelopes.find(e => e.id === editId);
+        if (env) {
+          env.name = name;
+          env.budget = budget;
+          env.category = category;
+        }
+      } else {
+        data.envelopes.push({
+          id: uid(),
+          name,
+          budget,
+          category,
+          spent: 0
+        });
+      }
+
+      saveData();
+      closeModal('envelopeModal');
+      renderEnvelopes();
+      populateEnvelopeSelect();
+    }
+
+    function deleteEnvelope(id) {
+      if (!confirm('確定刪除這個信封？')) return;
+      data.envelopes = data.envelopes.filter(e => e.id !== id);
+      saveData();
+      renderEnvelopes();
+      populateEnvelopeSelect();
+    }
+
+    function renderEnvelopes() {
+      const container = document.getElementById('envelopesList');
+      if (!container) return;
+
+      if (data.envelopes.length === 0) {
+        container.innerHTML = `<p class="text-sm py-6 text-center" style="color:var(--text-muted)">尚未建立任何信封</p>`;
+        return;
+      }
+
+      container.innerHTML = data.envelopes.map(env => {
+        const remain = (env.budget || 0) - (env.spent || 0);
+        const percent = env.budget > 0 ? Math.min(100, Math.round((env.spent || 0) / env.budget * 100)) : 0;
+        const isOver = remain < 0;
+
+        return `
+          <div class="card p-5">
+            <div class="flex items-start justify-between gap-3 mb-4">
+              <div>
+                <p class="semibold text-base">${env.name}</p>
+                <p class="text-xs mt-1" style="color:var(--text-muted)">
+                  ${env.category ? '對應分類：' + env.category : '無自動對應'}
+                </p>
+              </div>
+              <div class="flex gap-2 shrink-0">
+                <button class="btn text-xs px-3 py-1.5 edit-env-btn" data-id="${env.id}">編輯</button>
+                <button class="btn text-xs px-3 py-1.5 delete-env-btn" data-id="${env.id}" style="color:var(--danger)">刪除</button>
+              </div>
+            </div>
+            <div class="flex justify-between text-sm mb-2">
+              <span style="color:var(--text-muted)">已使用</span>
+              <span class="tabular">${formatMoney(env.spent || 0)}</span>
+            </div>
+            <div class="flex justify-between text-sm mb-3">
+              <span style="color:var(--text-muted)">剩餘</span>
+              <span class="tabular ${isOver ? 'text-red-500' : ''}">${formatMoney(remain)}</span>
+            </div>
+            <div class="progress-track mb-2">
+              <div class="progress-fill" style="width:${percent}%;${isOver ? 'background:var(--danger)' : ''}"></div>
+            </div>
+            <p class="text-xs text-right" style="color:var(--text-muted)">預算 ${formatMoney(env.budget)}</p>
           </div>
-          <div class="flex gap-2 shrink-0">
-            <button onclick="openEnvelopeModal('${env.id}')" class="btn text-xs px-3 py-1.5">編輯</button>
-            <button onclick="deleteEnvelope('${env.id}')" class="btn text-xs px-3 py-1.5" style="color:var(--danger)">刪除</button>
-          </div>
-        </div>
+        `;
+      }).join('');
 
-        <div class="flex justify-between text-sm mb-2">
-          <span style="color:var(--text-muted)">已使用</span>
-          <span class="tabular">${formatMoney(env.spent || 0)}</span>
-        </div>
-        <div class="flex justify-between text-sm mb-3">
-          <span style="color:var(--text-muted)">剩餘</span>
-          <span class="tabular ${isOver ? 'text-red-500' : ''}">${formatMoney(remain)}</span>
-        </div>
+      // 綁定編輯與刪除按鈕
+      container.querySelectorAll('.edit-env-btn').forEach(btn => {
+        btn.onclick = function() {
+          openEnvelopeModal(this.getAttribute('data-id'));
+        };
+      });
+      container.querySelectorAll('.delete-env-btn').forEach(btn => {
+        btn.onclick = function() {
+          deleteEnvelope(this.getAttribute('data-id'));
+        };
+      });
+    }
 
-        <div class="progress-track mb-2">
-          <div class="progress-fill" style="width:${percent}%;${isOver ? 'background:var(--danger)' : ''}"></div>
-        </div>
-        <p class="text-xs text-right" style="color:var(--text-muted)">預算 ${formatMoney(env.budget)}</p>
-      </div>
-    `;
-  }).join('');
-}
-  function renderInvestments() {}
-  function renderStockTransactions() {}
-  function renderFixedSection() {}
-  function renderCharts() {}
+    function populateEnvelopeSelect() {
+      const sel = document.getElementById('txEnvelope');
+      if (!sel) return;
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">不指定</option>';
+      data.envelopes.forEach(env => {
+        sel.innerHTML += `<option value="${env.id}">${env.name}</option>`;
+      });
+      if (cur) sel.value = cur;
+    }
 
-  // ===================== 初始化 =====================
-  document.addEventListener('DOMContentLoaded', () => {
-    initTheme();
-    loadData();
-    populateAccountSelects();
-    switchTab('dashboard');
-    updateStorageStatus();
-  });
-</script>
+    function onCategoryChange() {
+      const cat = document.getElementById('txCategory').value;
+      const matched = data.envelopes.find(e => e.category === cat);
+      if (matched) {
+        document.getElementById('txEnvelope').value = matched.id;
+      }
+    }
+
+    // ===================== 看板 =====================
+    function getMonthSpent() {
+      const cm = currentMonthStr();
+      return data.transactions
+        .filter(t => t.date.startsWith(cm) && t.amount < 0 && t.account !== '他人支付')
+        .filter(t => data.budgetIncludeInvest ? true : t.category !== '投')
+        .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+    }
+    function getMonthTitheShould() {
+      const cm = currentMonthStr();
+      return data.transactions
+        .filter(t => t.date.startsWith(cm) && (t.category === '收' || t.category === '息'))
+        .reduce((sum, t) => sum + Math.round(Math.abs(t.amount) * 0.1), 0);
+    }
+    function renderDashboard() {
+      let cash = data.accountList.reduce((s, a) => s + (parseFloat(data.accounts[a]) || 0), 0);
+      cash += (data.jpyCash || 0) * (data.jpyRate || 0.22);
+
+      let invest = 0;
+      data.stocks.forEach(s => invest += (s.shares || 0) * (s.price || 0));
+      data.funds.forEach(f => invest += (f.units || 0) * (f.price || 0) * (f.rate || 1));
+
+      document.getElementById('netWorth').textContent = formatMoney(cash + invest);
+      document.getElementById('totalCash').textContent = formatMoney(cash);
+      document.getElementById('totalInvest').textContent = formatMoney(invest);
+      document.getElementById('jpyRateDisplay').textContent = (data.jpyRate || 0).toFixed(4) + ' TWD';
+      document.getElementById('monthlyBudgetInput').value = data.monthlyBudget || '';
+
+      const spent = getMonthSpent();
+      const budget = data.monthlyBudget || 0;
+      document.getElementById('monthSpent').textContent = formatMoney(spent);
+      document.getElementById('monthRemain').textContent = formatMoney(budget - spent);
+
+      document.getElementById('titheShould').textContent = formatMoney(getMonthTitheShould());
+      document.getElementById('titheDone').textContent = formatMoney(data.titheDonatedThisMonth || 0);
+      document.getElementById('tithePool').textContent = formatMoney(data.tithePool || 0);
+
+      const toggle = document.getElementById('budgetToggle');
+      if (toggle) toggle.classList.toggle('on', data.budgetIncludeInvest);
+
+      const accDiv = document.getElementById('accountsOverview');
+      if (accDiv) {
+        accDiv.innerHTML = data.accountList.map(name => `
+          <div class="pill p-2.5 text-center">
+            <p class="text-xs" style="color:var(--text-muted)">${name}</p>
+            <p class="semibold text-sm tabular">${formatMoney(data.accounts[name] || 0)}</p>
+          </div>`).join('');
+      }
+    }
+
+    function saveMonthlyBudget() {
+      data.monthlyBudget = parseFloat(document.getElementById('monthlyBudgetInput').value) || 0;
+      saveData();
+      renderDashboard();
+    }
+    function toggleBudgetMode() {
+      data.budgetIncludeInvest = !data.budgetIncludeInvest;
+      document.getElementById('budgetToggle').classList.toggle('on', data.budgetIncludeInvest);
+      saveData();
+      renderDashboard();
+    }
+    function recordTitheDonation() {
+      const amount = parseFloat(document.getElementById('titheDonateAmount').value) || 0;
+      if (amount <= 0) return alert('請輸入有效金額');
+      data.titheDonatedThisMonth = (data.titheDonatedThisMonth || 0) + amount;
+      data.tithePool = Math.max(0, (data.tithePool || 0) - amount);
+      document.getElementById('titheDonateAmount').value = '';
+      saveData();
+      renderDashboard();
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      document.querySelectorAll('.nav-item').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+      });
+
+      if (tab === 'dashboard') renderDashboard();
+      if (tab === 'envelopes') {
+        renderEnvelopes();
+        populateEnvelopeSelect();
+      }
+      if (tab === 'transactions') {
+        populateAccountSelects();
+        populateEnvelopeSelect();
+        document.getElementById('txDate').value = todayStr();
+        renderTransactions();
+      }
+    }
+
+    function exportData() {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '我的錢錢備份_' + todayStr() + '.json';
+      a.click();
+    }
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const imported = JSON.parse(e.target.result);
+          if (!confirm('匯入將覆蓋目前所有資料，確定嗎？')) return;
+          data = Object.assign({}, DEFAULT_DATA, imported);
+          saveData();
+          switchTab('dashboard');
+          alert('匯入成功！');
+        } catch {
+          alert('檔案解析失敗');
+        }
+      };
+      reader.readAsText(file);
+    }
+    function resetAllData() {
+      if (!confirm('確定要清除全部資料嗎？此動作無法復原！')) return;
+      data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      saveData();
+      switchTab('dashboard');
+    }
+
+    function updateJPYRate() {
+      document.getElementById('apiStatus').textContent = '日幣功能待完善';
+    }
+    function updateStockPrices() {
+      document.getElementById('apiStatus').textContent = '股價功能待完善';
+    }
+    function refreshAllAssets() {
+      updateJPYRate();
+      updateStockPrices();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      loadData();
+      populateAccountSelects();
+      populateEnvelopeSelect();
+      switchTab('dashboard');
+      updateStorageStatus();
+    });
   </script>
 </body>
 </html>
