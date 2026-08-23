@@ -47,8 +47,6 @@
       --border: rgba(0,0,0,0.06);
       --shadow: 0 8px 30px rgba(0,0,0,0.06);
       --shadow-soft: 0 4px 16px rgba(0,0,0,0.05);
-      --success: #34c759;
-      --danger: #ff3b30;
       --radius: 24px;
       --radius-pill: 999px;
     }
@@ -113,7 +111,7 @@
     .btn:active { transform: scale(0.96); }
     .btn-primary { background: #1c1c1e; color: #fff; border: none; }
     .dark .btn-primary { background: #f5f5f7; color: #1c1c1e; }
-    .btn-danger { background: rgba(255, 59, 48, 0.12); color: #ff3b30; border: none; }
+    .btn-secondary { background: rgba(142,142,147,0.12); color: var(--text); border: 1px solid var(--border); }
     .input {
       width: 100%;
       background: var(--bg);
@@ -171,7 +169,8 @@
     td { font-size: 13px; padding: 10px 6px; border-bottom: 1px solid var(--border); }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .badge-nec { background: rgba(28,28,30,0.08); color: var(--text); }
-    .badge-non { background: rgba(255,149,0,0.12); color: #ff9500; }
+    .dark .badge-nec { background: rgba(255,255,255,0.12); color: #f5f5f7; }
+    .badge-non { background: transparent; border: 1px solid var(--border); color: var(--text-muted); }
     .toggle {
       width: 46px; height: 26px; background: var(--bg); border-radius: 999px;
       position: relative; cursor: pointer; border: 1px solid var(--border);
@@ -227,12 +226,12 @@
         </div>
         <div class="card p-5">
           <p class="text-xs" style="color:var(--text-muted)">現金總額（含日幣）</p>
-          <p class="text-2xl bold tabular mt-1" id="totalCash">$0</p>
+          <p class="text-2xl heavy tabular mt-1" id="totalCash">$0</p>
           <p class="text-xs mt-1" style="color:var(--text-muted)">日幣 <span id="jpyRateDisplay">--</span></p>
         </div>
         <div class="card p-5">
           <p class="text-xs" style="color:var(--text-muted)">投資總額</p>
-          <p class="text-2xl bold tabular mt-1" id="totalInvest">$0</p>
+          <p class="text-2xl heavy tabular mt-1" id="totalInvest">$0</p>
         </div>
       </div>
 
@@ -243,7 +242,7 @@
         <span id="apiStatus" class="text-xs" style="color:var(--text-muted)"></span>
       </div>
 
-      <!-- 當月預算控制（完美寬裕留白版） -->
+      <!-- 當月預算控制 -->
       <div class="card p-5 space-y-4">
         <div class="flex items-center justify-between">
           <h2 class="semibold text-base">當月預算控制</h2>
@@ -266,7 +265,7 @@
           <div class="grid grid-cols-2 gap-3 pt-1">
             <div class="pill p-3.5">
               <p class="text-xs" style="color:var(--text-muted)">已花費</p>
-              <p class="text-xl heavy tabular mt-1" style="color:var(--danger)" id="monthSpent">$0</p>
+              <p class="text-xl heavy tabular mt-1" id="monthSpent">$0</p>
             </div>
             <div class="pill p-3.5">
               <p class="text-xs" style="color:var(--text-muted)">剩餘可用</p>
@@ -282,15 +281,15 @@
         <div class="grid grid-cols-3 gap-2 mb-3">
           <div class="pill p-3 text-center">
             <p class="text-xs" style="color:var(--text-muted)">應提撥 (10%)</p>
-            <p class="text-base bold tabular mt-0.5" id="titheShould">$0</p>
+            <p class="text-base heavy tabular mt-0.5" id="titheShould">$0</p>
           </div>
           <div class="pill p-3 text-center">
             <p class="text-xs" style="color:var(--text-muted)">已奉獻</p>
-            <p class="text-base bold tabular mt-0.5" id="titheDone">$0</p>
+            <p class="text-base heavy tabular mt-0.5" id="titheDone">$0</p>
           </div>
           <div class="pill p-3 text-center">
             <p class="text-xs" style="color:var(--text-muted)">待奉獻池</p>
-            <p class="text-base bold tabular mt-0.5" id="tithePool">$0</p>
+            <p class="text-base heavy tabular mt-0.5" id="tithePool">$0</p>
           </div>
         </div>
         <div class="flex gap-2">
@@ -331,9 +330,14 @@
           </button>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- 日期欄位：支援打字輸入 + 右側彈出月曆選擇器 -->
           <div>
-            <label class="text-xs" style="color:var(--text-muted)">日期</label>
-            <input type="date" id="txDate" class="input mt-1" />
+            <label class="text-xs" style="color:var(--text-muted)">日期（可手打 2026-08-23 或點右側月曆）</label>
+            <div class="relative mt-1 flex items-center">
+              <input type="text" id="txDateText" class="input tabular pr-10" placeholder="YYYY-MM-DD" onchange="syncDateFromText(this.value)" />
+              <input type="date" id="txDateNative" class="absolute right-2 opacity-0 w-8 h-8 cursor-pointer z-10" onchange="syncDateFromNative(this.value)" />
+              <div class="absolute right-3 pointer-events-none text-base opacity-60">📅</div>
+            </div>
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">項目名稱</label>
@@ -373,10 +377,19 @@
               <input type="radio" name="txNecessary" value="non" /> 非必要
             </label>
           </div>
+
+          <!-- 拍照 / 上傳單據：按鈕靠右，左側顯示狀態 -->
           <div>
-            <label class="text-xs" style="color:var(--text-muted)">📸 拍照/上傳單據收據（選填）</label>
-            <input type="file" id="txReceiptInput" accept="image/*" class="input mt-1 text-xs py-2" />
+            <label class="text-xs" style="color:var(--text-muted)">📸 單據 / 收據拍照備忘（選填）</label>
+            <div class="flex items-center justify-between border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 mt-1 bg-[var(--bg)]">
+              <span id="txReceiptFileName" class="text-xs truncate max-w-[180px]" style="color:var(--text-muted)">未選擇任何檔案</span>
+              <label class="btn text-xs px-3 py-1 cursor-pointer shrink-0 ml-2">
+                選擇檔案
+                <input type="file" id="txReceiptInput" accept="image/*" class="hidden" onchange="handleReceiptFileSelect(this)" />
+              </label>
+            </div>
           </div>
+
           <div class="sm:col-span-2">
             <label class="text-xs" style="color:var(--text-muted)">備忘註記</label>
             <input type="text" id="txNote" class="input mt-1" placeholder="大額細節、保固說明或備忘" />
@@ -385,12 +398,16 @@
         <button onclick="addTransaction()" class="btn-primary btn w-full mt-4 py-3">新增帳務</button>
       </div>
 
+      <!-- 帳務明細與篩選 -->
       <div class="card p-5">
         <h2 class="semibold mb-3">帳務明細</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
-          <input type="date" id="filterDateFrom" class="input text-xs" />
-          <input type="date" id="filterDateTo" class="input text-xs" />
-          <select id="filterCategory" class="input text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+          <div class="flex items-center gap-2">
+            <input type="date" id="filterDateFrom" class="input text-xs flex-1" onchange="renderTransactions()" />
+            <span class="text-xs" style="color:var(--text-muted)">至</span>
+            <input type="date" id="filterDateTo" class="input text-xs flex-1" onchange="renderTransactions()" />
+          </div>
+          <select id="filterCategory" class="input text-xs" onchange="renderTransactions()">
             <option value="">全部分類</option>
             <option value="食">食</option><option value="衣">衣</option><option value="住">住</option>
             <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
@@ -399,19 +416,18 @@
             <option value="提領">提領</option><option value="投">投</option><option value="息">息</option>
             <option value="折">折</option><option value="收">收</option><option value="什一">什一</option>
           </select>
-          <select id="filterAccount" class="input text-xs"><option value="">全部帳戶</option></select>
-          <select id="filterNecessary" class="input text-xs">
+          <select id="filterAccount" class="input text-xs" onchange="renderTransactions()"><option value="">全部帳戶</option></select>
+          <select id="filterNecessary" class="input text-xs" onchange="renderTransactions()">
             <option value="">全部標籤</option>
             <option value="necessary">必要</option>
             <option value="non">非必要</option>
           </select>
-          <input type="text" id="filterKeyword" class="input text-xs" placeholder="關鍵字搜尋" />
+          <input type="text" id="filterKeyword" class="input text-xs sm:col-span-2" placeholder="關鍵字搜尋（名稱/備忘）" oninput="renderTransactions()" />
         </div>
         <div class="flex gap-2 mb-3">
-          <button onclick="renderTransactions()" class="btn-primary btn text-xs">篩選</button>
-          <button onclick="clearTxFilters()" class="btn text-xs">清除</button>
+          <button onclick="clearTxFilters()" class="btn text-xs px-4">清除篩選條件</button>
         </div>
-        <div class="text-xs semibold mb-2">小計：<span id="txSubtotal" class="tabular bold">$0</span></div>
+        <div class="text-xs semibold mb-2">小計：<span id="txSubtotal" class="tabular heavy text-sm">$0</span></div>
         <div class="overflow-x-auto">
           <table>
             <thead>
@@ -431,8 +447,8 @@
         <h2 class="semibold mb-2">月領萬元股息目標進度</h2>
         <p class="text-xs mb-3" style="color:var(--text-muted)">根據 00919、00918、00713 等持股與殖利率自動估算</p>
         <div class="flex justify-between text-xs mb-1">
-          <span>預估月領股息：<strong class="tabular text-sm" id="estMonthlyDividend">$0</strong></span>
-          <span>目標 $10,000 · 達成率 <strong id="dividendProgressPct" class="text-sm">0%</strong></span>
+          <span>預估月領股息：<strong class="tabular heavy text-sm" id="estMonthlyDividend">$0</strong></span>
+          <span>目標 $10,000 · 達成率 <strong id="dividendProgressPct" class="heavy text-sm">0%</strong></span>
         </div>
         <div class="progress-track mt-1">
           <div id="dividendProgressBar" class="progress-fill" style="width:0%"></div>
@@ -454,7 +470,7 @@
             <tbody id="stocksTableBody"></tbody>
           </table>
         </div>
-        <p class="text-xs semibold mt-2">總市值 <span id="stocksTotalValue" class="tabular bold">$0</span></p>
+        <p class="text-xs semibold mt-2">總市值 <span id="stocksTotalValue" class="tabular heavy">$0</span></p>
       </div>
 
       <div class="card p-5">
@@ -470,7 +486,7 @@
             <tbody id="fundsTableBody"></tbody>
           </table>
         </div>
-        <p class="text-xs semibold mt-2">總市值 <span id="fundsTotalValue" class="tabular bold">$0</span></p>
+        <p class="text-xs semibold mt-2">總市值 <span id="fundsTotalValue" class="tabular heavy">$0</span></p>
       </div>
     </section>
 
@@ -583,7 +599,7 @@
         <div id="monthSummary" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
       </div>
       <div class="card p-5">
-        <button onclick="resetAllData()" class="btn btn-danger text-xs">清除全部資料</button>
+        <button onclick="resetAllData()" class="btn btn-secondary text-xs">清除全部資料</button>
       </div>
     </section>
   </div>
@@ -905,7 +921,7 @@
         el.style.color = 'var(--text-muted)';
       } else {
         el.textContent = '記憶體模式（若於沙盒預覽重新整理會重置）';
-        el.style.color = '#ff9500';
+        el.style.color = 'var(--text-muted)';
       }
     }
 
@@ -941,6 +957,29 @@
     function currentMonthStr() {
       const d = new Date();
       return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+    }
+
+    // 日期欄位雙向同步
+    function syncDateFromText(val) {
+      const trimmed = (val || '').trim();
+      if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+        document.getElementById('txDateNative').value = trimmed;
+      }
+    }
+    function syncDateFromNative(val) {
+      document.getElementById('txDateText').value = val;
+    }
+
+    // 檔案選擇顯示名稱
+    function handleReceiptFileSelect(input) {
+      const span = document.getElementById('txReceiptFileName');
+      if (input.files && input.files[0]) {
+        span.textContent = input.files[0].name;
+        span.style.color = 'var(--text)';
+      } else {
+        span.textContent = '未選擇任何檔案';
+        span.style.color = 'var(--text-muted)';
+      }
     }
 
     function saveData() {
@@ -1000,8 +1039,10 @@
       if (tab === 'envelopes') renderEnvelopes();
       if (tab === 'transactions') {
         populateEnvelopeSelect();
+        const tday = todayStr();
+        document.getElementById('txDateText').value = tday;
+        document.getElementById('txDateNative').value = tday;
         renderTransactions();
-        document.getElementById('txDate').value = todayStr();
       }
       if (tab === 'investments') renderInvestments();
       if (tab === 'stockTx') {
@@ -1035,7 +1076,7 @@
         { fps: 10, qrbox: { width: 250, height: 250 } },
         (decodedText) => {
           document.getElementById('txNote').value = decodedText;
-          document.getElementById('txName').value = '掃碼支出: ' + decodedText.slice(0, 10);
+          document.getElementById('txName').value = '掃碼: ' + decodedText.slice(0, 10);
           stopScanner();
           alert('掃碼成功，已自動填入備註！');
         },
@@ -1070,7 +1111,7 @@
               <label class="text-xs" style="color:var(--text-muted)">${name}</label>
               <input type="number" data-account="${name}" class="input mt-1 account-edit-input tabular" value="${data.accounts[name] || 0}" step="any" />
             </div>
-            <button onclick="removeAccount('${name}')" class="btn text-xs mt-5" style="color:var(--danger)">移除</button>
+            <button onclick="removeAccount('${name}')" class="btn text-xs mt-5">移除</button>
           </div>`;
       });
       document.getElementById('jpyCashInput').value = data.jpyCash || 0;
@@ -1234,7 +1275,6 @@
       const remain = (data.monthlyBudget || 0) - spent;
       document.getElementById('monthSpent').textContent = formatMoney(spent);
       document.getElementById('monthRemain').textContent = formatMoney(remain);
-      document.getElementById('monthRemain').style.color = remain >= 0 ? 'var(--text)' : 'var(--danger)';
 
       document.getElementById('titheShould').textContent = formatMoney(calcTitheShould());
       document.getElementById('titheDone').textContent = formatMoney(data.titheDonatedThisMonth || 0);
@@ -1246,12 +1286,12 @@
         return `
           <div class="pill p-2.5 text-center">
             <p class="text-[11px]" style="color:var(--text-muted)">${name}</p>
-            <p class="semibold text-xs tabular mt-0.5 ${bal < 0 ? 'text-red-500' : ''}">${formatMoney(bal)}</p>
+            <p class="heavy text-xs tabular mt-0.5">${formatMoney(bal)}</p>
           </div>`;
       }).join('') + `
         <div class="pill p-2.5 text-center">
           <p class="text-[11px]" style="color:var(--text-muted)">日幣現金</p>
-          <p class="semibold text-xs tabular mt-0.5">¥${(data.jpyCash || 0).toLocaleString()}</p>
+          <p class="heavy text-xs tabular mt-0.5">¥${(data.jpyCash || 0).toLocaleString()}</p>
         </div>`;
     }
 
@@ -1322,15 +1362,15 @@
               </div>
               <div class="flex gap-2">
                 <button onclick="openEnvelopeModal('${e.id}')" class="text-xs" style="color:var(--text-muted)">編輯</button>
-                <button onclick="deleteEnvelope('${e.id}')" class="text-xs" style="color:var(--danger)">刪除</button>
+                <button onclick="deleteEnvelope('${e.id}')" class="text-xs" style="color:var(--text-muted)">刪除</button>
               </div>
             </div>
             <div class="progress-track">
-              <div class="progress-fill" style="width:${pct}%; ${remain < 0 ? 'background:var(--danger)' : ''}"></div>
+              <div class="progress-fill" style="width:${pct}%"></div>
             </div>
             <div class="flex justify-between text-xs tabular">
               <span style="color:var(--text-muted)">已用 ${formatMoney(spent)} / 預算 ${formatMoney(e.budget)}</span>
-              <span class="semibold" style="color:${remain < 0 ? 'var(--danger)' : 'var(--text)'}">剩餘 ${formatMoney(remain)}</span>
+              <span class="heavy">剩餘 ${formatMoney(remain)}</span>
             </div>
           </div>`;
       }).join('');
@@ -1353,7 +1393,7 @@
     }
 
     async function addTransaction() {
-      const date = document.getElementById('txDate').value || todayStr();
+      const date = document.getElementById('txDateText').value.trim() || todayStr();
       const name = document.getElementById('txName').value.trim();
       const amountStr = document.getElementById('txAmount').value;
       const amount = parseAmount(amountStr);
@@ -1390,6 +1430,8 @@
       document.getElementById('txAmount').value = '';
       document.getElementById('txNote').value = '';
       if (fileInput) fileInput.value = '';
+      document.getElementById('txReceiptFileName').textContent = '未選擇任何檔案';
+      document.getElementById('txReceiptFileName').style.color = 'var(--text-muted)';
       renderTransactions();
       renderDashboard();
     }
@@ -1448,19 +1490,19 @@
       const tbody = document.getElementById('txTableBody');
       tbody.innerHTML = list.map(t => {
         const env = data.envelopes.find(e => e.id === t.envelopeId);
-        const receiptBtn = t.receipt ? `<button onclick="viewReceipt('${t.id}')" class="text-xs px-2 py-0.5 rounded-full bg-zinc-100 dark:bg-zinc-800">📸 查看</button>` : '<span style="color:var(--text-muted)">-</span>';
+        const receiptBtn = t.receipt ? `<button onclick="viewReceipt('${t.id}')" class="text-xs px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700">📸 查看</button>` : '<span style="color:var(--text-muted)">-</span>';
         return `
           <tr>
-            <td class="tabular" style="color:var(--text-muted)">${t.date.slice(5)}</td>
+            <td class="tabular" style="color:var(--text-muted)">${(t.date || '').slice(5)}</td>
             <td class="semibold">${t.name}</td>
-            <td class="tabular semibold ${t.amount < 0 ? '' : 'text-emerald-500'}">${formatMoney(t.amount)}</td>
+            <td class="tabular heavy">${formatMoney(t.amount)}</td>
             <td>${t.category}</td>
             <td>${t.account}</td>
             <td><span class="badge ${t.necessary === 'necessary' ? 'badge-nec' : 'badge-non'}">${t.necessary === 'necessary' ? '必要' : '非必要'}</span></td>
             <td style="color:var(--text-muted)">${env ? env.name : ''}</td>
             <td>${receiptBtn}</td>
             <td style="color:var(--text-muted)">${t.note || ''}</td>
-            <td><button onclick="deleteTransaction('${t.id}')" class="btn-danger btn text-xs px-2 py-0.5">刪</button></td>
+            <td><button onclick="deleteTransaction('${t.id}')" class="btn text-xs px-2 py-0.5">刪</button></td>
           </tr>`;
       }).join('') || '<tr><td colspan="10" class="text-center py-6 text-xs" style="color:var(--text-muted)">尚無明細紀錄</td></tr>';
     }
@@ -1586,12 +1628,12 @@
             <td class="tabular">${s.shares}</td>
             <td class="tabular">${s.cost}</td>
             <td class="tabular">${s.price}</td>
-            <td class="tabular semibold">${formatMoney(mv)}</td>
-            <td class="tabular ${pl >= 0 ? 'text-emerald-500' : 'text-red-500'}">${formatMoney(pl)}</td>
+            <td class="tabular heavy">${formatMoney(mv)}</td>
+            <td class="tabular heavy">${formatMoney(pl)}</td>
             <td class="tabular">${s.yield || 0}%</td>
             <td>
               <button onclick="openStockModal('${s.id}')" class="text-xs mr-1" style="color:var(--text-muted)">編</button>
-              <button onclick="deleteStock('${s.id}')" class="text-xs" style="color:var(--danger)">刪</button>
+              <button onclick="deleteStock('${s.id}')" class="text-xs" style="color:var(--text-muted)">刪</button>
             </td>
           </tr>`;
       }).join('') || '<tr><td colspan="8" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無股票標的</td></tr>';
@@ -1607,10 +1649,10 @@
             <td class="tabular">${f.units}</td>
             <td class="tabular">${f.price}</td>
             <td class="tabular">${f.rate}</td>
-            <td class="tabular semibold">${formatMoney(mv)}</td>
+            <td class="tabular heavy">${formatMoney(mv)}</td>
             <td>
               <button onclick="openFundModal('${f.id}')" class="text-xs mr-1" style="color:var(--text-muted)">編</button>
-              <button onclick="deleteFund('${f.id}')" class="text-xs" style="color:var(--danger)">刪</button>
+              <button onclick="deleteFund('${f.id}')" class="text-xs" style="color:var(--text-muted)">刪</button>
             </td>
           </tr>`;
       }).join('') || '<tr><td colspan="6" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無基金標的</td></tr>';
@@ -1693,8 +1735,8 @@
           <td class="tabular">${formatMoney(t.total)}</td>
           <td class="tabular">${formatMoney(t.fee)}</td>
           <td class="tabular">${formatMoney(t.tax)}</td>
-          <td class="tabular semibold">${formatMoney(t.totalCost)}</td>
-          <td><button onclick="deleteStockTransaction('${t.id}')" class="btn-danger btn text-xs px-2 py-0.5">刪</button></td>
+          <td class="tabular heavy">${formatMoney(t.totalCost)}</td>
+          <td><button onclick="deleteStockTransaction('${t.id}')" class="btn text-xs px-2 py-0.5">刪</button></td>
         </tr>
       `).join('') || '<tr><td colspan="11" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無交易紀錄</td></tr>';
     }
@@ -1835,13 +1877,13 @@
         <div class="pill p-3 flex justify-between items-center text-xs">
           <div>
             <span class="semibold">${f.name}</span>
-            <span class="tabular font-medium ml-2 ${f.amount < 0 ? '' : 'text-emerald-500'}">${formatMoney(f.amount)}</span>
+            <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
             <span class="ml-2" style="color:var(--text-muted)">${f.account} · ${f.category}</span>
           </div>
           <div class="flex gap-2">
             <button onclick="applyFixed('${f.id}')" class="semibold text-xs">計入本月</button>
             <button onclick="openFixedModal('${f.id}')" style="color:var(--text-muted)">編</button>
-            <button onclick="deleteFixed('${f.id}')" style="color:var(--danger)">刪</button>
+            <button onclick="deleteFixed('${f.id}')" style="color:var(--text-muted)">刪</button>
           </div>
         </div>
       `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未設定固定收支</p>';
@@ -1854,12 +1896,12 @@
               <span class="semibold text-sm">${p.name}</span>
               <div class="flex gap-2">
                 <button onclick="openProjectModal('${p.id}')" style="color:var(--text-muted)">編</button>
-                <button onclick="deleteProject('${p.id}')" style="color:var(--danger)">刪</button>
+                <button onclick="deleteProject('${p.id}')" style="color:var(--text-muted)">刪</button>
               </div>
             </div>
             <div class="flex justify-between tabular" style="color:var(--text-muted)">
               <span>預算 ${formatMoney(p.budget)} · 已花 ${formatMoney(p.spent)}</span>
-              <span class="semibold" style="color:${remain < 0 ? 'var(--danger)' : 'var(--text)'}">剩餘 ${formatMoney(remain)}</span>
+              <span class="heavy">剩餘 ${formatMoney(remain)}</span>
             </div>
           </div>`;
       }).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未建立專案</p>';
@@ -1868,12 +1910,12 @@
         <div class="pill p-3 flex justify-between items-center text-xs">
           <div>
             <span class="semibold">${f.name}</span>
-            <span class="tabular font-medium text-emerald-500 ml-2">${formatMoney(f.amount)}</span>
+            <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
             <span class="badge badge-nec ml-2">${f.status}</span>
           </div>
           <div class="flex gap-2">
             <button onclick="openFreelanceModal('${f.id}')" style="color:var(--text-muted)">編</button>
-            <button onclick="deleteFreelance('${f.id}')" style="color:var(--danger)">刪</button>
+            <button onclick="deleteFreelance('${f.id}')" style="color:var(--text-muted)">刪</button>
           </div>
         </div>
       `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚無接案紀錄</p>';
@@ -1927,10 +1969,10 @@
       const inc = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount > 0).reduce((s, t) => s + t.amount, 0);
       const exp = monthTxs.reduce((s, t) => s + Math.abs(t.amount), 0);
       document.getElementById('monthSummary').innerHTML = `
-        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">本月收入</p><p class="tabular bold text-sm text-emerald-500 mt-0.5">${formatMoney(inc)}</p></div>
-        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">本月支出</p><p class="tabular bold text-sm mt-0.5">${formatMoney(exp)}</p></div>
-        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">必要支出</p><p class="tabular bold text-sm mt-0.5">${formatMoney(nec)}</p></div>
-        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">非必要</p><p class="tabular bold text-sm mt-0.5" style="color:var(--text-muted)">${formatMoney(non)}</p></div>`;
+        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">本月收入</p><p class="tabular heavy text-sm mt-0.5">${formatMoney(inc)}</p></div>
+        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">本月支出</p><p class="tabular heavy text-sm mt-0.5">${formatMoney(exp)}</p></div>
+        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">必要支出</p><p class="tabular heavy text-sm mt-0.5">${formatMoney(nec)}</p></div>
+        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">非必要</p><p class="tabular heavy text-sm mt-0.5" style="color:var(--text-muted)">${formatMoney(non)}</p></div>`;
     }
 
     // ==================== 備份與重置 ====================
