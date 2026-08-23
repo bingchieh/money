@@ -7,11 +7,9 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>⛁我的錢錢⛃</title>
 
-  <!-- ========== App Icon ========== -->
   <link rel="icon" href="icon.png" />
   <link rel="apple-touch-icon" href="icon.png" />
 
-  <!-- ========== 自訂字體 ========== -->
   <style>
     @font-face {
       font-family: 'GenYoMin';
@@ -47,8 +45,7 @@
       --border: rgba(0,0,0,0.06);
       --shadow: 0 8px 30px rgba(0,0,0,0.06);
       --shadow-soft: 0 4px 16px rgba(0,0,0,0.05);
-      --radius: 24px;
-      --radius-pill: 999px;
+      --radius: 20px;
     }
     .dark {
       --bg: #0c0c0e;
@@ -66,8 +63,9 @@
       background: var(--bg);
       color: var(--text);
       font-family: 'GenYoMin', 'Noto Serif TC', 'Songti TC', serif;
+      font-weight: 500;
       min-height: 100vh;
-      padding-bottom: 120px;
+      padding-bottom: 90px;
       transition: background 0.3s, color 0.3s;
       -webkit-font-smoothing: antialiased;
     }
@@ -75,7 +73,6 @@
     .heavy { font-weight: 800; letter-spacing: 0.04em; }
     .bold { font-weight: 700; }
     .semibold { font-weight: 600; }
-    .medium { font-weight: 500; }
     .card {
       background: var(--card);
       border-radius: var(--radius);
@@ -90,13 +87,13 @@
     }
     .pill {
       background: var(--card);
-      border-radius: 18px;
+      border-radius: 16px;
       box-shadow: var(--shadow-soft);
       border: 1px solid var(--border);
     }
     .btn {
       display: inline-flex; align-items: center; justify-content: center;
-      border-radius: var(--radius-pill);
+      border-radius: 999px;
       padding: 9px 18px;
       font-weight: 600;
       font-size: 13px;
@@ -112,6 +109,14 @@
     .btn-primary { background: #1c1c1e; color: #fff; border: none; }
     .dark .btn-primary { background: #f5f5f7; color: #1c1c1e; }
     .btn-secondary { background: rgba(142,142,147,0.12); color: var(--text); border: 1px solid var(--border); }
+    
+    input[type=number]::-webkit-inner-spin-button, 
+    input[type=number]::-webkit-outer-spin-button { 
+      -webkit-appearance: none; 
+      margin: 0; 
+    }
+    input[type=number] { -moz-appearance: textfield; }
+
     .input {
       width: 100%;
       background: var(--bg);
@@ -121,6 +126,7 @@
       color: var(--text);
       font-size: 15px;
       font-family: inherit;
+      font-weight: 500;
       outline: none;
     }
     select.input {
@@ -133,25 +139,28 @@
     .progress-track { height: 8px; background: var(--bg); border-radius: 999px; overflow: hidden; }
     .progress-fill { height: 100%; border-radius: 999px; transition: width 0.5s; background: #1c1c1e; }
     .dark .progress-fill { background: #f5f5f7; }
-    .floating-nav {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      z-index: 100; display: flex; gap: 2px; padding: 6px 8px; border-radius: 28px;
-      background: rgba(255,255,255,0.78); backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px); box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-      border: 1px solid rgba(255,255,255,0.4); max-width: 96vw; overflow-x: auto;
+
+    .bottom-bar {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      z-index: 100; display: flex; justify-content: space-around;
+      padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
+      background: rgba(255,255,255,0.85); backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
     }
-    .dark .floating-nav {
-      background: rgba(28,28,30,0.85);
-      border: 1px solid rgba(255,255,255,0.08);
+    .dark .bottom-bar {
+      background: rgba(20,20,22,0.88);
+      border-top: 1px solid rgba(255,255,255,0.08);
     }
     .nav-item {
       display: flex; flex-direction: column; align-items: center; justify-content: center;
-      min-width: 52px; padding: 6px 4px; border-radius: 20px; font-size: 10px;
+      flex: 1; padding: 6px 4px; border-radius: 12px; font-size: 11px;
       color: var(--text-muted); background: transparent; border: none; cursor: pointer;
     }
-    .nav-item.active { background: var(--card-dark); color: #fff; }
-    .dark .nav-item.active { background: #f5f5f7; color: #1c1c1e; }
-    .nav-item svg { width: 18px; height: 18px; margin-bottom: 2px; }
+    .nav-item.active { color: var(--text); font-weight: 700; }
+    .dark .nav-item.active { color: #fff; }
+    .nav-item svg { width: 20px; height: 20px; margin-bottom: 3px; }
+
     .tab-content { display: none; }
     .tab-content.active { display: block; }
     .modal-overlay {
@@ -160,7 +169,7 @@
     }
     .modal-overlay.hidden { display: none; }
     .modal {
-      background: var(--card); border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      background: var(--card); border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
       max-width: 440px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 24px;
       border: 1px solid var(--border); color: var(--text);
     }
@@ -239,6 +248,7 @@
         <button onclick="refreshAllAssets()" class="btn-primary btn text-xs">一鍵全資產即時刷新</button>
         <button onclick="updateJPYRate()" class="btn text-xs">更新日幣</button>
         <button onclick="updateStockPrices()" class="btn text-xs">更新股票/ETF</button>
+        <button onclick="openJpyFxModal()" class="btn text-xs">日幣換匯成本</button>
         <span id="apiStatus" class="text-xs" style="color:var(--text-muted)"></span>
       </div>
 
@@ -263,13 +273,13 @@
           </div>
 
           <div class="grid grid-cols-2 gap-3 pt-1">
-            <div class="pill p-3.5">
+            <div class="pill p-3.5 flex flex-col justify-between">
               <p class="text-xs" style="color:var(--text-muted)">已花費</p>
-              <p class="text-xl heavy tabular mt-1" id="monthSpent">$0</p>
+              <p class="text-xl heavy tabular mt-2 text-right" id="monthSpent">$0</p>
             </div>
-            <div class="pill p-3.5">
+            <div class="pill p-3.5 flex flex-col justify-between">
               <p class="text-xs" style="color:var(--text-muted)">剩餘可用</p>
-              <p class="text-xl heavy tabular mt-1" id="monthRemain">$0</p>
+              <p class="text-xl heavy tabular mt-2 text-right" id="monthRemain">$0</p>
             </div>
           </div>
         </div>
@@ -330,13 +340,19 @@
           </button>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <!-- 日期欄位：支援打字輸入 + 右側彈出月曆選擇器 -->
           <div>
-            <label class="text-xs" style="color:var(--text-muted)">日期（可手打 2026-08-23 或點右側月曆）</label>
+            <label class="text-xs" style="color:var(--text-muted)">日期</label>
             <div class="relative mt-1 flex items-center">
               <input type="text" id="txDateText" class="input tabular pr-10" placeholder="YYYY-MM-DD" onchange="syncDateFromText(this.value)" />
               <input type="date" id="txDateNative" class="absolute right-2 opacity-0 w-8 h-8 cursor-pointer z-10" onchange="syncDateFromNative(this.value)" />
-              <div class="absolute right-3 pointer-events-none text-base opacity-60">📅</div>
+              <div class="absolute right-3 pointer-events-none text-[var(--text-muted)]">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
+                  <line x1="16" x2="16" y1="2" y2="6"/>
+                  <line x1="8" x2="8" y1="2" y2="6"/>
+                  <line x1="3" x2="21" y1="10" y2="10"/>
+                </svg>
+              </div>
             </div>
           </div>
           <div>
@@ -360,10 +376,11 @@
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">帳戶</label>
-            <div class="flex gap-2 mt-1">
-              <select id="txAccount" class="input flex-1"></select>
-              <button type="button" onclick="openAccountEditModal()" class="btn text-sm px-3" title="新增/刪除帳戶">＋</button>
-            </div>
+            <select id="txAccount" class="input mt-1"></select>
+          </div>
+          <div>
+            <label class="text-xs" style="color:var(--text-muted)">所屬專案（若為出國/大額專案可選）</label>
+            <select id="txProject" class="input mt-1"><option value="">日常消費（無專案）</option></select>
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">信封（選填）</label>
@@ -378,7 +395,6 @@
             </label>
           </div>
 
-          <!-- 拍照 / 上傳單據：按鈕靠右，左側顯示狀態 -->
           <div>
             <label class="text-xs" style="color:var(--text-muted)">📸 單據 / 收據拍照備忘（選填）</label>
             <div class="flex items-center justify-between border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 mt-1 bg-[var(--bg)]">
@@ -398,31 +414,33 @@
         <button onclick="addTransaction()" class="btn-primary btn w-full mt-4 py-3">新增帳務</button>
       </div>
 
-      <!-- 帳務明細與篩選 -->
+      <!-- 帳務明細與篩選（獨立分行防重疊） -->
       <div class="card p-5">
         <h2 class="semibold mb-3">帳務明細</h2>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
+        <div class="space-y-2 mb-3">
           <div class="flex items-center gap-2">
             <input type="date" id="filterDateFrom" class="input text-xs flex-1" onchange="renderTransactions()" />
             <span class="text-xs" style="color:var(--text-muted)">至</span>
             <input type="date" id="filterDateTo" class="input text-xs flex-1" onchange="renderTransactions()" />
           </div>
-          <select id="filterCategory" class="input text-xs" onchange="renderTransactions()">
-            <option value="">全部分類</option>
-            <option value="食">食</option><option value="衣">衣</option><option value="住">住</option>
-            <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
-            <option value="醫">醫</option><option value="美">美</option><option value="稅">稅</option>
-            <option value="保">保</option><option value="禮">禮</option><option value="雜">雜</option>
-            <option value="提領">提領</option><option value="投">投</option><option value="息">息</option>
-            <option value="折">折</option><option value="收">收</option><option value="什一">什一</option>
-          </select>
-          <select id="filterAccount" class="input text-xs" onchange="renderTransactions()"><option value="">全部帳戶</option></select>
-          <select id="filterNecessary" class="input text-xs" onchange="renderTransactions()">
-            <option value="">全部標籤</option>
-            <option value="necessary">必要</option>
-            <option value="non">非必要</option>
-          </select>
-          <input type="text" id="filterKeyword" class="input text-xs sm:col-span-2" placeholder="關鍵字搜尋（名稱/備忘）" oninput="renderTransactions()" />
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+            <select id="filterCategory" class="input text-xs" onchange="renderTransactions()">
+              <option value="">全部分類</option>
+              <option value="食">食</option><option value="衣">衣</option><option value="住">住</option>
+              <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
+              <option value="醫">醫</option><option value="美">美</option><option value="稅">稅</option>
+              <option value="保">保</option><option value="禮">禮</option><option value="雜">雜</option>
+              <option value="提領">提領</option><option value="投">投</option><option value="息">息</option>
+              <option value="折">折</option><option value="收">收</option><option value="什一">什一</option>
+            </select>
+            <select id="filterAccount" class="input text-xs" onchange="renderTransactions()"><option value="">全部帳戶</option></select>
+            <select id="filterNecessary" class="input text-xs" onchange="renderTransactions()">
+              <option value="">全部標籤</option>
+              <option value="necessary">必要</option>
+              <option value="non">非必要</option>
+            </select>
+          </div>
+          <input type="text" id="filterKeyword" class="input text-xs" placeholder="關鍵字搜尋（名稱/備忘）" oninput="renderTransactions()" />
         </div>
         <div class="flex gap-2 mb-3">
           <button onclick="clearTxFilters()" class="btn text-xs px-4">清除篩選條件</button>
@@ -432,7 +450,7 @@
           <table>
             <thead>
               <tr>
-                <th>日期</th><th>項目</th><th>金額</th><th>分類</th><th>帳戶</th><th>標籤</th><th>信封</th><th>單據</th><th>備註</th><th></th>
+                <th>日期</th><th>項目</th><th>金額</th><th>分類</th><th>帳戶</th><th>標籤</th><th>信封/專案</th><th>單據</th><th>備註</th><th></th>
               </tr>
             </thead>
             <tbody id="txTableBody"></tbody>
@@ -475,13 +493,13 @@
 
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">基金</h2>
+          <h2 class="semibold">基金（支援日幣/美元獨立幣別）</h2>
           <button onclick="openFundModal()" class="btn-primary btn text-xs">新增基金</button>
         </div>
         <div class="overflow-x-auto">
           <table>
             <thead>
-              <tr><th>標的</th><th>單位數</th><th>單價</th><th>匯率</th><th>台幣市值</th><th></th></tr>
+              <tr><th>標的</th><th>幣別</th><th>單位數</th><th>原幣單價</th><th>匯率</th><th>台幣市值</th><th></th></tr>
             </thead>
             <tbody id="fundsTableBody"></tbody>
           </table>
@@ -501,10 +519,7 @@
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">帳戶</label>
-            <div class="flex gap-2 mt-1">
-              <select id="stxAccount" class="input flex-1"></select>
-              <button type="button" onclick="openAccountEditModal()" class="btn text-sm px-3" title="新增/刪除帳戶">＋</button>
-            </div>
+            <select id="stxAccount" class="input mt-1"></select>
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">類別</label>
@@ -561,24 +576,26 @@
     <section id="tab-fixed" class="tab-content space-y-4">
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">固定收支</h2>
-          <button onclick="openFixedModal()" class="btn-primary btn text-xs">新增</button>
-        </div>
-        <div id="fixedList" class="space-y-2"></div>
-      </div>
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">特殊專案</h2>
+          <h2 class="semibold">特殊專案（出國/活動獨立預算池）</h2>
           <button onclick="openProjectModal()" class="btn-primary btn text-xs">新增專案</button>
         </div>
         <div id="projectsList" class="space-y-3"></div>
       </div>
+
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">接案收入追蹤</h2>
+          <h2 class="semibold">接案追蹤</h2>
           <button onclick="openFreelanceModal()" class="btn-primary btn text-xs">新增接案</button>
         </div>
         <div id="freelanceList" class="space-y-2"></div>
+      </div>
+
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="semibold">固定收支</h2>
+          <button onclick="openFixedModal()" class="btn-primary btn text-xs">新增</button>
+        </div>
+        <div id="fixedList" class="space-y-2"></div>
       </div>
     </section>
 
@@ -604,8 +621,8 @@
     </section>
   </div>
 
-  <!-- 底部導航 -->
-  <nav class="floating-nav">
+  <!-- 貼底長方形導覽列 -->
+  <nav class="bottom-bar">
     <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
       看板
@@ -628,7 +645,7 @@
     </button>
     <button class="nav-item" data-tab="fixed" onclick="switchTab('fixed')">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
-      固定
+      專案
     </button>
     <button class="nav-item" data-tab="charts" onclick="switchTab('charts')">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"/></svg>
@@ -637,6 +654,31 @@
   </nav>
 
   <!-- ==================== 彈窗 MODALS ==================== -->
+  <!-- 日幣換匯紀錄 Modal -->
+  <div id="jpyFxModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-3">日幣分批換匯紀錄</h3>
+      <div class="space-y-2 text-xs">
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label style="color:var(--text-muted)">支出台幣 (TWD)</label>
+            <input type="number" id="fxTwdSpent" class="input mt-1 tabular" placeholder="例如 22000" />
+          </div>
+          <div>
+            <label style="color:var(--text-muted)">獲得日幣 (JPY)</label>
+            <input type="number" id="fxJpyBought" class="input mt-1 tabular" placeholder="例如 100000" />
+          </div>
+        </div>
+        <button onclick="addFxRecord()" class="btn-primary btn w-full mt-2">新增換匯紀錄</button>
+      </div>
+      <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+        <p class="text-xs semibold mb-2">平均換匯成本：<span id="jpyAvgCostDisplay" class="heavy text-sm">--</span></p>
+        <div id="fxRecordList" class="max-h-40 overflow-y-auto space-y-1 text-xs"></div>
+      </div>
+      <button onclick="closeModal('jpyFxModal')" class="btn btn-secondary w-full mt-4">關閉</button>
+    </div>
+  </div>
+
   <!-- 單據照片預覽 Modal -->
   <div id="receiptModal" class="modal-overlay hidden">
     <div class="modal text-center">
@@ -737,7 +779,7 @@
           <input type="number" id="stockPrice" class="input mt-1 tabular" step="any" />
         </div>
         <div>
-          <label style="color:var(--text-muted)">預估年化殖利率 %（預估月領股息用）</label>
+          <label style="color:var(--text-muted)">預估年化殖利率 %</label>
           <input type="number" id="stockYield" class="input mt-1 tabular" step="any" value="6" />
         </div>
       </div>
@@ -748,7 +790,7 @@
     </div>
   </div>
 
-  <!-- 基金 Modal -->
+  <!-- 基金 Modal (支援多幣別) -->
   <div id="fundModal" class="modal-overlay hidden">
     <div class="modal">
       <h3 class="text-base bold mb-4" id="fundModalTitle">新增基金標的</h3>
@@ -756,24 +798,115 @@
       <div class="space-y-2 text-xs">
         <div>
           <label style="color:var(--text-muted)">名稱</label>
-          <input type="text" id="fundName" class="input mt-1" placeholder="坦伯頓科技、瑞銀..." />
+          <input type="text" id="fundName" class="input mt-1" placeholder="瑞銀日本股票、坦伯頓..." />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label style="color:var(--text-muted)">計價幣別</label>
+            <select id="fundCurrency" class="input mt-1" onchange="onFundCurrencyChange()">
+              <option value="JPY">JPY (日幣)</option>
+              <option value="USD">USD (美元)</option>
+              <option value="TWD">TWD (台幣)</option>
+            </select>
+          </div>
+          <div>
+            <label style="color:var(--text-muted)">匯率</label>
+            <input type="number" id="fundRate" class="input mt-1 tabular" step="any" value="0.22" />
+          </div>
         </div>
         <div>
-          <label style="color:var(--text-muted)">單位數</label>
+          <label style="color:var(--text-muted)">單位數 (股數)</label>
           <input type="number" id="fundUnits" class="input mt-1 tabular" step="any" />
         </div>
         <div>
-          <label style="color:var(--text-muted)">單價（原幣淨值）</label>
+          <label style="color:var(--text-muted)">原幣單價 (最新淨值)</label>
           <input type="number" id="fundPrice" class="input mt-1 tabular" step="any" />
-        </div>
-        <div>
-          <label style="color:var(--text-muted)">匯率</label>
-          <input type="number" id="fundRate" class="input mt-1 tabular" step="any" value="1" />
         </div>
       </div>
       <div class="flex gap-2 mt-5">
         <button onclick="saveFund()" class="btn-primary btn flex-1">儲存</button>
         <button onclick="closeModal('fundModal')" class="btn flex-1">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 專案 Modal (支援封存) -->
+  <div id="projectModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4" id="projectModalTitle">新增專案</h3>
+      <input type="hidden" id="projectEditId" />
+      <div class="space-y-2 text-xs">
+        <div>
+          <label style="color:var(--text-muted)">專案名稱</label>
+          <input type="text" id="projectName" class="input mt-1" placeholder="日本旅遊、婚禮..." />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">專案總預算</label>
+          <input type="number" id="projectBudget" class="input mt-1 tabular" />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">狀態</label>
+          <select id="projectStatus" class="input mt-1">
+            <option value="active">進行中（記帳選單中顯示）</option>
+            <option value="archived">已結束/封存（從選單隱藏）</option>
+          </select>
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">備註</label>
+          <input type="text" id="projectNote" class="input mt-1" />
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveProject()" class="btn-primary btn flex-1">儲存</button>
+        <button onclick="closeModal('projectModal')" class="btn flex-1">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 接案 Modal (精簡欄位) -->
+  <div id="freelanceModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4" id="freelanceModalTitle">新增接案</h3>
+      <input type="hidden" id="freelanceEditId" />
+      <div class="space-y-2 text-xs">
+        <div>
+          <label style="color:var(--text-muted)">案件名稱</label>
+          <input type="text" id="freelanceName" class="input mt-1" placeholder="活動攝影、海報設計..." />
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label style="color:var(--text-muted)">執行日期</label>
+            <input type="date" id="freelanceExecDate" class="input mt-1" />
+          </div>
+          <div>
+            <label style="color:var(--text-muted)">收款日期</label>
+            <input type="date" id="freelancePayDate" class="input mt-1" />
+          </div>
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">金額</label>
+          <input type="number" id="freelanceAmount" class="input mt-1 tabular" />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">狀態</label>
+          <select id="freelanceStatus" class="input mt-1">
+            <option value="進行中">進行中</option>
+            <option value="待收款">待收款</option>
+            <option value="已收款">已收款</option>
+          </select>
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">入帳帳戶</label>
+          <select id="freelanceAccount" class="input mt-1"></select>
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">備註</label>
+          <input type="text" id="freelanceNote" class="input mt-1" />
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveFreelance()" class="btn-primary btn flex-1">儲存</button>
+        <button onclick="closeModal('freelanceModal')" class="btn flex-1">取消</button>
       </div>
     </div>
   </div>
@@ -813,74 +946,6 @@
       <div class="flex gap-2 mt-5">
         <button onclick="saveFixed()" class="btn-primary btn flex-1">儲存</button>
         <button onclick="closeModal('fixedModal')" class="btn flex-1">取消</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 專案 Modal -->
-  <div id="projectModal" class="modal-overlay hidden">
-    <div class="modal">
-      <h3 class="text-base bold mb-4" id="projectModalTitle">新增專案</h3>
-      <input type="hidden" id="projectEditId" />
-      <div class="space-y-2 text-xs">
-        <div>
-          <label style="color:var(--text-muted)">專案名稱</label>
-          <input type="text" id="projectName" class="input mt-1" placeholder="日本旅遊、婚禮..." />
-        </div>
-        <div>
-          <label style="color:var(--text-muted)">預算金額</label>
-          <input type="number" id="projectBudget" class="input mt-1 tabular" />
-        </div>
-        <div>
-          <label style="color:var(--text-muted)">已花費</label>
-          <input type="number" id="projectSpent" class="input mt-1 tabular" value="0" />
-        </div>
-        <div>
-          <label style="color:var(--text-muted)">備註</label>
-          <input type="text" id="projectNote" class="input mt-1" />
-        </div>
-      </div>
-      <div class="flex gap-2 mt-5">
-        <button onclick="saveProject()" class="btn-primary btn flex-1">儲存</button>
-        <button onclick="closeModal('projectModal')" class="btn flex-1">取消</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 接案 Modal -->
-  <div id="freelanceModal" class="modal-overlay hidden">
-    <div class="modal">
-      <h3 class="text-base bold mb-4" id="freelanceModalTitle">新增接案</h3>
-      <input type="hidden" id="freelanceEditId" />
-      <div class="space-y-2 text-xs">
-        <div>
-          <label style="color:var(--text-muted)">案件名稱</label>
-          <input type="text" id="freelanceName" class="input mt-1" placeholder="攝影、海報設計..." />
-        </div>
-        <div>
-          <label style="color:var(--text-muted)">金額</label>
-          <input type="number" id="freelanceAmount" class="input mt-1 tabular" />
-        </div>
-        <div>
-          <label style="color:var(--text-muted)">狀態</label>
-          <select id="freelanceStatus" class="input mt-1">
-            <option value="進行中">進行中</option>
-            <option value="已完成待收款">已完成待收款</option>
-            <option value="已收款">已收款</option>
-          </select>
-        </div>
-        <div>
-          <label style="color:var(--text-muted)">收款帳戶</label>
-          <select id="freelanceAccount" class="input mt-1"></select>
-        </div>
-        <div>
-          <label style="color:var(--text-muted)">備註</label>
-          <input type="text" id="freelanceNote" class="input mt-1" />
-        </div>
-      </div>
-      <div class="flex gap-2 mt-5">
-        <button onclick="saveFreelance()" class="btn-primary btn flex-1">儲存</button>
-        <button onclick="closeModal('freelanceModal')" class="btn flex-1">取消</button>
       </div>
     </div>
   </div>
@@ -929,7 +994,7 @@
     const DEFAULT_DATA = {
       accounts: Object.fromEntries(DEFAULT_ACCOUNTS.map(a => [a, 0])),
       accountList: [...DEFAULT_ACCOUNTS],
-      jpyCash: 0, jpyRate: 0.22, monthlyBudget: 50000,
+      jpyCash: 0, jpyRate: 0.22, jpyFxRecords: [], monthlyBudget: 50000,
       tithePool: 0, titheDonatedThisMonth: 0, lastTitheMonth: '',
       budgetIncludeInvest: false,
       envelopes: [], transactions: [], stocks: [], funds: [],
@@ -959,7 +1024,6 @@
       return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
     }
 
-    // 日期欄位雙向同步
     function syncDateFromText(val) {
       const trimmed = (val || '').trim();
       if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
@@ -970,7 +1034,6 @@
       document.getElementById('txDateText').value = val;
     }
 
-    // 檔案選擇顯示名稱
     function handleReceiptFileSelect(input) {
       const span = document.getElementById('txReceiptFileName');
       if (input.files && input.files[0]) {
@@ -995,6 +1058,7 @@
           data = Object.assign({}, DEFAULT_DATA, p);
           if (!data.accountList || !data.accountList.length) data.accountList = [...DEFAULT_ACCOUNTS];
           data.accountList.forEach(a => { if (data.accounts[a] === undefined) data.accounts[a] = 0; });
+          if (!data.jpyFxRecords) data.jpyFxRecords = [];
         } catch {
           data = JSON.parse(JSON.stringify(DEFAULT_DATA));
         }
@@ -1035,6 +1099,7 @@
       });
 
       populateAllAccountSelects();
+      populateProjectSelect();
       if (tab === 'dashboard') renderDashboard();
       if (tab === 'envelopes') renderEnvelopes();
       if (tab === 'transactions') {
@@ -1067,7 +1132,18 @@
       });
     }
 
-    // ==================== 鏡頭掃碼功能 ====================
+    function populateProjectSelect() {
+      const sel = document.getElementById('txProject');
+      if (!sel) return;
+      const cur = sel.value;
+      sel.innerHTML = '<option value="">日常消費（無專案）</option>';
+      (data.projects || []).filter(p => p.status !== 'archived').forEach(p => {
+        sel.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+      });
+      sel.value = cur;
+    }
+
+    // ==================== 鏡頭掃碼 ====================
     function openScanModal() {
       openModal('scanModal');
       html5QrCode = new Html5Qrcode("reader");
@@ -1086,18 +1162,50 @@
         stopScanner();
       });
     }
-
     function stopScanner() {
       if (html5QrCode) {
         html5QrCode.stop().then(() => {
           html5QrCode.clear();
           closeModal('scanModal');
-        }).catch(() => {
-          closeModal('scanModal');
-        });
+        }).catch(() => { closeModal('scanModal'); });
       } else {
         closeModal('scanModal');
       }
+    }
+
+    // ==================== 日幣換匯成本 ====================
+    function openJpyFxModal() {
+      renderFxRecords();
+      openModal('jpyFxModal');
+    }
+    function addFxRecord() {
+      const twd = parseFloat(document.getElementById('fxTwdSpent').value);
+      const jpy = parseFloat(document.getElementById('fxJpyBought').value);
+      if (!twd || !jpy || twd <= 0 || jpy <= 0) return alert('請輸入正確的台幣與日幣金額');
+      data.jpyFxRecords.push({ id: uid(), date: todayStr(), twd, jpy, rate: twd / jpy });
+      saveData();
+      document.getElementById('fxTwdSpent').value = '';
+      document.getElementById('fxJpyBought').value = '';
+      renderFxRecords();
+      renderDashboard();
+    }
+    function deleteFxRecord(id) {
+      data.jpyFxRecords = data.jpyFxRecords.filter(r => r.id !== id);
+      saveData();
+      renderFxRecords();
+      renderDashboard();
+    }
+    function renderFxRecords() {
+      const totalTwd = data.jpyFxRecords.reduce((s, r) => s + r.twd, 0);
+      const totalJpy = data.jpyFxRecords.reduce((s, r) => s + r.jpy, 0);
+      const avg = totalJpy > 0 ? (totalTwd / totalJpy) : 0;
+      document.getElementById('jpyAvgCostDisplay').textContent = avg > 0 ? avg.toFixed(4) + ' TWD' : '尚無紀錄';
+      document.getElementById('fxRecordList').innerHTML = data.jpyFxRecords.map(r => `
+        <div class="pill p-2 flex justify-between items-center">
+          <span>${r.date} · 支出 $${r.twd.toLocaleString()} 換 ¥${r.jpy.toLocaleString()} (匯率 ${r.rate.toFixed(4)})</span>
+          <button onclick="deleteFxRecord('${r.id}')" class="text-xs" style="color:var(--text-muted)">刪</button>
+        </div>
+      `).join('') || '<p class="text-center py-2" style="color:var(--text-muted)">尚無分批換匯紀錄</p>';
     }
 
     // ==================== 帳戶與匯率/股價 API ====================
@@ -1118,7 +1226,6 @@
       document.getElementById('newAccountName').value = '';
       openModal('accountModal');
     }
-
     function addNewAccount() {
       const name = document.getElementById('newAccountName').value.trim();
       if (!name) return alert('請輸入帳戶名稱');
@@ -1130,7 +1237,6 @@
       openAccountEditModal();
       populateAllAccountSelects();
     }
-
     function removeAccount(name) {
       if (data.accountList.length <= 1) return alert('至少保留一個帳戶');
       if (!confirm(`確定移除「${name}」？`)) return;
@@ -1140,7 +1246,6 @@
       openAccountEditModal();
       populateAllAccountSelects();
     }
-
     function saveAccounts() {
       document.querySelectorAll('.account-edit-input').forEach(inp => {
         data.accounts[inp.dataset.account] = parseFloat(inp.value) || 0;
@@ -1151,7 +1256,6 @@
       populateAllAccountSelects();
       renderDashboard();
     }
-
     async function updateJPYRate() {
       const status = document.getElementById('apiStatus');
       status.textContent = '更新日幣匯率中…';
@@ -1160,22 +1264,20 @@
         const json = await res.json();
         if (json && json.rates && json.rates.TWD) {
           data.jpyRate = json.rates.TWD;
+          data.funds.forEach(f => { if (f.currency === 'JPY') f.rate = data.jpyRate; });
           saveData();
-          status.textContent = '日幣匯率已更新：' + data.jpyRate.toFixed(4);
+          status.textContent = '日幣已更新：' + data.jpyRate.toFixed(4);
           renderDashboard();
+          renderInvestments();
           return;
         }
       } catch (e) {}
-      status.textContent = '匯率更新失敗，保留目前數值';
+      status.textContent = '匯率更新失敗';
     }
-
     async function updateStockPrices() {
       const status = document.getElementById('apiStatus');
-      if (!data.stocks.length) {
-        status.textContent = '尚無持股標的可更新';
-        return;
-      }
-      status.textContent = '更新股票現價中…';
+      if (!data.stocks.length) return status.textContent = '尚無股票可更新';
+      status.textContent = '更新股票中…';
       let updatedCount = 0;
       for (let s of data.stocks) {
         try {
@@ -1184,20 +1286,15 @@
           const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
           const res = await fetch(proxyUrl);
           const json = await res.json();
-          const meta = json?.chart?.result?.[0]?.meta;
-          const curPrice = meta?.regularMarketPrice || meta?.previousClose;
-          if (curPrice) {
-            s.price = curPrice;
-            updatedCount++;
-          }
+          const curPrice = json?.chart?.result?.[0]?.meta?.regularMarketPrice;
+          if (curPrice) { s.price = curPrice; updatedCount++; }
         } catch (err) {}
       }
       saveData();
       renderInvestments();
       renderDashboard();
-      status.textContent = `已完成現價更新（${updatedCount}/${data.stocks.length} 檔）`;
+      status.textContent = `已更新現價（${updatedCount}/${data.stocks.length} 檔）`;
     }
-
     async function refreshAllAssets() {
       await updateJPYRate();
       await updateStockPrices();
@@ -1210,27 +1307,23 @@
       saveData();
       renderDashboard();
     }
-
     function saveMonthlyBudget() {
       const val = parseFloat(document.getElementById('monthlyBudgetInput').value);
-      if (!isNaN(val)) {
-        data.monthlyBudget = val;
-        saveData();
-        renderDashboard();
-      }
+      data.monthlyBudget = isNaN(val) ? 0 : val;
+      saveData();
+      renderDashboard();
     }
-
     function calcMonthSpent() {
       const cm = currentMonthStr();
       return data.transactions
         .filter(t => {
           if (!t.date || !t.date.startsWith(cm)) return false;
           if (!data.budgetIncludeInvest && t.category === '投') return false;
+          if (t.projectId) return false;
           return true;
         })
         .reduce((sum, t) => t.amount < 0 ? sum + Math.abs(t.amount) : sum, 0);
     }
-
     function calcTitheShould() {
       const cm = currentMonthStr();
       const income = data.transactions
@@ -1238,7 +1331,6 @@
         .reduce((s, t) => s + t.amount, 0);
       return Math.round(income * 0.1);
     }
-
     function recordTitheDonation() {
       const amount = parseFloat(document.getElementById('titheDonateAmount').value);
       if (!amount || amount <= 0) return alert('請輸入奉獻金額');
@@ -1246,7 +1338,7 @@
       data.titheDonatedThisMonth = (data.titheDonatedThisMonth || 0) + amount;
       data.transactions.push({
         id: uid(), date: todayStr(), name: '什一奉獻',
-        amount: -amount, category: '什一', account: '現金', necessary: 'necessary', note: '奉獻池提撥', envelopeId: '', receipt: ''
+        amount: -amount, category: '什一', account: '現金', necessary: 'necessary', note: '奉獻池提撥', envelopeId: '', projectId: '', receipt: ''
       });
       data.accounts['現金'] = (data.accounts['現金'] || 0) - amount;
       saveData();
@@ -1268,7 +1360,9 @@
       document.getElementById('totalInvest').textContent = formatMoney(invest);
       document.getElementById('jpyRateDisplay').textContent = (data.jpyRate || 0.22).toFixed(4) + ' TWD';
 
-      document.getElementById('monthlyBudgetInput').value = data.monthlyBudget || '';
+      if (document.activeElement !== document.getElementById('monthlyBudgetInput')) {
+        document.getElementById('monthlyBudgetInput').value = data.monthlyBudget || '';
+      }
       document.getElementById('budgetToggle').classList.toggle('on', !!data.budgetIncludeInvest);
 
       const spent = calcMonthSpent();
@@ -1313,7 +1407,6 @@
       }
       openModal('envelopeModal');
     }
-
     function saveEnvelope() {
       const id = document.getElementById('envelopeEditId').value;
       const name = document.getElementById('envelopeName').value.trim();
@@ -1331,7 +1424,6 @@
       renderEnvelopes();
       populateEnvelopeSelect();
     }
-
     function deleteEnvelope(id) {
       if (!confirm('確定刪除此信封？')) return;
       data.envelopes = data.envelopes.filter(e => e.id !== id);
@@ -1339,7 +1431,6 @@
       renderEnvelopes();
       populateEnvelopeSelect();
     }
-
     function renderEnvelopes() {
       const cm = currentMonthStr();
       const list = document.getElementById('envelopesList');
@@ -1375,7 +1466,6 @@
           </div>`;
       }).join('');
     }
-
     function populateEnvelopeSelect() {
       const sel = document.getElementById('txEnvelope');
       if (!sel) return;
@@ -1399,6 +1489,7 @@
       const amount = parseAmount(amountStr);
       const category = document.getElementById('txCategory').value;
       const account = document.getElementById('txAccount').value;
+      const projectId = document.getElementById('txProject').value;
       const envelopeId = document.getElementById('txEnvelope').value;
       const necessary = document.querySelector('input[name="txNecessary"]:checked').value;
       const note = document.getElementById('txNote').value.trim();
@@ -1422,7 +1513,7 @@
       }
 
       data.transactions.push({
-        id: uid(), date, name, amount, category, account, necessary, note, envelopeId, receipt: receiptData
+        id: uid(), date, name, amount, category, account, necessary, note, envelopeId, projectId, receipt: receiptData
       });
       saveData();
 
@@ -1434,6 +1525,7 @@
       document.getElementById('txReceiptFileName').style.color = 'var(--text-muted)';
       renderTransactions();
       renderDashboard();
+      renderFixedSection();
     }
 
     function viewReceipt(id) {
@@ -1456,6 +1548,7 @@
       saveData();
       renderTransactions();
       renderDashboard();
+      renderFixedSection();
     }
 
     function clearTxFilters() {
@@ -1490,6 +1583,8 @@
       const tbody = document.getElementById('txTableBody');
       tbody.innerHTML = list.map(t => {
         const env = data.envelopes.find(e => e.id === t.envelopeId);
+        const proj = data.projects.find(p => p.id === t.projectId);
+        const tag = proj ? `[專] ${proj.name}` : (env ? env.name : '');
         const receiptBtn = t.receipt ? `<button onclick="viewReceipt('${t.id}')" class="text-xs px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700">📸 查看</button>` : '<span style="color:var(--text-muted)">-</span>';
         return `
           <tr>
@@ -1499,7 +1594,7 @@
             <td>${t.category}</td>
             <td>${t.account}</td>
             <td><span class="badge ${t.necessary === 'necessary' ? 'badge-nec' : 'badge-non'}">${t.necessary === 'necessary' ? '必要' : '非必要'}</span></td>
-            <td style="color:var(--text-muted)">${env ? env.name : ''}</td>
+            <td style="color:var(--text-muted)">${tag}</td>
             <td>${receiptBtn}</td>
             <td style="color:var(--text-muted)">${t.note || ''}</td>
             <td><button onclick="deleteTransaction('${t.id}')" class="btn text-xs px-2 py-0.5">刪</button></td>
@@ -1529,7 +1624,6 @@
       }
       openModal('stockModal');
     }
-
     function saveStock() {
       const id = document.getElementById('stockEditId').value;
       const symbol = document.getElementById('stockSymbol').value.trim();
@@ -1549,7 +1643,6 @@
       renderInvestments();
       renderDashboard();
     }
-
     function deleteStock(id) {
       if (!confirm('確定刪除？')) return;
       data.stocks = data.stocks.filter(s => s.id !== id);
@@ -1558,6 +1651,13 @@
       renderDashboard();
     }
 
+    function onFundCurrencyChange() {
+      const cur = document.getElementById('fundCurrency').value;
+      const rateInput = document.getElementById('fundRate');
+      if (cur === 'JPY') rateInput.value = (data.jpyRate || 0.22).toFixed(4);
+      else if (cur === 'USD') rateInput.value = '32.0';
+      else rateInput.value = '1';
+    }
     function openFundModal(id = null) {
       document.getElementById('fundEditId').value = id || '';
       document.getElementById('fundModalTitle').textContent = id ? '編輯基金' : '新增基金';
@@ -1565,38 +1665,39 @@
         const f = data.funds.find(x => x.id === id);
         if (f) {
           document.getElementById('fundName').value = f.name;
+          document.getElementById('fundCurrency').value = f.currency || 'JPY';
           document.getElementById('fundUnits').value = f.units;
           document.getElementById('fundPrice').value = f.price;
           document.getElementById('fundRate').value = f.rate;
         }
       } else {
         document.getElementById('fundName').value = '';
+        document.getElementById('fundCurrency').value = 'JPY';
         document.getElementById('fundUnits').value = '';
         document.getElementById('fundPrice').value = '';
-        document.getElementById('fundRate').value = '1';
+        document.getElementById('fundRate').value = (data.jpyRate || 0.22).toFixed(4);
       }
       openModal('fundModal');
     }
-
     function saveFund() {
       const id = document.getElementById('fundEditId').value;
       const name = document.getElementById('fundName').value.trim();
+      const currency = document.getElementById('fundCurrency').value;
       const units = parseFloat(document.getElementById('fundUnits').value) || 0;
       const price = parseFloat(document.getElementById('fundPrice').value) || 0;
       const rate = parseFloat(document.getElementById('fundRate').value) || 1;
       if (!name) return alert('請輸入基金名稱');
       if (id) {
         const f = data.funds.find(x => x.id === id);
-        if (f) { f.name = name; f.units = units; f.price = price; f.rate = rate; }
+        if (f) { f.name = name; f.currency = currency; f.units = units; f.price = price; f.rate = rate; }
       } else {
-        data.funds.push({ id: uid(), name, units, price, rate });
+        data.funds.push({ id: uid(), name, currency, units, price, rate });
       }
       saveData();
       closeModal('fundModal');
       renderInvestments();
       renderDashboard();
     }
-
     function deleteFund(id) {
       if (!confirm('確定刪除？')) return;
       data.funds = data.funds.filter(f => f.id !== id);
@@ -1646,6 +1747,7 @@
         return `
           <tr>
             <td class="semibold">${f.name}</td>
+            <td class="tabular">${f.currency || 'TWD'}</td>
             <td class="tabular">${f.units}</td>
             <td class="tabular">${f.price}</td>
             <td class="tabular">${f.rate}</td>
@@ -1655,11 +1757,11 @@
               <button onclick="deleteFund('${f.id}')" class="text-xs" style="color:var(--text-muted)">刪</button>
             </td>
           </tr>`;
-      }).join('') || '<tr><td colspan="6" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無基金標的</td></tr>';
+      }).join('') || '<tr><td colspan="7" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無基金標的</td></tr>';
       document.getElementById('fundsTotalValue').textContent = formatMoney(fundsTotal);
     }
 
-    // ==================== 股票流水 ====================
+    // ==================== 股票交易 ====================
     function addStockTransaction() {
       const date = document.getElementById('stxDate').value || todayStr();
       const account = document.getElementById('stxAccount').value;
@@ -1699,7 +1801,7 @@
         const div = total || shares;
         data.accounts[account] = (data.accounts[account] || 0) + div;
         data.transactions.push({
-          id: uid(), date, name: symbol + ' 配息', amount: div, category: '息', account, necessary: 'necessary', note: note || '股息入帳', envelopeId: '', receipt: ''
+          id: uid(), date, name: symbol + ' 配息', amount: div, category: '息', account, necessary: 'necessary', note: note || '股息入帳', envelopeId: '', projectId: '', receipt: ''
         });
         data.tithePool = (data.tithePool || 0) + Math.round(div * 0.1);
         totalCost = div;
@@ -1714,14 +1816,12 @@
       renderInvestments();
       renderDashboard();
     }
-
     function deleteStockTransaction(id) {
       if (!confirm('確定刪除流水？持股與帳戶需手動微調')) return;
       data.stockTransactions = data.stockTransactions.filter(t => t.id !== id);
       saveData();
       renderStockTransactions();
     }
-
     function renderStockTransactions() {
       const list = [...data.stockTransactions].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
       document.getElementById('stockTxTableBody').innerHTML = list.map(t => `
@@ -1741,7 +1841,115 @@
       `).join('') || '<tr><td colspan="11" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無交易紀錄</td></tr>';
     }
 
-    // ==================== 固定/專案/接案 ====================
+    // ==================== 專案 / 接案 / 固定 ====================
+    function openProjectModal(id = null) {
+      document.getElementById('projectEditId').value = id || '';
+      document.getElementById('projectModalTitle').textContent = id ? '編輯專案' : '新增專案';
+      if (id) {
+        const p = data.projects.find(x => x.id === id);
+        if (p) {
+          document.getElementById('projectName').value = p.name;
+          document.getElementById('projectBudget').value = p.budget;
+          document.getElementById('projectStatus').value = p.status || 'active';
+          document.getElementById('projectNote').value = p.note || '';
+        }
+      } else {
+        document.getElementById('projectName').value = '';
+        document.getElementById('projectBudget').value = '';
+        document.getElementById('projectStatus').value = 'active';
+        document.getElementById('projectNote').value = '';
+      }
+      openModal('projectModal');
+    }
+    function saveProject() {
+      const id = document.getElementById('projectEditId').value;
+      const name = document.getElementById('projectName').value.trim();
+      const budget = parseFloat(document.getElementById('projectBudget').value) || 0;
+      const status = document.getElementById('projectStatus').value;
+      const note = document.getElementById('projectNote').value.trim();
+      if (!name) return alert('請輸入專案名稱');
+      if (id) {
+        const p = data.projects.find(x => x.id === id);
+        if (p) { p.name = name; p.budget = budget; p.status = status; p.note = note; }
+      } else {
+        data.projects.push({ id: uid(), name, budget, status, note });
+      }
+      saveData();
+      closeModal('projectModal');
+      renderFixedSection();
+      populateProjectSelect();
+    }
+    function deleteProject(id) {
+      if (!confirm('確定刪除專案？')) return;
+      data.projects = data.projects.filter(p => p.id !== id);
+      saveData();
+      renderFixedSection();
+      populateProjectSelect();
+    }
+
+    function openFreelanceModal(id = null) {
+      document.getElementById('freelanceEditId').value = id || '';
+      document.getElementById('freelanceModalTitle').textContent = id ? '編輯接案' : '新增接案';
+      if (id) {
+        const f = data.freelances.find(x => x.id === id);
+        if (f) {
+          document.getElementById('freelanceName').value = f.name;
+          document.getElementById('freelanceExecDate').value = f.execDate || '';
+          document.getElementById('freelancePayDate').value = f.payDate || '';
+          document.getElementById('freelanceAmount').value = f.amount;
+          document.getElementById('freelanceStatus').value = f.status;
+          document.getElementById('freelanceAccount').value = f.account;
+          document.getElementById('freelanceNote').value = f.note || '';
+        }
+      } else {
+        document.getElementById('freelanceName').value = '';
+        document.getElementById('freelanceExecDate').value = todayStr();
+        document.getElementById('freelancePayDate').value = '';
+        document.getElementById('freelanceAmount').value = '';
+        document.getElementById('freelanceStatus').value = '進行中';
+        document.getElementById('freelanceNote').value = '';
+      }
+      openModal('freelanceModal');
+    }
+    function saveFreelance() {
+      const id = document.getElementById('freelanceEditId').value;
+      const name = document.getElementById('freelanceName').value.trim();
+      const execDate = document.getElementById('freelanceExecDate').value;
+      const payDate = document.getElementById('freelancePayDate').value;
+      const amount = parseFloat(document.getElementById('freelanceAmount').value) || 0;
+      const status = document.getElementById('freelanceStatus').value;
+      const account = document.getElementById('freelanceAccount').value;
+      const note = document.getElementById('freelanceNote').value.trim();
+      if (!name) return alert('請輸入案件名稱');
+      if (id) {
+        const f = data.freelances.find(x => x.id === id);
+        if (f) {
+          if (status === '已收款' && f.status !== '已收款') {
+            data.accounts[account] = (data.accounts[account] || 0) + amount;
+            data.tithePool = (data.tithePool || 0) + Math.round(amount * 0.1);
+            data.transactions.push({ id: uid(), date: payDate || todayStr(), name: name + '（接案收款）', amount, category: '收', account, necessary: 'necessary', note, envelopeId: '', projectId: '', receipt: '' });
+          }
+          f.name = name; f.execDate = execDate; f.payDate = payDate; f.amount = amount; f.status = status; f.account = account; f.note = note;
+        }
+      } else {
+        data.freelances.push({ id: uid(), name, execDate, payDate, amount, status, account, note });
+        if (status === '已收款') {
+          data.accounts[account] = (data.accounts[account] || 0) + amount;
+          data.tithePool = (data.tithePool || 0) + Math.round(amount * 0.1);
+          data.transactions.push({ id: uid(), date: payDate || todayStr(), name: name + '（接案收款）', amount, category: '收', account, necessary: 'necessary', note, envelopeId: '', projectId: '', receipt: '' });
+        }
+      }
+      saveData();
+      closeModal('freelanceModal');
+      renderFixedSection();
+      renderDashboard();
+    }
+    function deleteFreelance(id) {
+      data.freelances = data.freelances.filter(f => f.id !== id);
+      saveData();
+      renderFixedSection();
+    }
+
     function openFixedModal(id = null) {
       document.getElementById('fixedEditId').value = id || '';
       document.getElementById('fixedModalTitle').textContent = id ? '編輯固定項目' : '新增固定項目';
@@ -1775,104 +1983,65 @@
       } else {
         data.fixedItems.push({ id: uid(), name, amount, account, category, note });
       }
-      saveData(); closeModal('fixedModal'); renderFixedSection();
+      saveData();
+      closeModal('fixedModal');
+      renderFixedSection();
     }
-    function deleteFixed(id) { data.fixedItems = data.fixedItems.filter(f => f.id !== id); saveData(); renderFixedSection(); }
+    function deleteFixed(id) {
+      data.fixedItems = data.fixedItems.filter(f => f.id !== id);
+      saveData();
+      renderFixedSection();
+    }
     function applyFixed(id) {
       const f = data.fixedItems.find(x => x.id === id);
       if (!f) return;
       data.accounts[f.account] = (data.accounts[f.account] || 0) + f.amount;
-      data.transactions.push({ id: uid(), date: todayStr(), name: f.name + '（固定）', amount: f.amount, category: f.category, account: f.account, necessary: 'necessary', note: f.note || '', envelopeId: '', receipt: '' });
-      saveData(); renderDashboard(); alert('已計入本月帳務');
+      data.transactions.push({ id: uid(), date: todayStr(), name: f.name + '（固定）', amount: f.amount, category: f.category, account: f.account, necessary: 'necessary', note: f.note || '', envelopeId: '', projectId: '', receipt: '' });
+      saveData();
+      renderDashboard();
+      alert('已計入本月帳務');
     }
-
-    function openProjectModal(id = null) {
-      document.getElementById('projectEditId').value = id || '';
-      document.getElementById('projectModalTitle').textContent = id ? '編輯專案' : '新增專案';
-      if (id) {
-        const p = data.projects.find(x => x.id === id);
-        if (p) {
-          document.getElementById('projectName').value = p.name;
-          document.getElementById('projectBudget').value = p.budget;
-          document.getElementById('projectSpent').value = p.spent;
-          document.getElementById('projectNote').value = p.note || '';
-        }
-      } else {
-        document.getElementById('projectName').value = '';
-        document.getElementById('projectBudget').value = '';
-        document.getElementById('projectSpent').value = '0';
-        document.getElementById('projectNote').value = '';
-      }
-      openModal('projectModal');
-    }
-    function saveProject() {
-      const id = document.getElementById('projectEditId').value;
-      const name = document.getElementById('projectName').value.trim();
-      const budget = parseFloat(document.getElementById('projectBudget').value) || 0;
-      const spent = parseFloat(document.getElementById('projectSpent').value) || 0;
-      const note = document.getElementById('projectNote').value.trim();
-      if (!name) return alert('請輸入專案名稱');
-      if (id) {
-        const p = data.projects.find(x => x.id === id);
-        if (p) { p.name = name; p.budget = budget; p.spent = spent; p.note = note; }
-      } else {
-        data.projects.push({ id: uid(), name, budget, spent, note });
-      }
-      saveData(); closeModal('projectModal'); renderFixedSection();
-    }
-    function deleteProject(id) { data.projects = data.projects.filter(p => p.id !== id); saveData(); renderFixedSection(); }
-
-    function openFreelanceModal(id = null) {
-      document.getElementById('freelanceEditId').value = id || '';
-      document.getElementById('freelanceModalTitle').textContent = id ? '編輯接案' : '新增接案';
-      if (id) {
-        const f = data.freelances.find(x => x.id === id);
-        if (f) {
-          document.getElementById('freelanceName').value = f.name;
-          document.getElementById('freelanceAmount').value = f.amount;
-          document.getElementById('freelanceStatus').value = f.status;
-          document.getElementById('freelanceAccount').value = f.account;
-          document.getElementById('freelanceNote').value = f.note || '';
-        }
-      } else {
-        document.getElementById('freelanceName').value = '';
-        document.getElementById('freelanceAmount').value = '';
-        document.getElementById('freelanceStatus').value = '進行中';
-        document.getElementById('freelanceNote').value = '';
-      }
-      openModal('freelanceModal');
-    }
-    function saveFreelance() {
-      const id = document.getElementById('freelanceEditId').value;
-      const name = document.getElementById('freelanceName').value.trim();
-      const amount = parseFloat(document.getElementById('freelanceAmount').value) || 0;
-      const status = document.getElementById('freelanceStatus').value;
-      const account = document.getElementById('freelanceAccount').value;
-      const note = document.getElementById('freelanceNote').value.trim();
-      if (!name) return alert('請輸入案件名稱');
-      if (id) {
-        const f = data.freelances.find(x => x.id === id);
-        if (f) {
-          if (status === '已收款' && f.status !== '已收款') {
-            data.accounts[account] = (data.accounts[account] || 0) + amount;
-            data.tithePool = (data.tithePool || 0) + Math.round(amount * 0.1);
-            data.transactions.push({ id: uid(), date: todayStr(), name: name + '（接案收款）', amount, category: '收', account, necessary: 'necessary', note, envelopeId: '', receipt: '' });
-          }
-          f.name = name; f.amount = amount; f.status = status; f.account = account; f.note = note;
-        }
-      } else {
-        data.freelances.push({ id: uid(), name, amount, status, account, note });
-        if (status === '已收款') {
-          data.accounts[account] = (data.accounts[account] || 0) + amount;
-          data.tithePool = (data.tithePool || 0) + Math.round(amount * 0.1);
-          data.transactions.push({ id: uid(), date: todayStr(), name: name + '（接案收款）', amount, category: '收', account, necessary: 'necessary', note, envelopeId: '', receipt: '' });
-        }
-      }
-      saveData(); closeModal('freelanceModal'); renderFixedSection(); renderDashboard();
-    }
-    function deleteFreelance(id) { data.freelances = data.freelances.filter(f => f.id !== id); saveData(); renderFixedSection(); }
 
     function renderFixedSection() {
+      document.getElementById('projectsList').innerHTML = data.projects.map(p => {
+        const spent = data.transactions.filter(t => t.projectId === p.id && t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+        const remain = p.budget - spent;
+        return `
+          <div class="pill p-4 space-y-2 text-xs">
+            <div class="flex justify-between items-center">
+              <div>
+                <span class="semibold text-sm">${p.name}</span>
+                <span class="badge ${p.status === 'archived' ? 'badge-non' : 'badge-nec'} ml-2">${p.status === 'archived' ? '已封存' : '進行中'}</span>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="openProjectModal('${p.id}')" style="color:var(--text-muted)">編</button>
+                <button onclick="deleteProject('${p.id}')" style="color:var(--text-muted)">刪</button>
+              </div>
+            </div>
+            <div class="flex justify-between tabular" style="color:var(--text-muted)">
+              <span>預算 ${formatMoney(p.budget)} · 已花 ${formatMoney(spent)}</span>
+              <span class="heavy">剩餘 ${formatMoney(remain)}</span>
+            </div>
+          </div>`;
+      }).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未建立專案</p>';
+
+      document.getElementById('freelanceList').innerHTML = data.freelances.map(f => `
+        <div class="pill p-3 flex justify-between items-center text-xs">
+          <div>
+            <span class="semibold">${f.name}</span>
+            <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
+            <span class="badge badge-nec ml-2">${f.status}</span>
+            <div class="text-[11px] mt-0.5" style="color:var(--text-muted)">
+              執行: ${f.execDate || '--'} · 收款: ${f.payDate || '--'}
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="openFreelanceModal('${f.id}')" style="color:var(--text-muted)">編</button>
+            <button onclick="deleteFreelance('${f.id}')" style="color:var(--text-muted)">刪</button>
+          </div>
+        </div>
+      `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚無接案紀錄</p>';
+
       document.getElementById('fixedList').innerHTML = data.fixedItems.map(f => `
         <div class="pill p-3 flex justify-between items-center text-xs">
           <div>
@@ -1887,38 +2056,6 @@
           </div>
         </div>
       `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未設定固定收支</p>';
-
-      document.getElementById('projectsList').innerHTML = data.projects.map(p => {
-        const remain = p.budget - p.spent;
-        return `
-          <div class="pill p-4 space-y-2 text-xs">
-            <div class="flex justify-between items-center">
-              <span class="semibold text-sm">${p.name}</span>
-              <div class="flex gap-2">
-                <button onclick="openProjectModal('${p.id}')" style="color:var(--text-muted)">編</button>
-                <button onclick="deleteProject('${p.id}')" style="color:var(--text-muted)">刪</button>
-              </div>
-            </div>
-            <div class="flex justify-between tabular" style="color:var(--text-muted)">
-              <span>預算 ${formatMoney(p.budget)} · 已花 ${formatMoney(p.spent)}</span>
-              <span class="heavy">剩餘 ${formatMoney(remain)}</span>
-            </div>
-          </div>`;
-      }).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未建立專案</p>';
-
-      document.getElementById('freelanceList').innerHTML = data.freelances.map(f => `
-        <div class="pill p-3 flex justify-between items-center text-xs">
-          <div>
-            <span class="semibold">${f.name}</span>
-            <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
-            <span class="badge badge-nec ml-2">${f.status}</span>
-          </div>
-          <div class="flex gap-2">
-            <button onclick="openFreelanceModal('${f.id}')" style="color:var(--text-muted)">編</button>
-            <button onclick="deleteFreelance('${f.id}')" style="color:var(--text-muted)">刪</button>
-          </div>
-        </div>
-      `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚無接案紀錄</p>';
     }
 
     // ==================== 統計圖表 ====================
@@ -1983,7 +2120,6 @@
       a.download = '資產財務備份_' + todayStr() + '.json';
       a.click();
     }
-
     function importData(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1993,21 +2129,20 @@
           data = JSON.parse(e.target.result);
           saveData();
           populateAllAccountSelects();
+          populateProjectSelect();
           switchTab('dashboard');
           alert('資料匯入成功！');
-        } catch (err) {
-          alert('解析失敗：' + err.message);
-        }
+        } catch (err) { alert('解析失敗：' + err.message); }
       };
       reader.readAsText(file);
       event.target.value = '';
     }
-
     function resetAllData() {
       if (!confirm('確定要清除全部資料？此動作無法復原！')) return;
       data = JSON.parse(JSON.stringify(DEFAULT_DATA));
       saveData();
       populateAllAccountSelects();
+      populateProjectSelect();
       switchTab('dashboard');
       alert('已重置為初始狀態');
     }
@@ -2017,6 +2152,7 @@
       initTheme();
       loadData();
       populateAllAccountSelects();
+      populateProjectSelect();
       switchTab('dashboard');
     });
   </script>
