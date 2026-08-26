@@ -642,29 +642,39 @@
       </div>
     </section>
 
-    <!-- 報表 -->
+    <!-- 報表（三個圓餅圖合併至同一大卡片框，由上至下垂直排版） -->
     <section id="tab-charts" class="tab-content space-y-4">
-      <div class="card p-5">
-        <h2 class="semibold mb-3">費用分類圓餅圖</h2>
-        <div class="max-w-md mx-auto">
-          <canvas id="categoryPieChart" height="240"></canvas>
+      <div class="card p-5 space-y-6">
+        <!-- 1. 費用分類圓餅圖 -->
+        <div>
+          <h2 class="semibold text-base mb-3">費用分類圓餅圖</h2>
+          <div class="max-w-md mx-auto">
+            <canvas id="categoryPieChart" height="240"></canvas>
+          </div>
+        </div>
+
+        <div class="border-t border-zinc-200 dark:border-zinc-800"></div>
+
+        <!-- 2. 帳戶 / 卡片支出佔比 -->
+        <div>
+          <h2 class="semibold text-base mb-3">帳戶 / 卡片支出佔比</h2>
+          <div class="max-w-md mx-auto">
+            <canvas id="accountPieChart" height="240"></canvas>
+          </div>
+        </div>
+
+        <div class="border-t border-zinc-200 dark:border-zinc-800"></div>
+
+        <!-- 3. 必要 vs 非必要支出佔比 -->
+        <div>
+          <h2 class="semibold text-base mb-3">必要 vs 非必要支出佔比</h2>
+          <div class="max-w-md mx-auto">
+            <canvas id="necessaryPieChart" height="220"></canvas>
+          </div>
         </div>
       </div>
 
-      <div class="card p-5">
-        <h2 class="semibold mb-3">帳戶 / 卡片支出佔比</h2>
-        <div class="max-w-md mx-auto">
-          <canvas id="accountPieChart" height="240"></canvas>
-        </div>
-      </div>
-
-      <div class="card p-5">
-        <h2 class="semibold mb-3">必要 vs 非必要支出佔比</h2>
-        <div class="max-w-md mx-auto">
-          <canvas id="necessaryPieChart" height="220"></canvas>
-        </div>
-      </div>
-
+      <!-- 底部操作列 -->
       <div class="card p-5">
         <div class="flex items-center justify-center gap-3 flex-wrap">
           <label class="btn btn-secondary text-xs px-4 py-2 cursor-pointer">
@@ -1369,159 +1379,155 @@
       }
     }
 
-    // ==================== 批次匯入發票 CSV（精準定位品名/金額與修正日期） ====================
+    // ==================== 批次匯入發票 CSV（精確定位品名與金額，防數量誤抓） ====================
     function importInvoiceCSV(event) {
-  const file = event.target.files[0];
-  if (!file) return;
+      const file = event.target.files[0];
+      if (!file) return;
 
-  const reader = new FileReader();
-  reader.onload = function(e) {
-    try {
-      let text = e.target.result.replace(/^\uFEFF/, '');
-      const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-      if (lines.length <= 1) return alert('CSV 內容為空');
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          let text = e.target.result.replace(/^\uFEFF/, '');
+          const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+          if (lines.length <= 1) return alert('CSV 內容為空');
 
-      // 標準 RFC 4180 CSV 拆分（確保包含引號與逗號的品名不被錯切）
-      function parseCSVLine(line) {
-        const result = [];
-        let cur = '';
-        let inQuotes = false;
-        for (let i = 0; i < line.length; i++) {
-          const char = line[i];
-          if (char === '"') {
-            inQuotes = !inQuotes;
-          } else if (char === ',' && !inQuotes) {
+          // RFC 4180 標準拆分
+          function parseCSVLine(line) {
+            const result = [];
+            let cur = '';
+            let inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+              const char = line[i];
+              if (char === '"') {
+                inQuotes = !inQuotes;
+              } else if (char === ',' && !inQuotes) {
+                result.push(cur.trim().replace(/^"|"$/g, '').trim());
+                cur = '';
+              } else {
+                cur += char;
+              }
+            }
             result.push(cur.trim().replace(/^"|"$/g, '').trim());
-            cur = '';
-          } else {
-            cur += char;
+            return result;
           }
-        }
-        result.push(cur.trim().replace(/^"|"$/g, '').trim());
-        return result;
-      }
 
-      // 尋找表頭行
-      let headerIdx = -1;
-      let headers = [];
-      for (let i = 0; i < Math.min(10, lines.length); i++) {
-        const row = parseCSVLine(lines[i]);
-        if (row.some(c => c.includes('發票日期') || c.includes('品名') || c.includes('賣方名稱') || c.includes('發票金額'))) {
-          headerIdx = i;
-          headers = row;
-          break;
-        }
-      }
+          let headerIdx = -1;
+          let headers = [];
+          for (let i = 0; i < Math.min(10, lines.length); i++) {
+            const row = parseCSVLine(lines[i]);
+            if (row.some(c => c === '發票日期' || c.includes('品名') || c === '賣方名稱' || c === '發票金額')) {
+              headerIdx = i;
+              headers = row;
+              break;
+            }
+          }
 
-      if (headerIdx === -1) {
-        headerIdx = 0;
-        headers = parseCSVLine(lines[0]);
-      }
+          if (headerIdx === -1) {
+            headerIdx = 0;
+            headers = parseCSVLine(lines[0]);
+          }
 
-      // 1. 嚴格鎖定「品名」欄位（排除數量、單價、序號等）
-      let itemIdx = headers.findIndex(h => h === '消費明細_品名' || h.endsWith('品名') || h === '品名');
-      if (itemIdx === -1) {
-        // 找不到品名時，改抓賣方名稱
-        itemIdx = headers.findIndex(h => h === '賣方名稱' || (h.includes('賣方') && !h.includes('統編') && !h.includes('地址')));
-      }
-
-      // 2. 嚴格鎖定「金額」欄位（優先抓品名金額，其次抓整張發票總額）
-      let amtIdx = headers.findIndex(h => h === '消費明細_金額' || h.endsWith('金額') && !h.includes('發票'));
-      if (amtIdx === -1) {
-        amtIdx = headers.findIndex(h => h === '發票金額' || h.includes('總金額') || h.includes('金額'));
-      }
-
-      // 3. 鎖定「日期」欄位
-      let dateIdx = headers.findIndex(h => h === '發票日期' || h.includes('日期'));
-
-      // 萬一表頭完全對不上時的降級索引（以財政部標準版型為準）
-      if (dateIdx === -1) dateIdx = 1;
-      if (amtIdx === -1) amtIdx = 3;
-      if (itemIdx === -1) itemIdx = headers.length - 1; // 品名通常在最末欄
-
-      let count = 0;
-      for (let i = headerIdx + 1; i < lines.length; i++) {
-        const cleanCols = parseCSVLine(lines[i]);
-
-        if (cleanCols.length > Math.max(dateIdx, amtIdx)) {
-          const dateRaw = cleanCols[dateIdx] || '';
-          let displayName = cleanCols[itemIdx] || '';
+          // 1. 嚴格比對品名（不允許模糊匹配到數量/單價）
+          let itemIdx = headers.findIndex(h => h === '消費明細_品名' || h === '品名');
+          let sellerIdx = headers.findIndex(h => h === '賣方名稱');
           
-          // 如果品名抓出來是純數字（例如數量 1、2 或統編），嘗試改抓賣方名稱
-          if (!displayName || /^\d+$/.test(displayName)) {
-            const sellerIdx = headers.findIndex(h => h.includes('賣方') && !h.includes('統編') && !h.includes('地址'));
-            if (sellerIdx !== -1 && cleanCols[sellerIdx] && !/^\d+$/.test(cleanCols[sellerIdx])) {
-              displayName = cleanCols[sellerIdx];
-            } else {
-              displayName = '載具消費';
+          // 2. 嚴格比對金額（優先品名金額，其次發票總額）
+          let amtIdx = headers.findIndex(h => h === '消費明細_金額');
+          if (amtIdx === -1) amtIdx = headers.findIndex(h => h === '發票金額');
+
+          // 3. 嚴格比對日期
+          let dateIdx = headers.findIndex(h => h === '發票日期');
+
+          // 降級保護
+          if (dateIdx === -1) dateIdx = 1;
+          if (amtIdx === -1) amtIdx = 3;
+          if (itemIdx === -1 && sellerIdx === -1) itemIdx = headers.length - 1;
+
+          let count = 0;
+          for (let i = headerIdx + 1; i < lines.length; i++) {
+            const cleanCols = parseCSVLine(lines[i]);
+
+            if (cleanCols.length > Math.max(dateIdx, amtIdx)) {
+              const dateRaw = cleanCols[dateIdx] || '';
+              
+              let displayName = '';
+              // 優先抓品名
+              if (itemIdx !== -1 && cleanCols[itemIdx]) {
+                displayName = cleanCols[itemIdx];
+              }
+              // 若無品名，或是純數字（數量誤讀防呆），則改抓賣方名稱
+              if (!displayName || /^\d+$/.test(displayName)) {
+                if (sellerIdx !== -1 && cleanCols[sellerIdx]) {
+                  displayName = cleanCols[sellerIdx];
+                } else {
+                  displayName = '載具消費';
+                }
+              }
+
+              const amtRaw = cleanCols[amtIdx] ? cleanCols[amtIdx].replace(/[$,]/g, '') : '0';
+              const amt = Math.abs(parseFloat(amtRaw) || 0);
+
+              let dateFormatted = todayStr();
+              const cleanDate = dateRaw.split(' ')[0].replace(/\//g, '-').replace(/\./g, '-');
+
+              if (/^20\d{2}-\d{1,2}-\d{1,2}$/.test(cleanDate)) {
+                const p = cleanDate.split('-');
+                dateFormatted = `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
+              } else if (/^\d{2,3}-\d{1,2}-\d{1,2}$/.test(cleanDate)) {
+                const p = cleanDate.split('-');
+                const year = parseInt(p[0]) + 1911;
+                dateFormatted = `${year}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
+              } else if (/^\d{7,8}$/.test(cleanDate)) {
+                if (cleanDate.startsWith('20')) {
+                  dateFormatted = `${cleanDate.slice(0, 4)}-${cleanDate.slice(4, 6)}-${cleanDate.slice(6, 8)}`;
+                } else {
+                  const rocYearLen = cleanDate.length - 4;
+                  const year = parseInt(cleanDate.slice(0, rocYearLen)) + 1911;
+                  const month = cleanDate.slice(rocYearLen, rocYearLen + 2);
+                  const day = cleanDate.slice(rocYearLen + 2);
+                  dateFormatted = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                }
+              }
+
+              if (amt > 0) {
+                data.transactions.push({
+                  id: uid(),
+                  date: dateFormatted,
+                  name: displayName,
+                  amount: -amt,
+                  category: '食',
+                  account: '他人支付',
+                  necessary: 'necessary',
+                  note: '',
+                  envelopeId: '',
+                  projectId: '',
+                  receipt: ''
+                });
+                count++;
+              }
             }
           }
 
-          const amtRaw = cleanCols[amtIdx] ? cleanCols[amtIdx].replace(/[$,]/g, '') : '0';
-          const amt = Math.abs(parseFloat(amtRaw) || 0);
-
-          // 正確日期格式化（西元 2026 或民國 115）
-          let dateFormatted = todayStr();
-          const cleanDate = dateRaw.split(' ')[0].replace(/\//g, '-').replace(/\./g, '-');
-
-          if (/^20\d{2}-\d{1,2}-\d{1,2}$/.test(cleanDate)) {
-            const p = cleanDate.split('-');
-            dateFormatted = `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
-          } else if (/^\d{2,3}-\d{1,2}-\d{1,2}$/.test(cleanDate)) {
-            const p = cleanDate.split('-');
-            const year = parseInt(p[0]) + 1911;
-            dateFormatted = `${year}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
-          } else if (/^\d{7,8}$/.test(cleanDate)) {
-            if (cleanDate.startsWith('20')) {
-              dateFormatted = `${cleanDate.slice(0, 4)}-${cleanDate.slice(4, 6)}-${cleanDate.slice(6, 8)}`;
-            } else {
-              const rocYearLen = cleanDate.length - 4;
-              const year = parseInt(cleanDate.slice(0, rocYearLen)) + 1911;
-              const month = cleanDate.slice(rocYearLen, rocYearLen + 2);
-              const day = cleanDate.slice(rocYearLen + 2);
-              dateFormatted = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-            }
+          saveData();
+          renderTransactions();
+          renderDashboard();
+          if (count > 0) {
+            alert(`🎉 成功匯入 ${count} 筆載具發票紀錄！品名與金額已精確解析。`);
+          } else {
+            alert('未能識別出有效發票資料，請確認該 CSV 是否包含發票日期與金額。');
           }
-
-          if (amt > 0) {
-            data.transactions.push({
-              id: uid(),
-              date: dateFormatted,
-              name: displayName,
-              amount: -amt,
-              category: '食',
-              account: '他人支付',
-              necessary: 'necessary',
-              note: '',
-              envelopeId: '',
-              projectId: '',
-              receipt: ''
-            });
-            count++;
-          }
+        } catch (err) {
+          alert('解析 CSV 失敗：' + err.message);
         }
-      }
+      };
 
-      saveData();
-      renderTransactions();
-      renderDashboard();
-      if (count > 0) {
-        alert(`🎉 成功匯入 ${count} 筆載具發票紀錄！已正確對應品名、金額與日期。`);
-      } else {
-        alert('未能識別出有效發票資料，請確認該 CSV 是否包含發票日期與金額。');
+      try {
+        reader.readAsText(file, 'Big5');
+      } catch (e) {
+        reader.readAsText(file, 'UTF-8');
       }
-    } catch (err) {
-      alert('解析 CSV 失敗：' + err.message);
+      event.target.value = '';
     }
-  };
-
-  try {
-    reader.readAsText(file, 'Big5');
-  } catch (e) {
-    reader.readAsText(file, 'UTF-8');
-  }
-  event.target.value = '';
-}
 
     // ==================== 全外幣換匯中心 ====================
     function openFxCenterModal() {
@@ -1957,7 +1963,7 @@
       sel.value = cur;
     }
 
-    // ==================== 記帳與流水明細 ====================
+    // ==================== 記帳與流水明細（支援編輯） ====================
     function onCategoryChange() {
       const cat = document.getElementById('txCategory').value;
       const env = data.envelopes.find(e => e.category === cat);
@@ -2574,7 +2580,7 @@
       const f = data.fixedItems.find(x => x.id === id);
       if (!f) return;
       data.accounts[f.account] = (data.accounts[f.account] || 0) + f.amount;
-      data.transactions.push({ id: uid(), date: todayStr(), name: f.name + '（固定）', amount: f.amount, category: f.category, account: f.account, necessary: 'necessary', note: f.note || '', envelopeId: '', projectId: '', receipt: '' });
+      data.transactions.push({ id: uid(), date: todayStr(), name: f.name + '（固定）', amount, category: f.category, account: f.account, necessary: 'necessary', note: f.note || '', envelopeId: '', projectId: '', receipt: '' });
       saveData();
       renderDashboard();
       alert('已計入本月帳務');
@@ -2677,6 +2683,7 @@
       const isDark = document.documentElement.classList.contains('dark');
       const textColor = isDark ? '#8e8e93' : '#1c1c1e';
 
+      // 1. 費用分類圓餅圖
       categoryChart = new Chart(document.getElementById('categoryPieChart').getContext('2d'), {
         type: 'doughnut',
         data: {
@@ -2692,6 +2699,7 @@
         }
       });
 
+      // 2. 帳戶支出分佈佔比圖 (黑白灰交錯)
       accountChart = new Chart(document.getElementById('accountPieChart').getContext('2d'), {
         type: 'doughnut',
         data: {
@@ -2707,6 +2715,7 @@
         }
       });
 
+      // 3. 必要 vs 非必要支出佔比圖
       necessaryChart = new Chart(document.getElementById('necessaryPieChart').getContext('2d'), {
         type: 'pie',
         data: {
