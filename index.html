@@ -223,7 +223,6 @@
 
     <!-- 看板 -->
     <section id="tab-dashboard" class="tab-content active space-y-4">
-      <!-- 1. 頂部操作列 -->
       <div class="card p-4 flex flex-wrap gap-2 items-center">
         <button onclick="refreshAllAssets()" class="btn-primary btn text-xs">一鍵全資產即時刷新</button>
         <button onclick="updateStockPrices()" class="btn text-xs">更新股票/ETF</button>
@@ -232,7 +231,6 @@
         <span id="apiStatus" class="text-xs" style="color:var(--text-muted)"></span>
       </div>
 
-      <!-- 2. 總資產指標 -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div class="card-dark p-5">
           <p class="text-xs opacity-70">淨資產總額</p>
@@ -252,7 +250,6 @@
         </div>
       </div>
 
-      <!-- 3. 帳戶餘額卡片 -->
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3">
           <h2 class="semibold">帳戶餘額</h2>
@@ -261,7 +258,6 @@
         <div id="accountsOverview" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
       </div>
 
-      <!-- 4. 當月預算控制 -->
       <div class="card p-5 space-y-4">
         <div class="flex items-center justify-between">
           <h2 class="semibold text-base">當月預算控制</h2>
@@ -294,7 +290,6 @@
         </div>
       </div>
 
-      <!-- 5. 本月金流摘要 -->
       <div class="card p-5">
         <h2 class="semibold mb-3">本月金流摘要</h2>
         <div class="grid grid-cols-2 gap-3">
@@ -309,7 +304,6 @@
         </div>
       </div>
 
-      <!-- 6. 什一奉獻管理 -->
       <div class="card p-5 space-y-3" id="titheCardSection">
         <div class="flex items-center justify-between">
           <h2 class="semibold">什一奉獻管理</h2>
@@ -606,45 +600,49 @@
       </div>
     </section>
 
-    <!-- 專案（固定收支 ➔ 特殊專案 ➔ 接案追蹤，Toggle 開關在左，「新增」在右） -->
+    <!-- 專案（Toggle List 折疊清單） -->
     <section id="tab-fixed" class="tab-content space-y-4">
-      <!-- 1. 固定收支 -->
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">固定收支</h2>
+      <!-- 1. 固定收支 (Toggle) -->
+      <div class="card p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <button onclick="toggleSection('fixed')" class="flex items-center gap-1.5 semibold text-base text-left">
+            <span id="fixedArrow">▼</span> 固定收支
+          </button>
           <button onclick="openFixedModal()" class="btn-primary btn text-xs">新增</button>
         </div>
-        <div id="fixedList" class="space-y-2"></div>
+        <div id="fixedBody">
+          <div id="fixedList" class="space-y-2 pt-1"></div>
+        </div>
       </div>
 
-      <!-- 2. 特殊專案 -->
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">特殊專案（出國/活動獨立預算池）</h2>
+      <!-- 2. 特殊專案 (Toggle) -->
+      <div class="card p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <button onclick="toggleSection('project')" class="flex items-center gap-1.5 semibold text-base text-left">
+            <span id="projectArrow">▼</span> 特殊專案（出國/活動獨立預算）
+          </button>
           <button onclick="openProjectModal()" class="btn-primary btn text-xs">新增專案</button>
         </div>
-        <div id="projectsList" class="space-y-3"></div>
+        <div id="projectBody">
+          <div id="projectsList" class="space-y-3 pt-1"></div>
+        </div>
       </div>
 
-      <!-- 3. 接案追蹤（Toggle在左，新增在右） -->
-      <div class="card p-5 space-y-3" id="freelanceCardSection">
+      <!-- 3. 接案追蹤 (Toggle) -->
+      <div class="card p-5 space-y-3">
         <div class="flex items-center justify-between">
-          <h2 class="semibold">接案追蹤</h2>
-          <div class="flex items-center gap-3">
-            <div class="flex items-center gap-1.5 text-xs">
-              <span style="color:var(--text-muted)">顯示</span>
-              <div id="freelanceToggle" class="toggle on" onclick="toggleFreelanceDisplay()"></div>
-            </div>
-            <button onclick="openFreelanceModal()" class="btn-primary btn text-xs">新增接案</button>
-          </div>
+          <button onclick="toggleSection('freelance')" class="flex items-center gap-1.5 semibold text-base text-left">
+            <span id="freelanceArrow">▼</span> 接案追蹤
+          </button>
+          <button onclick="openFreelanceModal()" class="btn-primary btn text-xs">新增接案</button>
         </div>
         <div id="freelanceBody">
-          <div id="freelanceList" class="space-y-2"></div>
+          <div id="freelanceList" class="space-y-2 pt-1"></div>
         </div>
       </div>
     </section>
 
-    <!-- 報表（三個圓餅圖垂直排列） -->
+    <!-- 報表 -->
     <section id="tab-charts" class="tab-content space-y-4">
       <div class="card p-5">
         <h2 class="semibold mb-3">費用分類圓餅圖</h2>
@@ -1185,7 +1183,7 @@
       dividendGoal: 10000,
       showDividendGoal: true,
       showTithe: true,
-      showFreelance: true,
+      sectionsOpen: { fixed: true, project: true, freelance: true },
       tithePool: 0, titheDonatedThisMonth: 0, lastTitheMonth: '',
       budgetIncludeInvest: false,
       envelopes: [], transactions: [], stocks: [], funds: [],
@@ -1253,7 +1251,7 @@
           if (data.dividendGoal === undefined) data.dividendGoal = 10000;
           if (data.showDividendGoal === undefined) data.showDividendGoal = true;
           if (data.showTithe === undefined) data.showTithe = true;
-          if (data.showFreelance === undefined) data.showFreelance = true;
+          if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, project: true, freelance: true };
         } catch {
           data = JSON.parse(JSON.stringify(DEFAULT_DATA));
         }
@@ -1371,7 +1369,7 @@
       }
     }
 
-    // ==================== 批次匯入發票 CSV（精準抓取賣方名稱/品名） ====================
+    // ==================== 批次匯入發票 CSV（精準定位品名/金額與修正日期） ====================
     function importInvoiceCSV(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1388,7 +1386,7 @@
           let headers = [];
           for (let i = 0; i < Math.min(10, lines.length); i++) {
             const row = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim());
-            if (row.some(c => c.includes('日期') || c.includes('發票號碼') || c.includes('賣方') || c.includes('發票金額'))) {
+            if (row.some(c => c.includes('日期') || c.includes('發票號碼') || c.includes('品名') || c.includes('發票金額'))) {
               headerIdx = i;
               headers = row;
               break;
@@ -1402,9 +1400,9 @@
 
           // 精準定位欄位
           let dateIdx = headers.findIndex(h => h === '發票日期' || h.includes('日期'));
+          let itemIdx = headers.findIndex(h => h === '消費明細_品名' || h.includes('品名'));
           let sellerIdx = headers.findIndex(h => h === '賣方名稱' || h.includes('賣方'));
-          let itemIdx = headers.findIndex(h => h.includes('品名') || h.includes('明細'));
-          let amtIdx = headers.findIndex(h => h === '發票金額' || h.includes('金額') || h.includes('總計'));
+          let amtIdx = headers.findIndex(h => h === '消費明細_金額' || h === '發票金額' || h.includes('金額'));
 
           if (dateIdx === -1) dateIdx = 1;
           if (amtIdx === -1) amtIdx = 3;
@@ -1416,21 +1414,22 @@
 
             if (cleanCols.length > Math.max(dateIdx, amtIdx)) {
               const dateRaw = cleanCols[dateIdx] || '';
-              const sellerName = (sellerIdx !== -1 && cleanCols[sellerIdx]) ? cleanCols[sellerIdx] : '';
               const itemName = (itemIdx !== -1 && cleanCols[itemIdx]) ? cleanCols[itemIdx] : '';
-              const displayName = sellerName || itemName || '載具消費';
+              const sellerName = (sellerIdx !== -1 && cleanCols[sellerIdx]) ? cleanCols[sellerIdx] : '';
+              const displayName = itemName || sellerName || '載具消費';
               
               const amtRaw = cleanCols[amtIdx] ? cleanCols[amtIdx].replace(/[$,]/g, '') : '0';
               const amt = Math.abs(parseFloat(amtRaw) || 0);
 
+              // 修正日期邏輯：不重複加 1911 年
               let dateFormatted = todayStr();
-              const cleanDate = dateRaw.split(' ')[0];
+              const cleanDate = dateRaw.split(' ')[0].replace(/\//g, '-');
 
-              if (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(cleanDate)) {
-                const p = cleanDate.split(/[-/]/);
+              if (/^\d{4}-\d{1,2}-\d{1,2}$/.test(cleanDate)) {
+                const p = cleanDate.split('-');
                 dateFormatted = `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
-              } else if (/^\d{2,3}[-/]\d{1,2}[-/]\d{1,2}$/.test(cleanDate)) {
-                const p = cleanDate.split(/[-/]/);
+              } else if (/^\d{2,3}-\d{1,2}-\d{1,2}$/.test(cleanDate)) {
+                const p = cleanDate.split('-');
                 const year = parseInt(p[0]) + 1911;
                 dateFormatted = `${year}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
               } else if (/^\d{7,8}$/.test(cleanDate)) {
@@ -1447,9 +1446,9 @@
                   name: displayName,
                   amount: -amt,
                   category: '食',
-                  account: '他人支付', // 預設他人支付/待分配，避免搞亂真實銀行現金
+                  account: '他人支付',
                   necessary: 'necessary',
-                  note: '', // 備註預設留空
+                  note: '',
                   envelopeId: '',
                   projectId: '',
                   receipt: ''
@@ -1463,9 +1462,9 @@
           renderTransactions();
           renderDashboard();
           if (count > 0) {
-            alert(`🎉 成功匯入 ${count} 筆載具發票紀錄！預設帳戶為「他人支付/待分配」，可在明細點擊「編」自由微調。`);
+            alert(`🎉 成功匯入 ${count} 筆載具發票紀錄！品名與金額已精準帶入，預設帳戶為「他人支付」，可在明細點擊「編」自由微調。`);
           } else {
-            alert('未能識別出有效發票資料，請確認該 CSV 是否包含「發票日期」與「發票金額」欄位。');
+            alert('未能識別出有效發票資料，請確認該 CSV 是否包含「發票日期」與「消費明細_金額」欄位。');
           }
         } catch (err) {
           alert('解析 CSV 失敗：' + err.message);
@@ -1711,8 +1710,9 @@
       saveData();
       renderDashboard();
     }
-    function toggleFreelanceDisplay() {
-      data.showFreelance = !data.showFreelance;
+    function toggleSection(sec) {
+      if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, project: true, freelance: true };
+      data.sectionsOpen[sec] = !data.sectionsOpen[sec];
       saveData();
       renderFixedSection();
     }
@@ -1913,7 +1913,7 @@
       sel.value = cur;
     }
 
-    // ==================== 記帳與流水明細（支援編輯） ====================
+    // ==================== 記帳與流水明細 ====================
     function onCategoryChange() {
       const cat = document.getElementById('txCategory').value;
       const env = data.envelopes.find(e => e.category === cat);
@@ -1995,7 +1995,6 @@
 
       if (!newName) return alert('請輸入項目名稱');
 
-      // 回滾舊帳戶餘額，加上新帳戶餘額
       data.accounts[tx.account] = (data.accounts[tx.account] || 0) - tx.amount;
       data.accounts[newAcc] = (data.accounts[newAcc] || 0) + newAmt;
 
@@ -2376,7 +2375,7 @@
       `).join('') || '<tr><td colspan="11" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無交易紀錄</td></tr>';
     }
 
-    // ==================== 專案 / 接案 / 固定 ====================
+    // ==================== 專案 / 接案 / 固定（Toggle List 渲染） ====================
     function openProjectModal(id = null) {
       document.getElementById('projectEditId').value = id || '';
       document.getElementById('projectModalTitle').textContent = id ? '編輯專案' : '新增專案';
@@ -2538,54 +2537,62 @@
     }
 
     function renderFixedSection() {
-      // 1. 固定收支
-      document.getElementById('fixedList').innerHTML = data.fixedItems.map(f => `
-        <div class="pill p-3 flex justify-between items-center text-xs">
-          <div>
-            <span class="semibold">${f.name}</span>
-            <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
-            <span class="ml-2" style="color:var(--text-muted)">${f.account} · ${f.category}</span>
-          </div>
-          <div class="flex gap-2">
-            <button onclick="applyFixed('${f.id}')" class="semibold text-xs">計入本月</button>
-            <button onclick="openFixedModal('${f.id}')" style="color:var(--text-muted)">編</button>
-            <button onclick="deleteFixed('${f.id}')" style="color:var(--text-muted)">刪</button>
-          </div>
-        </div>
-      `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未設定固定收支</p>';
+      if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, project: true, freelance: true };
 
-      // 2. 特殊專案
-      document.getElementById('projectsList').innerHTML = data.projects.map(p => {
-        const spent = data.transactions.filter(t => t.projectId === p.id && t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
-        const remain = p.budget - spent;
-        return `
-          <div class="pill p-4 space-y-2 text-xs">
-            <div class="flex justify-between items-center">
-              <div>
-                <span class="semibold text-sm">${p.name}</span>
-                <span class="badge ${p.status === 'archived' ? 'badge-non' : 'badge-nec'} ml-2">${p.status === 'archived' ? '已封存' : '進行中'}</span>
-              </div>
-              <div class="flex gap-2">
-                <button onclick="openProjectModal('${p.id}')" style="color:var(--text-muted)">編</button>
-                <button onclick="deleteProject('${p.id}')" style="color:var(--text-muted)">刪</button>
-              </div>
+      // 1. 固定收支 Toggle
+      const fixOpen = data.sectionsOpen.fixed !== false;
+      document.getElementById('fixedArrow').textContent = fixOpen ? '▼' : '▶';
+      document.getElementById('fixedBody').style.display = fixOpen ? 'block' : 'none';
+      if (fixOpen) {
+        document.getElementById('fixedList').innerHTML = data.fixedItems.map(f => `
+          <div class="pill p-3 flex justify-between items-center text-xs">
+            <div>
+              <span class="semibold">${f.name}</span>
+              <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
+              <span class="ml-2" style="color:var(--text-muted)">${f.account} · ${f.category}</span>
             </div>
-            <div class="flex justify-between tabular" style="color:var(--text-muted)">
-              <span>預算 ${formatMoney(p.budget)} · 已花 ${formatMoney(spent)}</span>
-              <span class="heavy">剩餘 ${formatMoney(remain)}</span>
+            <div class="flex gap-2">
+              <button onclick="applyFixed('${f.id}')" class="semibold text-xs">計入本月</button>
+              <button onclick="openFixedModal('${f.id}')" style="color:var(--text-muted)">編</button>
+              <button onclick="deleteFixed('${f.id}')" style="color:var(--text-muted)">刪</button>
             </div>
-          </div>`;
-      }).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未建立專案</p>';
+          </div>
+        `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未設定固定收支</p>';
+      }
 
-      // 3. 接案追蹤
-      const flToggle = document.getElementById('freelanceToggle');
-      const flBody = document.getElementById('freelanceBody');
-      flToggle.classList.toggle('on', data.showFreelance !== false);
+      // 2. 特殊專案 Toggle
+      const projOpen = data.sectionsOpen.project !== false;
+      document.getElementById('projectArrow').textContent = projOpen ? '▼' : '▶';
+      document.getElementById('projectBody').style.display = projOpen ? 'block' : 'none';
+      if (projOpen) {
+        document.getElementById('projectsList').innerHTML = data.projects.map(p => {
+          const spent = data.transactions.filter(t => t.projectId === p.id && t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+          const remain = p.budget - spent;
+          return `
+            <div class="pill p-4 space-y-2 text-xs">
+              <div class="flex justify-between items-center">
+                <div>
+                  <span class="semibold text-sm">${p.name}</span>
+                  <span class="badge ${p.status === 'archived' ? 'badge-non' : 'badge-nec'} ml-2">${p.status === 'archived' ? '已封存' : '進行中'}</span>
+                </div>
+                <div class="flex gap-2">
+                  <button onclick="openProjectModal('${p.id}')" style="color:var(--text-muted)">編</button>
+                  <button onclick="deleteProject('${p.id}')" style="color:var(--text-muted)">刪</button>
+                </div>
+              </div>
+              <div class="flex justify-between tabular" style="color:var(--text-muted)">
+                <span>預算 ${formatMoney(p.budget)} · 已花 ${formatMoney(spent)}</span>
+                <span class="heavy">剩餘 ${formatMoney(remain)}</span>
+              </div>
+            </div>`;
+        }).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未建立專案</p>';
+      }
 
-      if (data.showFreelance === false) {
-        flBody.classList.add('hidden');
-      } else {
-        flBody.classList.remove('hidden');
+      // 3. 接案追蹤 Toggle
+      const freeOpen = data.sectionsOpen.freelance !== false;
+      document.getElementById('freelanceArrow').textContent = freeOpen ? '▼' : '▶';
+      document.getElementById('freelanceBody').style.display = freeOpen ? 'block' : 'none';
+      if (freeOpen) {
         document.getElementById('freelanceList').innerHTML = data.freelances.map(f => `
           <div class="pill p-3 flex justify-between items-center text-xs">
             <div>
@@ -2626,7 +2633,6 @@
       const isDark = document.documentElement.classList.contains('dark');
       const textColor = isDark ? '#8e8e93' : '#1c1c1e';
 
-      // 1. 費用分類圓餅圖
       categoryChart = new Chart(document.getElementById('categoryPieChart').getContext('2d'), {
         type: 'doughnut',
         data: {
@@ -2642,7 +2648,6 @@
         }
       });
 
-      // 2. 帳戶支出分佈佔比圖 (黑白灰交錯)
       accountChart = new Chart(document.getElementById('accountPieChart').getContext('2d'), {
         type: 'doughnut',
         data: {
@@ -2658,7 +2663,6 @@
         }
       });
 
-      // 3. 必要 vs 非必要支出佔比圖
       necessaryChart = new Chart(document.getElementById('necessaryPieChart').getContext('2d'), {
         type: 'pie',
         data: {
