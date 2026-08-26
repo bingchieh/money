@@ -1381,7 +1381,7 @@
       const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
       if (lines.length <= 1) return alert('CSV 內容為空');
 
-      // 1. RFC 4180 標準 CSV 解析（避免引號內的逗號被誤切）
+      // 標準 RFC 4180 CSV 拆分（確保包含引號與逗號的品名不被錯切）
       function parseCSVLine(line) {
         const result = [];
         let cur = '';
@@ -1401,12 +1401,12 @@
         return result;
       }
 
-      // 2. 定位真正的表頭行
+      // 尋找表頭行
       let headerIdx = -1;
       let headers = [];
       for (let i = 0; i < Math.min(10, lines.length); i++) {
         const row = parseCSVLine(lines[i]);
-        if (row.some(c => c.includes('發票日期') || c.includes('消費明細') || c.includes('賣方名稱') || c.includes('發票金額'))) {
+        if (row.some(c => c.includes('發票日期') || c.includes('品名') || c.includes('賣方名稱') || c.includes('發票金額'))) {
           headerIdx = i;
           headers = row;
           break;
@@ -1418,16 +1418,26 @@
         headers = parseCSVLine(lines[0]);
       }
 
-      // 3. 欄位精準比對（排除統編，嚴格指定品名與金額）
-      let dateIdx = headers.findIndex(h => h === '發票日期' || h.includes('日期'));
-      let itemIdx = headers.findIndex(h => h === '消費明細_品名' || h.includes('品名') || (h.includes('明細') && !h.includes('金額')));
-      let sellerIdx = headers.findIndex(h => (h.includes('賣方') || h.includes('店家') || h.includes('營業人')) && !h.includes('統編') && !h.includes('統一編號') && !h.includes('地址'));
-      let amtIdx = headers.findIndex(h => h === '消費明細_金額' || h === '發票金額' || h.includes('金額') || h.includes('總計'));
+      // 1. 嚴格鎖定「品名」欄位（排除數量、單價、序號等）
+      let itemIdx = headers.findIndex(h => h === '消費明細_品名' || h.endsWith('品名') || h === '品名');
+      if (itemIdx === -1) {
+        // 找不到品名時，改抓賣方名稱
+        itemIdx = headers.findIndex(h => h === '賣方名稱' || (h.includes('賣方') && !h.includes('統編') && !h.includes('地址')));
+      }
 
-      // 降級備用索引
+      // 2. 嚴格鎖定「金額」欄位（優先抓品名金額，其次抓整張發票總額）
+      let amtIdx = headers.findIndex(h => h === '消費明細_金額' || h.endsWith('金額') && !h.includes('發票'));
+      if (amtIdx === -1) {
+        amtIdx = headers.findIndex(h => h === '發票金額' || h.includes('總金額') || h.includes('金額'));
+      }
+
+      // 3. 鎖定「日期」欄位
+      let dateIdx = headers.findIndex(h => h === '發票日期' || h.includes('日期'));
+
+      // 萬一表頭完全對不上時的降級索引（以財政部標準版型為準）
       if (dateIdx === -1) dateIdx = 1;
-      if (sellerIdx === -1) sellerIdx = 7;
       if (amtIdx === -1) amtIdx = 3;
+      if (itemIdx === -1) itemIdx = headers.length - 1; // 品名通常在最末欄
 
       let count = 0;
       for (let i = headerIdx + 1; i < lines.length; i++) {
@@ -1435,35 +1445,33 @@
 
         if (cleanCols.length > Math.max(dateIdx, amtIdx)) {
           const dateRaw = cleanCols[dateIdx] || '';
+          let displayName = cleanCols[itemIdx] || '';
           
-          // 品名優先順序：消費明細品名 -> 賣方名稱
-          let displayName = '';
-          if (itemIdx !== -1 && cleanCols[itemIdx] && !/^\d{8}$/.test(cleanCols[itemIdx])) {
-            displayName = cleanCols[itemIdx];
-          } else if (sellerIdx !== -1 && cleanCols[sellerIdx] && !/^\d{8}$/.test(cleanCols[sellerIdx])) {
-            displayName = cleanCols[sellerIdx];
-          } else {
-            displayName = '載具消費';
+          // 如果品名抓出來是純數字（例如數量 1、2 或統編），嘗試改抓賣方名稱
+          if (!displayName || /^\d+$/.test(displayName)) {
+            const sellerIdx = headers.findIndex(h => h.includes('賣方') && !h.includes('統編') && !h.includes('地址'));
+            if (sellerIdx !== -1 && cleanCols[sellerIdx] && !/^\d+$/.test(cleanCols[sellerIdx])) {
+              displayName = cleanCols[sellerIdx];
+            } else {
+              displayName = '載具消費';
+            }
           }
 
           const amtRaw = cleanCols[amtIdx] ? cleanCols[amtIdx].replace(/[$,]/g, '') : '0';
           const amt = Math.abs(parseFloat(amtRaw) || 0);
 
-          // 4. 正確日期解析（支援 2026/08/25、115/08/25、1150825）
+          // 正確日期格式化（西元 2026 或民國 115）
           let dateFormatted = todayStr();
           const cleanDate = dateRaw.split(' ')[0].replace(/\//g, '-').replace(/\./g, '-');
 
           if (/^20\d{2}-\d{1,2}-\d{1,2}$/.test(cleanDate)) {
-            // 已經是西元年（2026-08-25）
             const p = cleanDate.split('-');
             dateFormatted = `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
           } else if (/^\d{2,3}-\d{1,2}-\d{1,2}$/.test(cleanDate)) {
-            // 民國年加破折號（115-08-25）
             const p = cleanDate.split('-');
             const year = parseInt(p[0]) + 1911;
             dateFormatted = `${year}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
           } else if (/^\d{7,8}$/.test(cleanDate)) {
-            // 純數字民國年（1150825）或西元年（20260825）
             if (cleanDate.startsWith('20')) {
               dateFormatted = `${cleanDate.slice(0, 4)}-${cleanDate.slice(4, 6)}-${cleanDate.slice(6, 8)}`;
             } else {
@@ -1498,7 +1506,7 @@
       renderTransactions();
       renderDashboard();
       if (count > 0) {
-        alert(`🎉 成功匯入 ${count} 筆載具發票紀錄！品名、金額與日期已精準校正。`);
+        alert(`🎉 成功匯入 ${count} 筆載具發票紀錄！已正確對應品名、金額與日期。`);
       } else {
         alert('未能識別出有效發票資料，請確認該 CSV 是否包含發票日期與金額。');
       }
