@@ -209,11 +209,6 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button onclick="exportData()" class="btn text-xs px-3 py-1.5">匯出</button>
-        <label class="btn text-xs px-3 py-1.5 cursor-pointer">
-          匯入
-          <input type="file" accept=".json" onchange="importData(event)" class="hidden" />
-        </label>
         <button id="themeBtn" onclick="toggleTheme()" class="btn w-9 h-9 rounded-full p-0 flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2v2"/>
@@ -228,15 +223,28 @@
 
     <!-- 看板 -->
     <section id="tab-dashboard" class="tab-content active space-y-4">
+      <!-- 1. 頂部操作列 -->
+      <div class="card p-4 flex flex-wrap gap-2 items-center">
+        <button onclick="refreshAllAssets()" class="btn-primary btn text-xs">一鍵全資產即時刷新</button>
+        <button onclick="updateStockPrices()" class="btn text-xs">更新股票/ETF</button>
+        <button onclick="updateFxRates()" class="btn text-xs">更新外匯</button>
+        <button onclick="openFxCenterModal()" class="btn text-xs">換匯中心</button>
+        <span id="apiStatus" class="text-xs" style="color:var(--text-muted)"></span>
+      </div>
+
+      <!-- 2. 總資產指標 -->
       <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div class="card-dark p-5">
           <p class="text-xs opacity-70">淨資產總額</p>
           <p class="text-3xl heavy tabular mt-1" id="netWorth">$0</p>
         </div>
         <div class="card p-5">
-          <p class="text-xs" style="color:var(--text-muted)">現金總額（含日幣）</p>
+          <p class="text-xs" style="color:var(--text-muted)">現金總額（含外幣現值）</p>
           <p class="text-2xl heavy tabular mt-1" id="totalCash">$0</p>
-          <p class="text-xs mt-1" style="color:var(--text-muted)">日幣 <span id="jpyRateDisplay">--</span></p>
+          <p class="text-[11px] mt-1 space-x-2" style="color:var(--text-muted)">
+            <span>JPY <strong id="jpyRateDisplay">--</strong></span>
+            <span>USD <strong id="usdRateDisplay">--</strong></span>
+          </p>
         </div>
         <div class="card p-5">
           <p class="text-xs" style="color:var(--text-muted)">投資總額</p>
@@ -244,15 +252,16 @@
         </div>
       </div>
 
-      <div class="card p-4 flex flex-wrap gap-2 items-center">
-        <button onclick="refreshAllAssets()" class="btn-primary btn text-xs">一鍵全資產即時刷新</button>
-        <button onclick="updateJPYRate()" class="btn text-xs">更新日幣</button>
-        <button onclick="updateStockPrices()" class="btn text-xs">更新股票/ETF</button>
-        <button onclick="openJpyFxModal()" class="btn text-xs">日幣換匯成本</button>
-        <span id="apiStatus" class="text-xs" style="color:var(--text-muted)"></span>
+      <!-- 3. 帳戶餘額卡片 -->
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="semibold">帳戶餘額</h2>
+          <button onclick="openAccountEditModal()" class="btn text-xs px-3 py-1.5">調整 / 新增帳戶</button>
+        </div>
+        <div id="accountsOverview" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
       </div>
 
-      <!-- 當月預算控制 -->
+      <!-- 4. 當月預算控制 -->
       <div class="card p-5 space-y-4">
         <div class="flex items-center justify-between">
           <h2 class="semibold text-base">當月預算控制</h2>
@@ -285,9 +294,27 @@
         </div>
       </div>
 
-      <!-- 什一奉獻 -->
+      <!-- 5. 本月金流摘要 -->
       <div class="card p-5">
-        <h2 class="semibold mb-3">當月什一奉獻</h2>
+        <h2 class="semibold mb-3">本月金流摘要</h2>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="pill p-3.5 text-center">
+            <p class="text-xs" style="color:var(--text-muted)">本月總收入</p>
+            <p class="text-xl heavy tabular mt-1" id="dashMonthIncome">$0</p>
+          </div>
+          <div class="pill p-3.5 text-center">
+            <p class="text-xs" style="color:var(--text-muted)">本月總支出</p>
+            <p class="text-xl heavy tabular mt-1" id="dashMonthExpense">$0</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. 什一奉獻管理 -->
+      <div class="card p-5" id="titheCardSection">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="semibold">什一奉獻管理</h2>
+          <button onclick="toggleTitheDisplay()" class="text-xs" style="color:var(--text-muted)">隱藏區塊</button>
+        </div>
         <div class="grid grid-cols-3 gap-2 mb-3">
           <div class="pill p-3 text-center">
             <p class="text-xs" style="color:var(--text-muted)">應提撥 (10%)</p>
@@ -306,15 +333,6 @@
           <input type="number" id="titheDonateAmount" class="input tabular flex-1" placeholder="本次奉獻金額" />
           <button onclick="recordTitheDonation()" class="btn-primary btn px-4 shrink-0 whitespace-nowrap">記錄奉獻</button>
         </div>
-      </div>
-
-      <!-- 帳戶餘額 -->
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">帳戶餘額</h2>
-          <button onclick="openAccountEditModal()" class="btn text-xs px-3 py-1.5">調整 / 新增帳戶</button>
-        </div>
-        <div id="accountsOverview" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
       </div>
     </section>
 
@@ -335,9 +353,11 @@
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3">
           <h2 class="semibold">新增帳務</h2>
-          <button onclick="openScanModal()" class="btn text-xs px-3 py-1.5 flex items-center gap-1">
-            <span>📷</span> 鏡頭掃碼
-          </button>
+          <div class="flex gap-2">
+            <button onclick="openScanModal()" class="btn text-xs px-3 py-1.5 flex items-center gap-1">
+              <span>📷</span> 鏡頭掃碼
+            </button>
+          </div>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
@@ -370,8 +390,9 @@
               <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
               <option value="醫">醫</option><option value="美">美</option><option value="稅">稅</option>
               <option value="保">保</option><option value="禮">禮</option><option value="雜">雜</option>
-              <option value="提領">提領</option><option value="投">投</option><option value="息">息</option>
-              <option value="折">折</option><option value="收">收（案件/薪水）</option><option value="什一">什一</option>
+              <option value="轉帳/換匯">轉帳/換匯</option>
+              <option value="投">投</option><option value="息">息</option><option value="折">折</option>
+              <option value="收">收（案件/薪水）</option><option value="什一">什一</option>
             </select>
           </div>
           <div>
@@ -379,7 +400,7 @@
             <select id="txAccount" class="input mt-1"></select>
           </div>
           <div>
-            <label class="text-xs" style="color:var(--text-muted)">所屬專案（若為出國/大額專案可選）</label>
+            <label class="text-xs" style="color:var(--text-muted)">所屬專案（選填）</label>
             <select id="txProject" class="input mt-1"><option value="">日常消費（無專案）</option></select>
           </div>
           <div>
@@ -414,7 +435,7 @@
         <button onclick="addTransaction()" class="btn-primary btn w-full mt-4 py-3">新增帳務</button>
       </div>
 
-      <!-- 帳務明細與篩選（獨立分行防重疊） -->
+      <!-- 帳務明細與篩選 -->
       <div class="card p-5">
         <h2 class="semibold mb-3">帳務明細</h2>
         <div class="space-y-2 mb-3">
@@ -430,8 +451,9 @@
               <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
               <option value="醫">醫</option><option value="美">美</option><option value="稅">稅</option>
               <option value="保">保</option><option value="禮">禮</option><option value="雜">雜</option>
-              <option value="提領">提領</option><option value="投">投</option><option value="息">息</option>
-              <option value="折">折</option><option value="收">收</option><option value="什一">什一</option>
+              <option value="轉帳/換匯">轉帳/換匯</option>
+              <option value="投">投</option><option value="息">息</option><option value="折">折</option>
+              <option value="收">收</option><option value="什一">什一</option>
             </select>
             <select id="filterAccount" class="input text-xs" onchange="renderTransactions()"><option value="">全部帳戶</option></select>
             <select id="filterNecessary" class="input text-xs" onchange="renderTransactions()">
@@ -461,12 +483,17 @@
 
     <!-- 投資 -->
     <section id="tab-investments" class="tab-content space-y-4">
-      <div class="card p-5">
-        <h2 class="semibold mb-2">月領萬元股息目標進度</h2>
-        <p class="text-xs mb-3" style="color:var(--text-muted)">根據 00919、00918、00713 等持股與殖利率自動估算</p>
+      <div class="card p-5" id="dividendGoalSection">
+        <div class="flex items-center justify-between mb-2">
+          <h2 class="semibold">月領股息目標進度</h2>
+          <div class="flex items-center gap-2">
+            <button onclick="promptDividendGoal()" class="text-xs" style="color:var(--text-muted)">設定目標</button>
+            <button onclick="toggleDividendDisplay()" class="text-xs" style="color:var(--text-muted)">隱藏</button>
+          </div>
+        </div>
         <div class="flex justify-between text-xs mb-1">
-          <span>預估月領股息：<strong class="tabular heavy text-sm" id="estMonthlyDividend">$0</strong></span>
-          <span>目標 $10,000 · 達成率 <strong id="dividendProgressPct" class="heavy text-sm">0%</strong></span>
+          <span>預估月領：<strong class="tabular heavy text-sm" id="estMonthlyDividend">$0</strong></span>
+          <span>目標 <span id="dividendTargetDisplay">$10,000</span> · 達成率 <strong id="dividendProgressPct" class="heavy text-sm">0%</strong></span>
         </div>
         <div class="progress-track mt-1">
           <div id="dividendProgressBar" class="progress-fill" style="width:0%"></div>
@@ -493,7 +520,7 @@
 
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">基金（支援日幣/美元獨立幣別）</h2>
+          <h2 class="semibold">基金（支援日幣/美元/台幣獨立幣別）</h2>
           <button onclick="openFundModal()" class="btn-primary btn text-xs">新增基金</button>
         </div>
         <div class="overflow-x-auto">
@@ -572,8 +599,16 @@
       </div>
     </section>
 
-    <!-- 固定 / 專案 / 接案 -->
+    <!-- 專案（固定收支 ➔ 特殊專案 ➔ 接案追蹤） -->
     <section id="tab-fixed" class="tab-content space-y-4">
+      <div class="card p-5">
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="semibold">固定收支</h2>
+          <button onclick="openFixedModal()" class="btn-primary btn text-xs">新增</button>
+        </div>
+        <div id="fixedList" class="space-y-2"></div>
+      </div>
+
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3">
           <h2 class="semibold">特殊專案（出國/活動獨立預算池）</h2>
@@ -589,17 +624,9 @@
         </div>
         <div id="freelanceList" class="space-y-2"></div>
       </div>
-
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">固定收支</h2>
-          <button onclick="openFixedModal()" class="btn-primary btn text-xs">新增</button>
-        </div>
-        <div id="fixedList" class="space-y-2"></div>
-      </div>
     </section>
 
-    <!-- 報表 -->
+    <!-- 報表（純圖表分析 + 置中等距操作區） -->
     <section id="tab-charts" class="tab-content space-y-4">
       <div class="card p-5">
         <h2 class="semibold mb-3">費用分類圓餅圖</h2>
@@ -611,12 +638,29 @@
           </div>
         </div>
       </div>
+
+      <!-- 新增：帳戶支出分佈佔比圖 -->
       <div class="card p-5">
-        <h2 class="semibold mb-3">本月摘要</h2>
-        <div id="monthSummary" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+        <h2 class="semibold mb-3">帳戶/卡片支出佔比</h2>
+        <div class="max-w-md mx-auto">
+          <canvas id="accountPieChart" height="220"></canvas>
+        </div>
       </div>
+
+      <!-- 匯入發票 ➔ 匯入資料 ➔ 匯出資料 ➔ 清除全部資料 -->
       <div class="card p-5">
-        <button onclick="resetAllData()" class="btn btn-secondary text-xs">清除全部資料</button>
+        <div class="flex items-center justify-center gap-3 flex-wrap">
+          <label class="btn btn-secondary text-xs px-4 py-2 cursor-pointer">
+            匯入發票 (CSV)
+            <input type="file" accept=".csv" class="hidden" onchange="importInvoiceCSV(event)" />
+          </label>
+          <label class="btn btn-secondary text-xs px-4 py-2 cursor-pointer">
+            匯入資料 (JSON)
+            <input type="file" accept=".json" onchange="importData(event)" class="hidden" />
+          </label>
+          <button onclick="exportData()" class="btn btn-secondary text-xs px-4 py-2">匯出資料 (JSON)</button>
+          <button onclick="resetAllData()" class="btn text-xs px-4 py-2" style="color:var(--text-muted); border:1px solid var(--border)">清除全部資料</button>
+        </div>
       </div>
     </section>
   </div>
@@ -654,28 +698,90 @@
   </nav>
 
   <!-- ==================== 彈窗 MODALS ==================== -->
-  <!-- 日幣換匯紀錄 Modal -->
-  <div id="jpyFxModal" class="modal-overlay hidden">
+  <!-- 統一外匯管理與流水帳中心 Modal -->
+  <div id="fxCenterModal" class="modal-overlay hidden">
     <div class="modal">
-      <h3 class="text-base bold mb-3">日幣分批換匯紀錄</h3>
+      <h3 class="text-base bold mb-3">全外幣換匯中心</h3>
+      
+      <div class="grid grid-cols-3 gap-2 mb-4">
+        <div class="pill p-2 text-center">
+          <p class="text-[10px]" style="color:var(--text-muted)">USD 平均</p>
+          <p class="semibold text-xs tabular mt-0.5" id="avgUsdCost">--</p>
+        </div>
+        <div class="pill p-2 text-center">
+          <p class="text-[10px]" style="color:var(--text-muted)">JPY 平均</p>
+          <p class="semibold text-xs tabular mt-0.5" id="avgJpyCost">--</p>
+        </div>
+        <div class="pill p-2 text-center">
+          <p class="text-[10px]" style="color:var(--text-muted)">EUR 平均</p>
+          <p class="semibold text-xs tabular mt-0.5" id="avgEurCost">--</p>
+        </div>
+      </div>
+
       <div class="space-y-2 text-xs">
+        <div>
+          <label style="color:var(--text-muted)">日期</label>
+          <input type="date" id="fxDate" class="input mt-1 text-xs" />
+        </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label style="color:var(--text-muted)">支出台幣 (TWD)</label>
-            <input type="number" id="fxTwdSpent" class="input mt-1 tabular" placeholder="例如 22000" />
+            <label style="color:var(--text-muted)">支出幣別</label>
+            <select id="fxFromCurrency" class="input mt-1 text-xs">
+              <option value="TWD">TWD (台幣)</option>
+              <option value="USD">USD (美元)</option>
+              <option value="JPY">JPY (日幣)</option>
+            </select>
           </div>
           <div>
-            <label style="color:var(--text-muted)">獲得日幣 (JPY)</label>
-            <input type="number" id="fxJpyBought" class="input mt-1 tabular" placeholder="例如 100000" />
+            <label style="color:var(--text-muted)">扣款帳戶</label>
+            <select id="fxFromAccount" class="input mt-1 text-xs"></select>
           </div>
         </div>
-        <button onclick="addFxRecord()" class="btn-primary btn w-full mt-2">新增換匯紀錄</button>
+        <div>
+          <label style="color:var(--text-muted)">支出金額</label>
+          <input type="number" id="fxFromAmount" class="input mt-1 tabular text-xs" placeholder="例如 22000" oninput="calcFxRatePreview()" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-zinc-200 dark:border-zinc-800">
+          <div>
+            <label style="color:var(--text-muted)">換得幣別</label>
+            <select id="fxToCurrency" class="input mt-1 text-xs">
+              <option value="JPY">JPY (日幣)</option>
+              <option value="USD">USD (美元)</option>
+              <option value="EUR">EUR (歐元)</option>
+              <option value="KRW">KRW (韓元)</option>
+              <option value="GBP">GBP (英鎊)</option>
+            </select>
+          </div>
+          <div>
+            <label style="color:var(--text-muted)">入帳帳戶</label>
+            <select id="fxToAccount" class="input mt-1 text-xs"></select>
+          </div>
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">換得外幣金額</label>
+          <input type="number" id="fxToAmount" class="input mt-1 tabular text-xs" placeholder="例如 100000" oninput="calcFxRatePreview()" />
+        </div>
+
+        <div class="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-center" style="background:var(--bg)">
+          <span class="text-xs" style="color:var(--text-muted)">即時試算成交匯率：</span>
+          <span id="fxCalculatedRate" class="heavy text-xs ml-1">--</span>
+        </div>
+
+        <div>
+          <label style="color:var(--text-muted)">備註</label>
+          <input type="text" id="fxNote" class="input mt-1 text-xs" placeholder="例如：日本旅遊、美金定存" />
+        </div>
+
+        <button onclick="saveFxExchange()" class="btn-primary btn w-full mt-2">儲存 [ 記錄並同步更新帳戶餘額 ]</button>
       </div>
+
       <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800">
-        <p class="text-xs semibold mb-2">平均換匯成本：<span id="jpyAvgCostDisplay" class="heavy text-sm">--</span></p>
-        <div id="fxRecordList" class="max-h-40 overflow-y-auto space-y-1 text-xs"></div>
+        <p class="text-xs semibold mb-2">歷史換匯紀錄</p>
+        <div id="fxHistoryList" class="max-h-36 overflow-y-auto space-y-1.5 text-xs"></div>
       </div>
-      <button onclick="closeModal('jpyFxModal')" class="btn btn-secondary w-full mt-4">關閉</button>
+
+      <button onclick="closeModal('fxCenterModal')" class="btn btn-secondary w-full mt-4">關閉</button>
     </div>
   </div>
 
@@ -706,9 +812,15 @@
     <div class="modal">
       <h3 class="text-base bold mb-4">帳戶管理</h3>
       <div id="accountEditFields" class="space-y-3"></div>
-      <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800">
-        <label class="text-xs" style="color:var(--text-muted)">日幣現金 (JPY)</label>
-        <input type="number" id="jpyCashInput" class="input mt-1 tabular" step="any" />
+      <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-2 gap-2">
+        <div>
+          <label class="text-xs" style="color:var(--text-muted)">日幣現金 (JPY)</label>
+          <input type="number" id="jpyCashInput" class="input mt-1 tabular" step="any" />
+        </div>
+        <div>
+          <label class="text-xs" style="color:var(--text-muted)">美金現金 (USD)</label>
+          <input type="number" id="usdCashInput" class="input mt-1 tabular" step="any" />
+        </div>
       </div>
       <div class="mt-3">
         <label class="text-xs" style="color:var(--text-muted)">新增帳戶名稱</label>
@@ -790,7 +902,7 @@
     </div>
   </div>
 
-  <!-- 基金 Modal (支援多幣別) -->
+  <!-- 基金 Modal -->
   <div id="fundModal" class="modal-overlay hidden">
     <div class="modal">
       <h3 class="text-base bold mb-4" id="fundModalTitle">新增基金標的</h3>
@@ -830,7 +942,7 @@
     </div>
   </div>
 
-  <!-- 專案 Modal (支援封存) -->
+  <!-- 專案 Modal -->
   <div id="projectModal" class="modal-overlay hidden">
     <div class="modal">
       <h3 class="text-base bold mb-4" id="projectModalTitle">新增專案</h3>
@@ -863,7 +975,7 @@
     </div>
   </div>
 
-  <!-- 接案 Modal (精簡欄位) -->
+  <!-- 接案 Modal -->
   <div id="freelanceModal" class="modal-overlay hidden">
     <div class="modal">
       <h3 class="text-base bold mb-4" id="freelanceModalTitle">新增接案</h3>
@@ -994,14 +1106,20 @@
     const DEFAULT_DATA = {
       accounts: Object.fromEntries(DEFAULT_ACCOUNTS.map(a => [a, 0])),
       accountList: [...DEFAULT_ACCOUNTS],
-      jpyCash: 0, jpyRate: 0.22, jpyFxRecords: [], monthlyBudget: 50000,
+      jpyCash: 0, jpyRate: 0.22,
+      usdCash: 0, usdRate: 32.0,
+      fxExchanges: [],
+      monthlyBudget: 50000,
+      dividendGoal: 10000,
+      showDividendGoal: true,
+      showTithe: true,
       tithePool: 0, titheDonatedThisMonth: 0, lastTitheMonth: '',
       budgetIncludeInvest: false,
       envelopes: [], transactions: [], stocks: [], funds: [],
       stockTransactions: [], fixedItems: [], projects: [], freelances: []
     };
     let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
-    let categoryChart = null, necessaryChart = null;
+    let categoryChart = null, necessaryChart = null, accountChart = null;
 
     function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
     function formatMoney(n) {
@@ -1058,7 +1176,10 @@
           data = Object.assign({}, DEFAULT_DATA, p);
           if (!data.accountList || !data.accountList.length) data.accountList = [...DEFAULT_ACCOUNTS];
           data.accountList.forEach(a => { if (data.accounts[a] === undefined) data.accounts[a] = 0; });
-          if (!data.jpyFxRecords) data.jpyFxRecords = [];
+          if (!data.fxExchanges) data.fxExchanges = [];
+          if (data.dividendGoal === undefined) data.dividendGoal = 10000;
+          if (data.showDividendGoal === undefined) data.showDividendGoal = true;
+          if (data.showTithe === undefined) data.showTithe = true;
         } catch {
           data = JSON.parse(JSON.stringify(DEFAULT_DATA));
         }
@@ -1119,7 +1240,7 @@
     }
 
     function populateAllAccountSelects() {
-      const selects = ['txAccount', 'filterAccount', 'stxAccount', 'fixedAccount', 'freelanceAccount'];
+      const selects = ['txAccount', 'filterAccount', 'stxAccount', 'fixedAccount', 'freelanceAccount', 'fxFromAccount', 'fxToAccount'];
       selects.forEach(id => {
         const sel = document.getElementById(id);
         if (!sel) return;
@@ -1128,7 +1249,10 @@
         (data.accountList || DEFAULT_ACCOUNTS).forEach(acc => {
           sel.innerHTML += `<option value="${acc}">${acc}</option>`;
         });
-        if (cur && (data.accountList || DEFAULT_ACCOUNTS).includes(cur)) sel.value = cur;
+        if (id === 'fxFromAccount' || id === 'fxToAccount') {
+          sel.innerHTML += `<option value="日幣現金">日幣現金</option><option value="美金現金">美金現金</option>`;
+        }
+        if (cur) sel.value = cur;
       });
     }
 
@@ -1173,42 +1297,165 @@
       }
     }
 
-    // ==================== 日幣換匯成本 ====================
-    function openJpyFxModal() {
-      renderFxRecords();
-      openModal('jpyFxModal');
-    }
-    function addFxRecord() {
-      const twd = parseFloat(document.getElementById('fxTwdSpent').value);
-      const jpy = parseFloat(document.getElementById('fxJpyBought').value);
-      if (!twd || !jpy || twd <= 0 || jpy <= 0) return alert('請輸入正確的台幣與日幣金額');
-      data.jpyFxRecords.push({ id: uid(), date: todayStr(), twd, jpy, rate: twd / jpy });
-      saveData();
-      document.getElementById('fxTwdSpent').value = '';
-      document.getElementById('fxJpyBought').value = '';
-      renderFxRecords();
-      renderDashboard();
-    }
-    function deleteFxRecord(id) {
-      data.jpyFxRecords = data.jpyFxRecords.filter(r => r.id !== id);
-      saveData();
-      renderFxRecords();
-      renderDashboard();
-    }
-    function renderFxRecords() {
-      const totalTwd = data.jpyFxRecords.reduce((s, r) => s + r.twd, 0);
-      const totalJpy = data.jpyFxRecords.reduce((s, r) => s + r.jpy, 0);
-      const avg = totalJpy > 0 ? (totalTwd / totalJpy) : 0;
-      document.getElementById('jpyAvgCostDisplay').textContent = avg > 0 ? avg.toFixed(4) + ' TWD' : '尚無紀錄';
-      document.getElementById('fxRecordList').innerHTML = data.jpyFxRecords.map(r => `
-        <div class="pill p-2 flex justify-between items-center">
-          <span>${r.date} · 支出 $${r.twd.toLocaleString()} 換 ¥${r.jpy.toLocaleString()} (匯率 ${r.rate.toFixed(4)})</span>
-          <button onclick="deleteFxRecord('${r.id}')" class="text-xs" style="color:var(--text-muted)">刪</button>
-        </div>
-      `).join('') || '<p class="text-center py-2" style="color:var(--text-muted)">尚無分批換匯紀錄</p>';
+    // ==================== 批次匯入發票 CSV ====================
+    function importInvoiceCSV(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const text = e.target.result;
+          const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+          if (lines.length <= 1) return alert('CSV 內容為空或格式不符');
+
+          let count = 0;
+          for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim());
+            if (cols.length >= 2) {
+              const dateRaw = cols[0];
+              const name = cols[1] || '載具消費';
+              const amt = Math.abs(parseFloat(cols[2]) || 0);
+
+              let dateFormatted = todayStr();
+              if (/^\d{4}[-/]\d{2}[-/]\d{2}$/.test(dateRaw)) dateFormatted = dateRaw.replace(/\//g, '-');
+              else if (/^\d{7,8}$/.test(dateRaw)) {
+                const year = parseInt(dateRaw.slice(0, dateRaw.length - 4)) + 1911;
+                const month = dateRaw.slice(-4, -2);
+                const day = dateRaw.slice(-2);
+                dateFormatted = `${year}-${month}-${day}`;
+              }
+
+              if (amt > 0) {
+                data.transactions.push({
+                  id: uid(), date: dateFormatted, name, amount: -amt,
+                  category: '食', account: '現金', necessary: 'necessary',
+                  note: '載具發票匯入', envelopeId: '', projectId: '', receipt: ''
+                });
+                count++;
+              }
+            }
+          }
+          saveData();
+          renderTransactions();
+          renderDashboard();
+          alert(`成功匯入 ${count} 筆載具發票紀錄！`);
+        } catch (err) {
+          alert('解析 CSV 失敗：' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
     }
 
-    // ==================== 帳戶與匯率/股價 API ====================
+    // ==================== 全外幣換匯中心 ====================
+    function openFxCenterModal() {
+      document.getElementById('fxDate').value = todayStr();
+      populateAllAccountSelects();
+      calcFxRatePreview();
+      renderFxCenter();
+      openModal('fxCenterModal');
+    }
+
+    function calcFxRatePreview() {
+      const fromAmt = parseFloat(document.getElementById('fxFromAmount').value) || 0;
+      const toAmt = parseFloat(document.getElementById('fxToAmount').value) || 0;
+      const fromCur = document.getElementById('fxFromCurrency').value;
+      const toCur = document.getElementById('fxToCurrency').value;
+      const preview = document.getElementById('fxCalculatedRate');
+      if (fromAmt > 0 && toAmt > 0) {
+        const rate = fromAmt / toAmt;
+        preview.textContent = rate.toFixed(4) + ` ${fromCur}/${toCur}`;
+      } else {
+        preview.textContent = '--';
+      }
+    }
+
+    function saveFxExchange() {
+      const date = document.getElementById('fxDate').value || todayStr();
+      const fromCur = document.getElementById('fxFromCurrency').value;
+      const fromAcc = document.getElementById('fxFromAccount').value;
+      const fromAmt = parseFloat(document.getElementById('fxFromAmount').value) || 0;
+      const toCur = document.getElementById('fxToCurrency').value;
+      const toAcc = document.getElementById('fxToAccount').value;
+      const toAmt = parseFloat(document.getElementById('fxToAmount').value) || 0;
+      const note = document.getElementById('fxNote').value.trim();
+
+      if (fromAmt <= 0 || toAmt <= 0) return alert('請輸入有效的換匯金額');
+      if (fromAcc === toAcc) return alert('扣款與入帳帳戶不可相同');
+
+      if (fromAcc === '日幣現金') data.jpyCash = Math.max(0, (data.jpyCash || 0) - fromAmt);
+      else if (fromAcc === '美金現金') data.usdCash = Math.max(0, (data.usdCash || 0) - fromAmt);
+      else data.accounts[fromAcc] = (data.accounts[fromAcc] || 0) - fromAmt;
+
+      if (toAcc === '日幣現金') data.jpyCash = (data.jpyCash || 0) + toAmt;
+      else if (toAcc === '美金現金') data.usdCash = (data.usdCash || 0) + toAmt;
+      else data.accounts[toAcc] = (data.accounts[toAcc] || 0) + toAmt;
+
+      const rate = fromAmt / toAmt;
+      data.fxExchanges.push({ id: uid(), date, fromCur, fromAcc, fromAmt, toCur, toAcc, toAmt, rate, note });
+
+      data.transactions.push({
+        id: uid(), date,
+        name: `換匯：${fromAcc} ➔ ${toAcc} (${toAmt} ${toCur})`,
+        amount: -fromAmt, category: '轉帳/換匯', account: fromAcc,
+        necessary: 'necessary', note: note || `匯率 ${rate.toFixed(4)}`, envelopeId: '', projectId: '', receipt: ''
+      });
+
+      saveData();
+      document.getElementById('fxFromAmount').value = '';
+      document.getElementById('fxToAmount').value = '';
+      document.getElementById('fxNote').value = '';
+      renderFxCenter();
+      renderDashboard();
+      renderTransactions();
+      alert('換匯紀錄已儲存，帳戶餘額已同步更新！');
+    }
+
+    function deleteFxExchange(id) {
+      const fx = data.fxExchanges.find(x => x.id === id);
+      if (!fx) return;
+      if (!confirm('確定刪除此換匯紀錄？帳戶餘額將自動回滾')) return;
+
+      if (fx.fromAcc === '日幣現金') data.jpyCash = (data.jpyCash || 0) + fx.fromAmt;
+      else if (fx.fromAcc === '美金現金') data.usdCash = (data.usdCash || 0) + fx.fromAmt;
+      else data.accounts[fx.fromAcc] = (data.accounts[fx.fromAcc] || 0) + fx.fromAmt;
+
+      if (fx.toAcc === '日幣現金') data.jpyCash = Math.max(0, (data.jpyCash || 0) - fx.toAmt);
+      else if (fx.toAcc === '美金現金') data.usdCash = Math.max(0, (data.usdCash || 0) - fx.toAmt);
+      else data.accounts[fx.toAcc] = (data.accounts[fx.toAcc] || 0) - fx.toAmt;
+
+      data.fxExchanges = data.fxExchanges.filter(x => x.id !== id);
+      saveData();
+      renderFxCenter();
+      renderDashboard();
+    }
+
+    function renderFxCenter() {
+      const jpyTwd = data.fxExchanges.filter(x => x.toCur === 'JPY' && x.fromCur === 'TWD').reduce((s, x) => s + x.fromAmt, 0);
+      const jpyTotal = data.fxExchanges.filter(x => x.toCur === 'JPY' && x.fromCur === 'TWD').reduce((s, x) => s + x.toAmt, 0);
+      document.getElementById('avgJpyCost').textContent = jpyTotal > 0 ? (jpyTwd / jpyTotal).toFixed(4) : '--';
+
+      const usdTwd = data.fxExchanges.filter(x => x.toCur === 'USD' && x.fromCur === 'TWD').reduce((s, x) => s + x.fromAmt, 0);
+      const usdTotal = data.fxExchanges.filter(x => x.toCur === 'USD' && x.fromCur === 'TWD').reduce((s, x) => s + x.toAmt, 0);
+      document.getElementById('avgUsdCost').textContent = usdTotal > 0 ? (usdTwd / usdTotal).toFixed(2) : '--';
+
+      const eurTwd = data.fxExchanges.filter(x => x.toCur === 'EUR' && x.fromCur === 'TWD').reduce((s, x) => s + x.fromAmt, 0);
+      const eurTotal = data.fxExchanges.filter(x => x.toCur === 'EUR' && x.fromCur === 'TWD').reduce((s, x) => s + x.toAmt, 0);
+      document.getElementById('avgEurCost').textContent = eurTotal > 0 ? (eurTwd / eurTotal).toFixed(2) : '--';
+
+      document.getElementById('fxHistoryList').innerHTML = data.fxExchanges.map(x => `
+        <div class="pill p-2.5 flex justify-between items-center text-xs">
+          <div>
+            <span class="semibold">${x.date}</span>
+            <span class="tabular ml-1.5">${x.fromAcc} ($${x.fromAmt.toLocaleString()}) ➔ ${x.toAcc} (${x.toAmt.toLocaleString()} ${x.toCur})</span>
+            <span class="ml-1" style="color:var(--text-muted)">· 匯率 ${x.rate.toFixed(4)}</span>
+          </div>
+          <button onclick="deleteFxExchange('${x.id}')" class="btn text-xs px-2 py-0.5" style="color:var(--text-muted)">刪</button>
+        </div>
+      `).join('') || '<p class="text-center py-2" style="color:var(--text-muted)">尚無換匯紀錄</p>';
+    }
+
+    // ==================== 帳戶與外匯/股價 API ====================
     function openAccountEditModal() {
       const container = document.getElementById('accountEditFields');
       container.innerHTML = '';
@@ -1223,6 +1470,7 @@
           </div>`;
       });
       document.getElementById('jpyCashInput').value = data.jpyCash || 0;
+      document.getElementById('usdCashInput').value = data.usdCash || 0;
       document.getElementById('newAccountName').value = '';
       openModal('accountModal');
     }
@@ -1251,28 +1499,35 @@
         data.accounts[inp.dataset.account] = parseFloat(inp.value) || 0;
       });
       data.jpyCash = parseFloat(document.getElementById('jpyCashInput').value) || 0;
+      data.usdCash = parseFloat(document.getElementById('usdCashInput').value) || 0;
       saveData();
       closeModal('accountModal');
       populateAllAccountSelects();
       renderDashboard();
     }
-    async function updateJPYRate() {
+    async function updateFxRates() {
       const status = document.getElementById('apiStatus');
-      status.textContent = '更新日幣匯率中…';
+      status.textContent = '更新日幣與美金匯率中…';
       try {
-        const res = await fetch('https://open.er-api.com/v6/latest/JPY');
+        const res = await fetch('https://open.er-api.com/v6/latest/USD');
         const json = await res.json();
         if (json && json.rates && json.rates.TWD) {
-          data.jpyRate = json.rates.TWD;
-          data.funds.forEach(f => { if (f.currency === 'JPY') f.rate = data.jpyRate; });
+          data.usdRate = json.rates.TWD;
+          if (json.rates.JPY) {
+            data.jpyRate = json.rates.TWD / json.rates.JPY;
+          }
+          data.funds.forEach(f => {
+            if (f.currency === 'JPY') f.rate = data.jpyRate;
+            else if (f.currency === 'USD') f.rate = data.usdRate;
+          });
           saveData();
-          status.textContent = '日幣已更新：' + data.jpyRate.toFixed(4);
+          status.textContent = `匯率更新成功：USD ${data.usdRate.toFixed(2)} / JPY ${data.jpyRate.toFixed(4)}`;
           renderDashboard();
           renderInvestments();
           return;
         }
       } catch (e) {}
-      status.textContent = '匯率更新失敗';
+      status.textContent = '外匯更新失敗';
     }
     async function updateStockPrices() {
       const status = document.getElementById('apiStatus');
@@ -1296,8 +1551,32 @@
       status.textContent = `已更新現價（${updatedCount}/${data.stocks.length} 檔）`;
     }
     async function refreshAllAssets() {
-      await updateJPYRate();
+      await updateFxRates();
       await updateStockPrices();
+    }
+
+    // ==================== 自訂股息目標與顯示開關 ====================
+    function promptDividendGoal() {
+      const cur = data.dividendGoal || 10000;
+      const input = prompt('請輸入每月預估股息目標金額：', cur);
+      if (input !== null) {
+        const val = parseFloat(input);
+        if (!isNaN(val) && val > 0) {
+          data.dividendGoal = val;
+          saveData();
+          renderInvestments();
+        }
+      }
+    }
+    function toggleDividendDisplay() {
+      data.showDividendGoal = !data.showDividendGoal;
+      saveData();
+      renderInvestments();
+    }
+    function toggleTitheDisplay() {
+      data.showTithe = !data.showTithe;
+      saveData();
+      renderDashboard();
     }
 
     // ==================== 看板預算與什一 ====================
@@ -1319,6 +1598,7 @@
         .filter(t => {
           if (!t.date || !t.date.startsWith(cm)) return false;
           if (!data.budgetIncludeInvest && t.category === '投') return false;
+          if (t.category === '轉帳/換匯') return false;
           if (t.projectId) return false;
           return true;
         })
@@ -1350,6 +1630,7 @@
     function renderDashboard() {
       let cash = (data.accountList || DEFAULT_ACCOUNTS).reduce((s, a) => s + (parseFloat(data.accounts[a]) || 0), 0);
       cash += (data.jpyCash || 0) * (data.jpyRate || 0.22);
+      cash += (data.usdCash || 0) * (data.usdRate || 32.0);
 
       let invest = 0;
       data.stocks.forEach(s => invest += (s.shares || 0) * (s.price || 0));
@@ -1358,7 +1639,8 @@
       document.getElementById('netWorth').textContent = formatMoney(cash + invest);
       document.getElementById('totalCash').textContent = formatMoney(cash);
       document.getElementById('totalInvest').textContent = formatMoney(invest);
-      document.getElementById('jpyRateDisplay').textContent = (data.jpyRate || 0.22).toFixed(4) + ' TWD';
+      document.getElementById('jpyRateDisplay').textContent = (data.jpyRate || 0.22).toFixed(4);
+      document.getElementById('usdRateDisplay').textContent = (data.usdRate || 32.0).toFixed(2);
 
       if (document.activeElement !== document.getElementById('monthlyBudgetInput')) {
         document.getElementById('monthlyBudgetInput').value = data.monthlyBudget || '';
@@ -1370,9 +1652,20 @@
       document.getElementById('monthSpent').textContent = formatMoney(spent);
       document.getElementById('monthRemain').textContent = formatMoney(remain);
 
-      document.getElementById('titheShould').textContent = formatMoney(calcTitheShould());
-      document.getElementById('titheDone').textContent = formatMoney(data.titheDonatedThisMonth || 0);
-      document.getElementById('tithePool').textContent = formatMoney(data.tithePool || 0);
+      const cm = currentMonthStr();
+      const inc = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount > 0 && t.category !== '轉帳/換匯').reduce((s, t) => s + t.amount, 0);
+      const exp = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount < 0 && t.category !== '轉帳/換匯').reduce((s, t) => s + Math.abs(t.amount), 0);
+      document.getElementById('dashMonthIncome').textContent = formatMoney(inc);
+      document.getElementById('dashMonthExpense').textContent = formatMoney(exp);
+
+      const titheSec = document.getElementById('titheCardSection');
+      if (data.showTithe === false) titheSec.classList.add('hidden');
+      else {
+        titheSec.classList.remove('hidden');
+        document.getElementById('titheShould').textContent = formatMoney(calcTitheShould());
+        document.getElementById('titheDone').textContent = formatMoney(data.titheDonatedThisMonth || 0);
+        document.getElementById('tithePool').textContent = formatMoney(data.tithePool || 0);
+      }
 
       const accDiv = document.getElementById('accountsOverview');
       accDiv.innerHTML = (data.accountList || DEFAULT_ACCOUNTS).map(name => {
@@ -1386,6 +1679,10 @@
         <div class="pill p-2.5 text-center">
           <p class="text-[11px]" style="color:var(--text-muted)">日幣現金</p>
           <p class="heavy text-xs tabular mt-0.5">¥${(data.jpyCash || 0).toLocaleString()}</p>
+        </div>
+        <div class="pill p-2.5 text-center">
+          <p class="text-[11px]" style="color:var(--text-muted)">美金現金</p>
+          <p class="heavy text-xs tabular mt-0.5">$${(data.usdCash || 0).toLocaleString()}</p>
         </div>`;
     }
 
@@ -1655,7 +1952,7 @@
       const cur = document.getElementById('fundCurrency').value;
       const rateInput = document.getElementById('fundRate');
       if (cur === 'JPY') rateInput.value = (data.jpyRate || 0.22).toFixed(4);
-      else if (cur === 'USD') rateInput.value = '32.0';
+      else if (cur === 'USD') rateInput.value = (data.usdRate || 32.0).toFixed(2);
       else rateInput.value = '1';
     }
     function openFundModal(id = null) {
@@ -1707,15 +2004,23 @@
     }
 
     function renderInvestments() {
-      let estMonthly = 0;
-      data.stocks.forEach(s => {
-        const mv = (s.shares || 0) * (s.price || 0);
-        estMonthly += mv * ((s.yield || 6) / 100) / 12;
-      });
-      const pct = Math.min(100, (estMonthly / 10000) * 100);
-      document.getElementById('estMonthlyDividend').textContent = formatMoney(Math.round(estMonthly));
-      document.getElementById('dividendProgressPct').textContent = pct.toFixed(1) + '%';
-      document.getElementById('dividendProgressBar').style.width = pct + '%';
+      const goalSec = document.getElementById('dividendGoalSection');
+      if (data.showDividendGoal === false) {
+        goalSec.classList.add('hidden');
+      } else {
+        goalSec.classList.remove('hidden');
+        let estMonthly = 0;
+        data.stocks.forEach(s => {
+          const mv = (s.shares || 0) * (s.price || 0);
+          estMonthly += mv * ((s.yield || 6) / 100) / 12;
+        });
+        const goal = data.dividendGoal || 10000;
+        const pct = Math.min(100, (estMonthly / goal) * 100);
+        document.getElementById('estMonthlyDividend').textContent = formatMoney(Math.round(estMonthly));
+        document.getElementById('dividendTargetDisplay').textContent = formatMoney(goal);
+        document.getElementById('dividendProgressPct').textContent = pct.toFixed(1) + '%';
+        document.getElementById('dividendProgressBar').style.width = pct + '%';
+      }
 
       let stocksTotal = 0;
       document.getElementById('stocksTableBody').innerHTML = data.stocks.map(s => {
@@ -1761,7 +2066,7 @@
       document.getElementById('fundsTotalValue').textContent = formatMoney(fundsTotal);
     }
 
-    // ==================== 股票交易 ====================
+    // ==================== 股票交易（含雙向自動回滾） ====================
     function addStockTransaction() {
       const date = document.getElementById('stxDate').value || todayStr();
       const account = document.getElementById('stxAccount').value;
@@ -1816,12 +2121,46 @@
       renderInvestments();
       renderDashboard();
     }
+
     function deleteStockTransaction(id) {
-      if (!confirm('確定刪除流水？持股與帳戶需手動微調')) return;
+      const tx = data.stockTransactions.find(t => t.id === id);
+      if (!tx) return;
+      if (!confirm(`確定刪除此筆「${tx.type}」紀錄？持股與帳戶將自動回滾`)) return;
+
+      const totalCost = tx.totalCost || (tx.shares * tx.price + (tx.fee || 0) + (tx.tax || 0));
+      let stock = data.stocks.find(s => s.symbol === tx.symbol);
+
+      if (tx.type === '買入') {
+        data.accounts[tx.account] = (data.accounts[tx.account] || 0) + totalCost;
+        if (stock) {
+          stock.shares = Math.max(0, stock.shares - tx.shares);
+          if (stock.shares === 0) {
+            data.stocks = data.stocks.filter(s => s.id !== stock.id);
+          }
+        }
+      } else if (tx.type === '賣出') {
+        data.accounts[tx.account] = (data.accounts[tx.account] || 0) - totalCost;
+        if (stock) {
+          stock.shares += tx.shares;
+        } else {
+          data.stocks.push({ id: uid(), symbol: tx.symbol, shares: tx.shares, cost: tx.price, price: tx.price, yield: 6 });
+        }
+      } else if (tx.type === '配息') {
+        const div = tx.total || tx.shares;
+        data.accounts[tx.account] = (data.accounts[tx.account] || 0) - div;
+        data.tithePool = Math.max(0, (data.tithePool || 0) - Math.round(div * 0.1));
+        data.transactions = data.transactions.filter(t => !(t.name.includes(tx.symbol) && t.category === '息' && t.date === tx.date));
+      } else if (tx.type === '折讓') {
+        data.accounts[tx.account] = (data.accounts[tx.account] || 0) - tx.total;
+      }
+
       data.stockTransactions = data.stockTransactions.filter(t => t.id !== id);
       saveData();
       renderStockTransactions();
+      renderInvestments();
+      renderDashboard();
     }
+
     function renderStockTransactions() {
       const list = [...data.stockTransactions].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
       document.getElementById('stockTxTableBody').innerHTML = list.map(t => `
@@ -2003,6 +2342,23 @@
     }
 
     function renderFixedSection() {
+      // 1. 固定收支
+      document.getElementById('fixedList').innerHTML = data.fixedItems.map(f => `
+        <div class="pill p-3 flex justify-between items-center text-xs">
+          <div>
+            <span class="semibold">${f.name}</span>
+            <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
+            <span class="ml-2" style="color:var(--text-muted)">${f.account} · ${f.category}</span>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="applyFixed('${f.id}')" class="semibold text-xs">計入本月</button>
+            <button onclick="openFixedModal('${f.id}')" style="color:var(--text-muted)">編</button>
+            <button onclick="deleteFixed('${f.id}')" style="color:var(--text-muted)">刪</button>
+          </div>
+        </div>
+      `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未設定固定收支</p>';
+
+      // 2. 特殊專案
       document.getElementById('projectsList').innerHTML = data.projects.map(p => {
         const spent = data.transactions.filter(t => t.projectId === p.id && t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
         const remain = p.budget - spent;
@@ -2025,6 +2381,7 @@
           </div>`;
       }).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未建立專案</p>';
 
+      // 3. 接案追蹤
       document.getElementById('freelanceList').innerHTML = data.freelances.map(f => `
         <div class="pill p-3 flex justify-between items-center text-xs">
           <div>
@@ -2041,35 +2398,25 @@
           </div>
         </div>
       `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚無接案紀錄</p>';
-
-      document.getElementById('fixedList').innerHTML = data.fixedItems.map(f => `
-        <div class="pill p-3 flex justify-between items-center text-xs">
-          <div>
-            <span class="semibold">${f.name}</span>
-            <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
-            <span class="ml-2" style="color:var(--text-muted)">${f.account} · ${f.category}</span>
-          </div>
-          <div class="flex gap-2">
-            <button onclick="applyFixed('${f.id}')" class="semibold text-xs">計入本月</button>
-            <button onclick="openFixedModal('${f.id}')" style="color:var(--text-muted)">編</button>
-            <button onclick="deleteFixed('${f.id}')" style="color:var(--text-muted)">刪</button>
-          </div>
-        </div>
-      `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未設定固定收支</p>';
     }
 
-    // ==================== 統計圖表 ====================
+    // ==================== 統計圖表（含帳戶支出圓餅圖） ====================
     function renderCharts() {
       const cm = currentMonthStr();
-      const monthTxs = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount < 0);
+      const monthTxs = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount < 0 && t.category !== '轉帳/換匯');
+      
       const catMap = {};
       monthTxs.forEach(t => catMap[t.category] = (catMap[t.category] || 0) + Math.abs(t.amount));
 
       let nec = 0, non = 0;
       monthTxs.forEach(t => t.necessary === 'necessary' ? nec += Math.abs(t.amount) : non += Math.abs(t.amount));
 
+      const accMap = {};
+      monthTxs.forEach(t => accMap[t.account] = (accMap[t.account] || 0) + Math.abs(t.amount));
+
       if (categoryChart) categoryChart.destroy();
       if (necessaryChart) necessaryChart.destroy();
+      if (accountChart) accountChart.destroy();
 
       const isDark = document.documentElement.classList.contains('dark');
       const textColor = isDark ? '#8e8e93' : '#1c1c1e';
@@ -2103,13 +2450,21 @@
         }
       });
 
-      const inc = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount > 0).reduce((s, t) => s + t.amount, 0);
-      const exp = monthTxs.reduce((s, t) => s + Math.abs(t.amount), 0);
-      document.getElementById('monthSummary').innerHTML = `
-        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">本月收入</p><p class="tabular heavy text-sm mt-0.5">${formatMoney(inc)}</p></div>
-        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">本月支出</p><p class="tabular heavy text-sm mt-0.5">${formatMoney(exp)}</p></div>
-        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">必要支出</p><p class="tabular heavy text-sm mt-0.5">${formatMoney(nec)}</p></div>
-        <div class="pill p-3 text-center"><p class="text-[10px]" style="color:var(--text-muted)">非必要</p><p class="tabular heavy text-sm mt-0.5" style="color:var(--text-muted)">${formatMoney(non)}</p></div>`;
+      // 帳戶消費比例圓餅圖（黑白灰相間）
+      accountChart = new Chart(document.getElementById('accountPieChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(accMap).length ? Object.keys(accMap) : ['無支出'],
+          datasets: [{
+            data: Object.values(accMap).length ? Object.values(accMap) : [1],
+            backgroundColor: ['#1c1c1e', '#8e8e93', '#3a3a3c', '#c7c7cc', '#636366', '#e5e5ea']
+          }]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 10 } } } },
+          cutout: '60%'
+        }
+      });
     }
 
     // ==================== 備份與重置 ====================
