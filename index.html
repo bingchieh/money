@@ -309,7 +309,7 @@
         </div>
       </div>
 
-      <!-- 6. 什一奉獻管理（支援 Toggle 開關控制收合/展開） -->
+      <!-- 6. 什一奉獻管理 -->
       <div class="card p-5 space-y-3" id="titheCardSection">
         <div class="flex items-center justify-between">
           <h2 class="semibold">什一奉獻管理</h2>
@@ -488,7 +488,6 @@
 
     <!-- 投資 -->
     <section id="tab-investments" class="tab-content space-y-4">
-      <!-- 股息目標與進度條（支援 Toggle 開關收合/展開） -->
       <div class="card p-5 space-y-3" id="dividendGoalSection">
         <div class="flex items-center justify-between">
           <h2 class="semibold">月領股息目標進度</h2>
@@ -607,7 +606,7 @@
       </div>
     </section>
 
-    <!-- 專案（順序：固定收支 ➔ 特殊專案 ➔ 接案追蹤，接案支援 Toggle 開關） -->
+    <!-- 專案（固定收支 ➔ 特殊專案 ➔ 接案追蹤，Toggle 開關在左，「新增」在右） -->
     <section id="tab-fixed" class="tab-content space-y-4">
       <!-- 1. 固定收支 -->
       <div class="card p-5">
@@ -627,13 +626,16 @@
         <div id="projectsList" class="space-y-3"></div>
       </div>
 
-      <!-- 3. 接案追蹤（支援 Toggle 開關收合/展開） -->
+      <!-- 3. 接案追蹤（Toggle在左，新增在右） -->
       <div class="card p-5 space-y-3" id="freelanceCardSection">
         <div class="flex items-center justify-between">
           <h2 class="semibold">接案追蹤</h2>
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
+            <div class="flex items-center gap-1.5 text-xs">
+              <span style="color:var(--text-muted)">顯示</span>
+              <div id="freelanceToggle" class="toggle on" onclick="toggleFreelanceDisplay()"></div>
+            </div>
             <button onclick="openFreelanceModal()" class="btn-primary btn text-xs">新增接案</button>
-            <div id="freelanceToggle" class="toggle on" onclick="toggleFreelanceDisplay()"></div>
           </div>
         </div>
         <div id="freelanceBody">
@@ -642,9 +644,8 @@
       </div>
     </section>
 
-    <!-- 報表（三個圓餅圖全垂直排列 + 底部置中操作區） -->
+    <!-- 報表（三個圓餅圖垂直排列） -->
     <section id="tab-charts" class="tab-content space-y-4">
-      <!-- 1. 費用分類圓餅圖 -->
       <div class="card p-5">
         <h2 class="semibold mb-3">費用分類圓餅圖</h2>
         <div class="max-w-md mx-auto">
@@ -652,7 +653,6 @@
         </div>
       </div>
 
-      <!-- 2. 帳戶/卡片支出佔比圓餅圖 -->
       <div class="card p-5">
         <h2 class="semibold mb-3">帳戶 / 卡片支出佔比</h2>
         <div class="max-w-md mx-auto">
@@ -660,7 +660,6 @@
         </div>
       </div>
 
-      <!-- 3. 必要 vs 非必要支出佔比圓餅圖 -->
       <div class="card p-5">
         <h2 class="semibold mb-3">必要 vs 非必要支出佔比</h2>
         <div class="max-w-md mx-auto">
@@ -668,7 +667,6 @@
         </div>
       </div>
 
-      <!-- 操作區：匯入發票 ➔ 匯入資料 ➔ 匯出資料 ➔ 清除全部資料 -->
       <div class="card p-5">
         <div class="flex items-center justify-center gap-3 flex-wrap">
           <label class="btn btn-secondary text-xs px-4 py-2 cursor-pointer">
@@ -719,6 +717,59 @@
   </nav>
 
   <!-- ==================== 彈窗 MODALS ==================== -->
+  <!-- 帳務編輯 Modal -->
+  <div id="txEditModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4">編輯帳務明細</h3>
+      <input type="hidden" id="editTxId" />
+      <div class="space-y-3 text-xs">
+        <div>
+          <label style="color:var(--text-muted)">日期</label>
+          <input type="date" id="editTxDate" class="input mt-1" />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">項目名稱</label>
+          <input type="text" id="editTxName" class="input mt-1" />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">金額（支出為負，如 -150）</label>
+          <input type="text" id="editTxAmount" class="input mt-1 tabular" />
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">分類</label>
+          <select id="editTxCategory" class="input mt-1">
+            <option value="食">食</option><option value="衣">衣</option><option value="住">住</option>
+            <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
+            <option value="醫">醫</option><option value="美">美</option><option value="稅">稅</option>
+            <option value="保">保</option><option value="禮">禮</option><option value="雜">雜</option>
+            <option value="轉帳/換匯">轉帳/換匯</option>
+            <option value="投">投</option><option value="息">息</option><option value="折">折</option>
+            <option value="收">收</option><option value="什一">什一</option>
+          </select>
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">帳戶</label>
+          <select id="editTxAccount" class="input mt-1"></select>
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">標籤</label>
+          <select id="editTxNecessary" class="input mt-1">
+            <option value="necessary">必要</option>
+            <option value="non">非必要</option>
+          </select>
+        </div>
+        <div>
+          <label style="color:var(--text-muted)">備註</label>
+          <input type="text" id="editTxNote" class="input mt-1" />
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveTxEdit()" class="btn-primary btn flex-1 py-2.5">儲存修改</button>
+        <button onclick="closeModal('txEditModal')" class="btn flex-1 py-2.5">取消</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 統一外匯管理與流水帳中心 Modal -->
   <div id="fxCenterModal" class="modal-overlay hidden">
     <div class="modal">
@@ -1263,7 +1314,7 @@
     }
 
     function populateAllAccountSelects() {
-      const selects = ['txAccount', 'filterAccount', 'stxAccount', 'fixedAccount', 'freelanceAccount', 'fxFromAccount', 'fxToAccount'];
+      const selects = ['txAccount', 'filterAccount', 'stxAccount', 'fixedAccount', 'freelanceAccount', 'fxFromAccount', 'fxToAccount', 'editTxAccount'];
       selects.forEach(id => {
         const sel = document.getElementById(id);
         if (!sel) return;
@@ -1320,7 +1371,7 @@
       }
     }
 
-    // ==================== 批次匯入發票 CSV (智慧解析與編碼自適應) ====================
+    // ==================== 批次匯入發票 CSV（精準抓取賣方名稱/品名） ====================
     function importInvoiceCSV(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1337,7 +1388,7 @@
           let headers = [];
           for (let i = 0; i < Math.min(10, lines.length); i++) {
             const row = lines[i].split(',').map(c => c.replace(/^"|"$/g, '').trim());
-            if (row.some(c => c.includes('日期') || c.includes('金額') || c.includes('發票') || c.includes('賣方') || c.includes('品名'))) {
+            if (row.some(c => c.includes('日期') || c.includes('發票號碼') || c.includes('賣方') || c.includes('發票金額'))) {
               headerIdx = i;
               headers = row;
               break;
@@ -1349,13 +1400,14 @@
             headers = lines[0].split(',').map(c => c.replace(/^"|"$/g, '').trim());
           }
 
-          let dateIdx = headers.findIndex(h => h.includes('日期') || h.includes('時間'));
-          let nameIdx = headers.findIndex(h => h.includes('賣方') || h.includes('店家') || h.includes('名稱') || h.includes('品名') || h.includes('營業人'));
-          let amtIdx = headers.findIndex(h => h.includes('金額') || h.includes('總計') || h.includes('小計') || h.includes('費用'));
+          // 精準定位欄位
+          let dateIdx = headers.findIndex(h => h === '發票日期' || h.includes('日期'));
+          let sellerIdx = headers.findIndex(h => h === '賣方名稱' || h.includes('賣方'));
+          let itemIdx = headers.findIndex(h => h.includes('品名') || h.includes('明細'));
+          let amtIdx = headers.findIndex(h => h === '發票金額' || h.includes('金額') || h.includes('總計'));
 
-          if (dateIdx === -1) dateIdx = 0;
-          if (nameIdx === -1) nameIdx = 1;
-          if (amtIdx === -1) amtIdx = headers.length > 2 ? 2 : 1;
+          if (dateIdx === -1) dateIdx = 1;
+          if (amtIdx === -1) amtIdx = 3;
 
           let count = 0;
           for (let i = headerIdx + 1; i < lines.length; i++) {
@@ -1364,7 +1416,10 @@
 
             if (cleanCols.length > Math.max(dateIdx, amtIdx)) {
               const dateRaw = cleanCols[dateIdx] || '';
-              const nameRaw = cleanCols[nameIdx] || '載具消費';
+              const sellerName = (sellerIdx !== -1 && cleanCols[sellerIdx]) ? cleanCols[sellerIdx] : '';
+              const itemName = (itemIdx !== -1 && cleanCols[itemIdx]) ? cleanCols[itemIdx] : '';
+              const displayName = sellerName || itemName || '載具消費';
+              
               const amtRaw = cleanCols[amtIdx] ? cleanCols[amtIdx].replace(/[$,]/g, '') : '0';
               const amt = Math.abs(parseFloat(amtRaw) || 0);
 
@@ -1389,12 +1444,12 @@
                 data.transactions.push({
                   id: uid(),
                   date: dateFormatted,
-                  name: nameRaw,
+                  name: displayName,
                   amount: -amt,
                   category: '食',
-                  account: '現金',
+                  account: '他人支付', // 預設他人支付/待分配，避免搞亂真實銀行現金
                   necessary: 'necessary',
-                  note: '載具發票匯入',
+                  note: '', // 備註預設留空
                   envelopeId: '',
                   projectId: '',
                   receipt: ''
@@ -1408,9 +1463,9 @@
           renderTransactions();
           renderDashboard();
           if (count > 0) {
-            alert(`🎉 成功匯入 ${count} 筆載具發票紀錄！`);
+            alert(`🎉 成功匯入 ${count} 筆載具發票紀錄！預設帳戶為「他人支付/待分配」，可在明細點擊「編」自由微調。`);
           } else {
-            alert('未能識別出有效發票資料，請確認該 CSV 是否包含「日期」與「金額」欄位。');
+            alert('未能識別出有效發票資料，請確認該 CSV 是否包含「發票日期」與「發票金額」欄位。');
           }
         } catch (err) {
           alert('解析 CSV 失敗：' + err.message);
@@ -1741,7 +1796,6 @@
       document.getElementById('dashMonthIncome').textContent = formatMoney(inc);
       document.getElementById('dashMonthExpense').textContent = formatMoney(exp);
 
-      // 什一奉獻 Toggle 連動
       const titheToggle = document.getElementById('titheToggle');
       const titheBody = document.getElementById('titheBody');
       titheToggle.classList.toggle('on', data.showTithe !== false);
@@ -1859,7 +1913,7 @@
       sel.value = cur;
     }
 
-    // ==================== 記帳與流水明細 ====================
+    // ==================== 記帳與流水明細（支援編輯） ====================
     function onCategoryChange() {
       const cat = document.getElementById('txCategory').value;
       const env = data.envelopes.find(e => e.category === cat);
@@ -1907,6 +1961,54 @@
       if (fileInput) fileInput.value = '';
       document.getElementById('txReceiptFileName').textContent = '未選擇任何檔案';
       document.getElementById('txReceiptFileName').style.color = 'var(--text-muted)';
+      renderTransactions();
+      renderDashboard();
+      renderFixedSection();
+    }
+
+    function openTxEditModal(id) {
+      const tx = data.transactions.find(t => t.id === id);
+      if (!tx) return;
+      document.getElementById('editTxId').value = tx.id;
+      document.getElementById('editTxDate').value = tx.date;
+      document.getElementById('editTxName').value = tx.name;
+      document.getElementById('editTxAmount').value = tx.amount;
+      document.getElementById('editTxCategory').value = tx.category;
+      document.getElementById('editTxAccount').value = tx.account;
+      document.getElementById('editTxNecessary').value = tx.necessary || 'necessary';
+      document.getElementById('editTxNote').value = tx.note || '';
+      openModal('txEditModal');
+    }
+
+    function saveTxEdit() {
+      const id = document.getElementById('editTxId').value;
+      const tx = data.transactions.find(t => t.id === id);
+      if (!tx) return;
+
+      const newDate = document.getElementById('editTxDate').value || todayStr();
+      const newName = document.getElementById('editTxName').value.trim();
+      const newAmt = parseAmount(document.getElementById('editTxAmount').value);
+      const newCat = document.getElementById('editTxCategory').value;
+      const newAcc = document.getElementById('editTxAccount').value;
+      const newNec = document.getElementById('editTxNecessary').value;
+      const newNote = document.getElementById('editTxNote').value.trim();
+
+      if (!newName) return alert('請輸入項目名稱');
+
+      // 回滾舊帳戶餘額，加上新帳戶餘額
+      data.accounts[tx.account] = (data.accounts[tx.account] || 0) - tx.amount;
+      data.accounts[newAcc] = (data.accounts[newAcc] || 0) + newAmt;
+
+      tx.date = newDate;
+      tx.name = newName;
+      tx.amount = newAmt;
+      tx.category = newCat;
+      tx.account = newAcc;
+      tx.necessary = newNec;
+      tx.note = newNote;
+
+      saveData();
+      closeModal('txEditModal');
       renderTransactions();
       renderDashboard();
       renderFixedSection();
@@ -1981,7 +2083,10 @@
             <td style="color:var(--text-muted)">${tag}</td>
             <td>${receiptBtn}</td>
             <td style="color:var(--text-muted)">${t.note || ''}</td>
-            <td><button onclick="deleteTransaction('${t.id}')" class="btn text-xs px-2 py-0.5">刪</button></td>
+            <td class="whitespace-nowrap">
+              <button onclick="openTxEditModal('${t.id}')" class="text-xs mr-1.5" style="color:var(--text-muted)">編</button>
+              <button onclick="deleteTransaction('${t.id}')" class="btn text-xs px-2 py-0.5">刪</button>
+            </td>
           </tr>`;
       }).join('') || '<tr><td colspan="10" class="text-center py-6 text-xs" style="color:var(--text-muted)">尚無明細紀錄</td></tr>';
     }
@@ -2426,7 +2531,7 @@
       const f = data.fixedItems.find(x => x.id === id);
       if (!f) return;
       data.accounts[f.account] = (data.accounts[f.account] || 0) + f.amount;
-      data.transactions.push({ id: uid(), date: todayStr(), name: f.name + '（固定）', amount, category: f.category, account: f.account, necessary: 'necessary', note: f.note || '', envelopeId: '', projectId: '', receipt: '' });
+      data.transactions.push({ id: uid(), date: todayStr(), name: f.name + '（固定）', amount: f.amount, category: f.category, account: f.account, necessary: 'necessary', note: f.note || '', envelopeId: '', projectId: '', receipt: '' });
       saveData();
       renderDashboard();
       alert('已計入本月帳務');
@@ -2472,7 +2577,7 @@
           </div>`;
       }).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未建立專案</p>';
 
-      // 3. 接案追蹤 Toggle 連動
+      // 3. 接案追蹤
       const flToggle = document.getElementById('freelanceToggle');
       const flBody = document.getElementById('freelanceBody');
       flToggle.classList.toggle('on', data.showFreelance !== false);
