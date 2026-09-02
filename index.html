@@ -92,7 +92,7 @@
       border: 1px solid var(--border);
     }
     .btn {
-      display: inline-flex align-items: center; justify-content: center;
+      display: inline-flex; align-items: center; justify-content: center;
       border-radius: 999px;
       padding: 9px 18px;
       font-weight: 600;
@@ -174,8 +174,8 @@
       border: 1px solid var(--border); color: var(--text);
     }
     table { width: 100%; border-collapse: collapse; }
-    th { font-size: 12px; color: var(--text-muted); font-weight: 600; text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--border); }
-    td { font-size: 13px; padding: 10px 6px; border-bottom: 1px solid var(--border); }
+    th { font-size: 12px; color: var(--text-muted); font-weight: 600; text-align: left; padding: 8px 8px; border-bottom: 1px solid var(--border); }
+    td { font-size: 13px; padding: 10px 8px; border-bottom: 1px solid var(--border); }
     .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; }
     .badge-nec { background: rgba(28,28,30,0.08); color: var(--text); }
     .dark .badge-nec { background: rgba(255,255,255,0.12); color: #f5f5f7; }
@@ -474,7 +474,7 @@
         <div class="overflow-x-auto">
           <table>
             <thead>
-              <tr>
+              <tr class="whitespace-nowrap">
                 <th>日期</th><th>項目</th><th>金額</th><th>分類</th><th>帳戶</th><th>標籤</th><th>信封/專案</th><th>單據</th><th>備註</th><th></th>
               </tr>
             </thead>
@@ -513,7 +513,7 @@
         <div class="overflow-x-auto">
           <table>
             <thead>
-              <tr>
+              <tr class="whitespace-nowrap">
                 <th>標的</th><th>股數</th><th>成本</th><th>現價</th><th>市值</th><th>損益</th><th>殖利率%</th><th></th>
               </tr>
             </thead>
@@ -531,7 +531,9 @@
         <div class="overflow-x-auto">
           <table>
             <thead>
-              <tr><th>標的</th><th>幣別</th><th>單位數</th><th>原幣單價</th><th>匯率</th><th>台幣市值</th><th></th></tr>
+              <tr class="whitespace-nowrap">
+                <th>標的</th><th>幣別</th><th>單位數</th><th>原幣單價</th><th>匯率</th><th>台幣市值</th><th></th>
+              </tr>
             </thead>
             <tbody id="fundsTableBody"></tbody>
           </table>
@@ -540,36 +542,43 @@
       </div>
     </section>
 
-    <!-- 股票交易 -->
+    <!-- 股票 / 基金 交易 -->
     <section id="tab-stockTx" class="tab-content space-y-4">
       <div class="card p-5">
-        <h2 class="semibold mb-3">新增股票交易</h2>
+        <h2 class="semibold mb-3">新增投資交易</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label class="text-xs" style="color:var(--text-muted)">日期</label>
             <input type="date" id="stxDate" class="input mt-1" />
           </div>
           <div>
-            <label class="text-xs" style="color:var(--text-muted)">帳戶</label>
+            <label class="text-xs" style="color:var(--text-muted)">扣款 / 入帳帳戶</label>
             <select id="stxAccount" class="input mt-1"></select>
           </div>
           <div>
-            <label class="text-xs" style="color:var(--text-muted)">類別</label>
-            <select id="stxType" class="input mt-1">
+            <label class="text-xs" style="color:var(--text-muted)">資產類別（股票或基金）</label>
+            <select id="stxAssetType" class="input mt-1">
+              <option value="股票">股票 / ETF</option>
+              <option value="基金">基金</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs" style="color:var(--text-muted)">交易類別</label>
+            <select id="stxType" class="input mt-1" onchange="calcStockInputs()">
               <option value="買入">買入</option><option value="賣出">賣出</option>
               <option value="配息">配息</option><option value="折讓">折讓</option>
             </select>
           </div>
           <div>
-            <label class="text-xs" style="color:var(--text-muted)">標的</label>
-            <input type="text" id="stxSymbol" class="input mt-1" placeholder="00919 / 2330" />
+            <label class="text-xs" style="color:var(--text-muted)">標的名稱 / 代號</label>
+            <input type="text" id="stxSymbol" class="input mt-1" placeholder="00919、2330 或 坦伯頓科技" />
           </div>
           <div>
-            <label class="text-xs" style="color:var(--text-muted)">股數</label>
+            <label class="text-xs" style="color:var(--text-muted)">股數 / 基金單位數</label>
             <input type="number" id="stxShares" class="input mt-1 tabular" step="any" oninput="calcStockInputs()" />
           </div>
           <div>
-            <label class="text-xs" style="color:var(--text-muted)">單價</label>
+            <label class="text-xs" style="color:var(--text-muted)">成交單價 / 原幣淨值</label>
             <input type="number" id="stxPrice" class="input mt-1 tabular" step="any" oninput="calcStockInputs()" />
           </div>
           <div>
@@ -577,34 +586,44 @@
             <input type="number" id="stxFee" class="input mt-1 tabular" step="any" value="0" oninput="calcStockInputs()" />
           </div>
           <div>
-            <label class="text-xs" style="color:var(--text-muted)">證交稅</label>
+            <label class="text-xs" style="color:var(--text-muted)">證交稅（基金為 0）</label>
             <input type="number" id="stxTax" class="input mt-1 tabular" step="any" value="0" oninput="calcStockInputs()" />
           </div>
-          <!-- 即時試算輸入格子（支援手動覆寫） -->
+          <!-- 即時試算與覆寫框 -->
           <div>
-            <label class="text-xs" style="color:var(--text-muted)">試算總額（股數×單價，可手動修改）</label>
+            <label class="text-xs" style="color:var(--text-muted)">試算總額（股數×單價，可覆寫）</label>
             <input type="number" id="stxTotal" class="input mt-1 tabular" step="any" placeholder="0" />
           </div>
           <div>
-            <label class="text-xs" style="color:var(--text-muted)">試算總花費（含稅費/扣款額，可手動修改）</label>
-            <input type="number" id="stxTotalCost" class="input mt-1 tabular" step="any" placeholder="0" />
+            <label class="text-xs" style="color:var(--text-muted)">試算總花費（實扣台幣，可手動覆寫）</label>
+            <input type="number" id="stxTotalCost" class="input mt-1 tabular font-semibold" step="any" placeholder="例如定期定額填 5053" />
           </div>
           <div class="sm:col-span-2">
             <label class="text-xs" style="color:var(--text-muted)">備註</label>
-            <input type="text" id="stxNote" class="input mt-1" />
+            <input type="text" id="stxNote" class="input mt-1" placeholder="定期定額、折讓備忘等" />
           </div>
         </div>
         <button onclick="addStockTransaction()" class="btn-primary btn w-full mt-4 py-3">新增交易</button>
       </div>
 
+      <!-- 交易流水帳（強固同一行排版 + 橫向滑動適配） -->
       <div class="card p-5">
         <h2 class="semibold mb-3">交易流水帳</h2>
         <div class="overflow-x-auto">
-          <table>
+          <table class="min-w-full">
             <thead>
-              <tr>
-                <th>日期</th><th>帳戶</th><th>類別</th><th>標的</th><th>股數</th><th>單價</th>
-                <th>總額</th><th>手續費</th><th>證交稅</th><th>總花費</th><th></th>
+              <tr class="whitespace-nowrap">
+                <th class="px-3">日期</th>
+                <th class="px-3">帳戶</th>
+                <th class="px-2">類別</th>
+                <th class="px-3">標的</th>
+                <th class="px-3 text-right">股數/單位</th>
+                <th class="px-3 text-right">單價</th>
+                <th class="px-3 text-right">總額</th>
+                <th class="px-3 text-right">手續費</th>
+                <th class="px-3 text-right">證交稅</th>
+                <th class="px-3 text-right">總花費</th>
+                <th class="px-3 text-center">操作</th>
               </tr>
             </thead>
             <tbody id="stockTxTableBody"></tbody>
@@ -613,7 +632,7 @@
       </div>
     </section>
 
-    <!-- 專案（Toggle List 折疊清單） -->
+    <!-- 專案（Toggle List） -->
     <section id="tab-fixed" class="tab-content space-y-4">
       <div class="card p-5 space-y-3">
         <div class="flex items-center justify-between">
@@ -652,7 +671,7 @@
       </div>
     </section>
 
-    <!-- 報表（三個圓餅圖合併至同一大卡片框，垂直排列） -->
+    <!-- 報表 -->
     <section id="tab-charts" class="tab-content space-y-4">
       <div class="card p-5 space-y-6">
         <div>
@@ -734,7 +753,7 @@
   <!-- 股票交易編輯 Modal -->
   <div id="stxEditModal" class="modal-overlay hidden">
     <div class="modal">
-      <h3 class="text-base bold mb-4">編輯股票交易流水</h3>
+      <h3 class="text-base bold mb-4">編輯交易流水</h3>
       <input type="hidden" id="editStxId" />
       <div class="space-y-3 text-xs">
         <div>
@@ -745,24 +764,33 @@
           <label style="color:var(--text-muted)">帳戶</label>
           <select id="editStxAccount" class="input mt-1"></select>
         </div>
-        <div>
-          <label style="color:var(--text-muted)">類別</label>
-          <select id="editStxType" class="input mt-1">
-            <option value="買入">買入</option><option value="賣出">賣出</option>
-            <option value="配息">配息</option><option value="折讓">折讓</option>
-          </select>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label style="color:var(--text-muted)">資產類別</label>
+            <select id="editStxAssetType" class="input mt-1">
+              <option value="股票">股票 / ETF</option>
+              <option value="基金">基金</option>
+            </select>
+          </div>
+          <div>
+            <label style="color:var(--text-muted)">交易類別</label>
+            <select id="editStxType" class="input mt-1" onchange="calcEditStockInputs()">
+              <option value="買入">買入</option><option value="賣出">賣出</option>
+              <option value="配息">配息</option><option value="折讓">折讓</option>
+            </select>
+          </div>
         </div>
         <div>
-          <label style="color:var(--text-muted)">標的</label>
+          <label style="color:var(--text-muted)">標的名稱 / 代號</label>
           <input type="text" id="editStxSymbol" class="input mt-1" />
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label style="color:var(--text-muted)">股數</label>
+            <label style="color:var(--text-muted)">股數 / 單位數</label>
             <input type="number" id="editStxShares" class="input mt-1 tabular" step="any" oninput="calcEditStockInputs()" />
           </div>
           <div>
-            <label style="color:var(--text-muted)">單價</label>
+            <label style="color:var(--text-muted)">成交單價 / 原幣淨值</label>
             <input type="number" id="editStxPrice" class="input mt-1 tabular" step="any" oninput="calcEditStockInputs()" />
           </div>
         </div>
@@ -782,8 +810,8 @@
             <input type="number" id="editStxTotal" class="input mt-1 tabular" step="any" />
           </div>
           <div>
-            <label style="color:var(--text-muted)">總花費（可覆寫）</label>
-            <input type="number" id="editStxTotalCost" class="input mt-1 tabular" step="any" />
+            <label style="color:var(--text-muted)">總花費（實扣台幣，可覆寫）</label>
+            <input type="number" id="editStxTotalCost" class="input mt-1 tabular font-semibold" step="any" />
           </div>
         </div>
         <div>
@@ -2248,7 +2276,7 @@
         const tag = proj ? `[專] ${proj.name}` : (env ? env.name : '');
         const receiptBtn = t.receipt ? `<button onclick="viewReceipt('${t.id}')" class="text-xs px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700">📸 查看</button>` : '<span style="color:var(--text-muted)">-</span>';
         return `
-          <tr>
+          <tr class="whitespace-nowrap">
             <td class="tabular" style="color:var(--text-muted)">${(t.date || '').slice(5)}</td>
             <td class="semibold">${t.name}</td>
             <td class="tabular heavy">${formatMoney(t.amount)}</td>
@@ -2258,7 +2286,7 @@
             <td style="color:var(--text-muted)">${tag}</td>
             <td>${receiptBtn}</td>
             <td style="color:var(--text-muted)">${t.note || ''}</td>
-            <td class="whitespace-nowrap">
+            <td>
               <button onclick="openTxEditModal('${t.id}')" class="text-xs mr-1.5" style="color:var(--text-muted)">編</button>
               <button onclick="deleteTransaction('${t.id}')" class="btn text-xs px-2 py-0.5">刪</button>
             </td>
@@ -2400,15 +2428,15 @@
         const pl = mv - costTotal;
         stocksTotal += mv;
         return `
-          <tr>
+          <tr class="whitespace-nowrap">
             <td class="semibold">${s.symbol}</td>
-            <td class="tabular">${s.shares}</td>
-            <td class="tabular">${s.cost}</td>
-            <td class="tabular">${s.price}</td>
-            <td class="tabular heavy">${formatMoney(mv)}</td>
-            <td class="tabular heavy">${formatMoney(pl)}</td>
-            <td class="tabular">${s.yield || 0}%</td>
-            <td>
+            <td class="tabular text-right">${s.shares}</td>
+            <td class="tabular text-right">${Math.round(s.cost * 100) / 100}</td>
+            <td class="tabular text-right">${s.price}</td>
+            <td class="tabular heavy text-right">${formatMoney(mv)}</td>
+            <td class="tabular heavy text-right">${formatMoney(pl)}</td>
+            <td class="tabular text-right">${s.yield || 0}%</td>
+            <td class="text-center">
               <button onclick="openStockModal('${s.id}')" class="text-xs mr-1" style="color:var(--text-muted)">編</button>
               <button onclick="deleteStock('${s.id}')" class="text-xs" style="color:var(--text-muted)">刪</button>
             </td>
@@ -2421,14 +2449,14 @@
         const mv = (f.units || 0) * (f.price || 0) * (f.rate || 1);
         fundsTotal += mv;
         return `
-          <tr>
+          <tr class="whitespace-nowrap">
             <td class="semibold">${f.name}</td>
-            <td class="tabular">${f.currency || 'TWD'}</td>
-            <td class="tabular">${f.units}</td>
-            <td class="tabular">${f.price}</td>
-            <td class="tabular">${f.rate}</td>
-            <td class="tabular heavy">${formatMoney(mv)}</td>
-            <td>
+            <td>${f.currency || 'TWD'}</td>
+            <td class="tabular text-right">${f.units}</td>
+            <td class="tabular text-right">${f.price}</td>
+            <td class="tabular text-right">${f.rate}</td>
+            <td class="tabular heavy text-right">${formatMoney(mv)}</td>
+            <td class="text-center">
               <button onclick="openFundModal('${f.id}')" class="text-xs mr-1" style="color:var(--text-muted)">編</button>
               <button onclick="deleteFund('${f.id}')" class="text-xs" style="color:var(--text-muted)">刪</button>
             </td>
@@ -2437,7 +2465,7 @@
       document.getElementById('fundsTotalValue').textContent = formatMoney(fundsTotal);
     }
 
-    // ==================== 股票交易（含即時試算、覆寫與編輯） ====================
+    // ==================== 投資交易（支援股票與基金自動分流、手續費、即時試算覆寫） ====================
     function calcStockInputs() {
       const type = document.getElementById('stxType').value;
       const shares = parseFloat(document.getElementById('stxShares').value) || 0;
@@ -2456,8 +2484,8 @@
         totalCost = total || shares;
       }
 
-      document.getElementById('stxTotal').value = total || '';
-      document.getElementById('stxTotalCost').value = totalCost || '';
+      document.getElementById('stxTotal').value = total ? Math.round(total * 100) / 100 : '';
+      document.getElementById('stxTotalCost').value = totalCost ? Math.round(totalCost * 100) / 100 : '';
     }
 
     function calcEditStockInputs() {
@@ -2478,8 +2506,8 @@
         totalCost = total || shares;
       }
 
-      document.getElementById('editStxTotal').value = total || '';
-      document.getElementById('editStxTotalCost').value = totalCost || '';
+      document.getElementById('editStxTotal').value = total ? Math.round(total * 100) / 100 : '';
+      document.getElementById('editStxTotalCost').value = totalCost ? Math.round(totalCost * 100) / 100 : '';
     }
 
     function applyStockTxEffect(tx, isReverse = false) {
@@ -2487,8 +2515,31 @@
       const account = tx.account;
       const symbol = tx.symbol;
       const shares = tx.shares || 0;
+      const assetType = tx.assetType || '股票';
       const totalCost = tx.totalCost !== undefined ? tx.totalCost : (tx.total + (tx.fee || 0) + (tx.tax || 0));
 
+      if (assetType === '基金') {
+        let fund = data.funds.find(f => f.name === symbol);
+        if (tx.type === '買入') {
+          data.accounts[account] = (data.accounts[account] || 0) - (totalCost * mult);
+          if (fund) {
+            if (!isReverse) fund.units = (fund.units || 0) + shares;
+            else fund.units = Math.max(0, (fund.units || 0) - shares);
+            fund.price = tx.price;
+          } else if (!isReverse) {
+            data.funds.push({ id: uid(), name: symbol, currency: 'USD', units: shares, price: tx.price, rate: data.usdRate || 32.0 });
+          }
+        } else if (tx.type === '賣出') {
+          data.accounts[account] = (data.accounts[account] || 0) + (totalCost * mult);
+          if (fund) {
+            if (!isReverse) fund.units = Math.max(0, (fund.units || 0) - shares);
+            else fund.units = (fund.units || 0) + shares;
+          }
+        }
+        return;
+      }
+
+      // 股票/ETF 處理
       let stock = data.stocks.find(s => s.symbol === symbol);
 
       if (tx.type === '買入') {
@@ -2539,6 +2590,7 @@
     function addStockTransaction() {
       const date = document.getElementById('stxDate').value || todayStr();
       const account = document.getElementById('stxAccount').value;
+      const assetType = document.getElementById('stxAssetType').value;
       const type = document.getElementById('stxType').value;
       const symbol = document.getElementById('stxSymbol').value.trim();
       const shares = parseFloat(document.getElementById('stxShares').value) || 0;
@@ -2549,15 +2601,15 @@
       const totalCost = parseFloat(document.getElementById('stxTotalCost').value) || (type === '買入' ? total + fee + tax : total - fee - tax);
       const note = document.getElementById('stxNote').value.trim();
 
-      if (!symbol) return alert('請輸入標的');
+      if (!symbol) return alert('請輸入標的名稱');
 
-      const tx = { id: uid(), date, account, type, symbol, shares, price, total, fee, tax, totalCost, note };
+      const tx = { id: uid(), date, account, assetType, type, symbol, shares, price, total, fee, tax, totalCost, note };
       applyStockTxEffect(tx, false);
 
       data.stockTransactions.push(tx);
       saveData();
 
-      // 保留日期、帳戶、類別，僅清空其餘欄位
+      // 保留日期、帳戶與類別，清空其餘輸入
       document.getElementById('stxSymbol').value = '';
       document.getElementById('stxShares').value = '';
       document.getElementById('stxPrice').value = '';
@@ -2578,6 +2630,7 @@
       document.getElementById('editStxId').value = tx.id;
       document.getElementById('editStxDate').value = tx.date;
       document.getElementById('editStxAccount').value = tx.account;
+      document.getElementById('editStxAssetType').value = tx.assetType || '股票';
       document.getElementById('editStxType').value = tx.type;
       document.getElementById('editStxSymbol').value = tx.symbol;
       document.getElementById('editStxShares').value = tx.shares;
@@ -2598,12 +2651,13 @@
       const symbol = document.getElementById('editStxSymbol').value.trim();
       if (!symbol) return alert('請輸入標的');
 
-      // 1. 先反向回滾舊交易數據
+      // 1. 反向回滾舊交易
       applyStockTxEffect(tx, true);
 
       // 2. 更新欄位
       tx.date = document.getElementById('editStxDate').value || todayStr();
       tx.account = document.getElementById('editStxAccount').value;
+      tx.assetType = document.getElementById('editStxAssetType').value;
       tx.type = document.getElementById('editStxType').value;
       tx.symbol = symbol;
       tx.shares = parseFloat(document.getElementById('editStxShares').value) || 0;
@@ -2614,7 +2668,7 @@
       tx.totalCost = parseFloat(document.getElementById('editStxTotalCost').value) || (tx.type === '買入' ? tx.total + tx.fee + tx.tax : tx.total - tx.fee - tx.tax);
       tx.note = document.getElementById('editStxNote').value.trim();
 
-      // 3. 正向套用新交易數據
+      // 3. 正向套用新數據
       applyStockTxEffect(tx, false);
 
       saveData();
@@ -2641,18 +2695,18 @@
     function renderStockTransactions() {
       const list = [...data.stockTransactions].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
       document.getElementById('stockTxTableBody').innerHTML = list.map(t => `
-        <tr>
-          <td class="tabular" style="color:var(--text-muted)">${t.date}</td>
-          <td>${t.account}</td>
-          <td><span class="badge ${t.type === '買入' ? 'badge-nec' : 'badge-non'}">${t.type}</span></td>
-          <td class="semibold">${t.symbol}</td>
-          <td class="tabular">${t.shares || 0}</td>
-          <td class="tabular">${t.price || 0}</td>
-          <td class="tabular">${formatMoney(t.total)}</td>
-          <td class="tabular">${formatMoney(t.fee)}</td>
-          <td class="tabular">${formatMoney(t.tax)}</td>
-          <td class="tabular heavy">${formatMoney(t.totalCost !== undefined ? t.totalCost : t.total)}</td>
-          <td class="whitespace-nowrap">
+        <tr class="whitespace-nowrap">
+          <td class="px-3 tabular" style="color:var(--text-muted)">${t.date}</td>
+          <td class="px-3">${t.account}</td>
+          <td class="px-2"><span class="badge ${t.type === '買入' ? 'badge-nec' : 'badge-non'}">${t.type}</span></td>
+          <td class="px-3 semibold">${t.symbol}</td>
+          <td class="px-3 tabular text-right">${t.shares || 0}</td>
+          <td class="px-3 tabular text-right">${t.price || 0}</td>
+          <td class="px-3 tabular text-right">${formatMoney(t.total)}</td>
+          <td class="px-3 tabular text-right">${formatMoney(t.fee)}</td>
+          <td class="px-3 tabular text-right">${formatMoney(t.tax)}</td>
+          <td class="px-3 tabular heavy text-right">${formatMoney(t.totalCost !== undefined ? t.totalCost : t.total)}</td>
+          <td class="px-3 text-center">
             <button onclick="openStockTxEditModal('${t.id}')" class="text-xs mr-1.5" style="color:var(--text-muted)">編</button>
             <button onclick="deleteStockTransaction('${t.id}')" class="btn text-xs px-2 py-0.5">刪</button>
           </td>
@@ -2815,7 +2869,7 @@
       const f = data.fixedItems.find(x => x.id === id);
       if (!f) return;
       data.accounts[f.account] = (data.accounts[f.account] || 0) + f.amount;
-      data.transactions.push({ id: uid(), date: todayStr(), name: f.name + '（固定）', amount, category: f.category, account: f.account, necessary: 'necessary', note: f.note || '', envelopeId: '', projectId: '', receipt: '' });
+      data.transactions.push({ id: uid(), date: todayStr(), name: f.name + '（固定）', amount: f.amount, category: f.category, account: f.account, necessary: 'necessary', note: f.note || '', envelopeId: '', projectId: '', receipt: '' });
       saveData();
       renderDashboard();
       alert('已計入本月帳務');
@@ -2894,7 +2948,7 @@
       }
     }
 
-    // ==================== 統計圖表（三個圓餅圖垂直渲染） ====================
+    // ==================== 統計圖表 ====================
     function renderCharts() {
       const cm = currentMonthStr();
       const monthTxs = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount < 0 && t.category !== '轉帳/換匯');
