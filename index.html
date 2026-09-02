@@ -193,6 +193,21 @@
     }
     .toggle.on::after { transform: translateX(20px); }
     .dark .toggle.on::after { background: #1c1c1e; }
+
+    /* 拖曳樣式 */
+    .drag-item {
+      cursor: grab;
+      transition: background 0.15s, opacity 0.15s;
+    }
+    .drag-item.dragging {
+      opacity: 0.4;
+      background: rgba(142,142,147,0.1);
+    }
+    .drag-handle {
+      cursor: grab;
+      user-select: none;
+      touch-action: none;
+    }
   </style>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
@@ -642,10 +657,9 @@
       </div>
     </section>
 
-    <!-- 報表（三個圓餅圖合併至同一大卡片框，由上至下垂直排版） -->
+    <!-- 報表（三個圓餅圖合併至同一大卡片框，垂直排列） -->
     <section id="tab-charts" class="tab-content space-y-4">
       <div class="card p-5 space-y-6">
-        <!-- 1. 費用分類圓餅圖 -->
         <div>
           <h2 class="semibold text-base mb-3">費用分類圓餅圖</h2>
           <div class="max-w-md mx-auto">
@@ -655,7 +669,6 @@
 
         <div class="border-t border-zinc-200 dark:border-zinc-800"></div>
 
-        <!-- 2. 帳戶 / 卡片支出佔比 -->
         <div>
           <h2 class="semibold text-base mb-3">帳戶 / 卡片支出佔比</h2>
           <div class="max-w-md mx-auto">
@@ -665,7 +678,6 @@
 
         <div class="border-t border-zinc-200 dark:border-zinc-800"></div>
 
-        <!-- 3. 必要 vs 非必要支出佔比 -->
         <div>
           <h2 class="semibold text-base mb-3">必要 vs 非必要支出佔比</h2>
           <div class="max-w-md mx-auto">
@@ -674,7 +686,6 @@
         </div>
       </div>
 
-      <!-- 底部操作列 -->
       <div class="card p-5">
         <div class="flex items-center justify-center gap-3 flex-wrap">
           <label class="btn btn-secondary text-xs px-4 py-2 cursor-pointer">
@@ -887,11 +898,14 @@
     </div>
   </div>
 
-  <!-- 帳戶編輯 Modal -->
+  <!-- 帳戶編輯 Modal（支援拖曳排序） -->
   <div id="accountModal" class="modal-overlay hidden">
     <div class="modal">
-      <h3 class="text-base bold mb-4">帳戶管理</h3>
-      <div id="accountEditFields" class="space-y-3"></div>
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-base bold">帳戶管理</h3>
+        <span class="text-[11px]" style="color:var(--text-muted)">按住 ⠿ 可拖曳排序</span>
+      </div>
+      <div id="accountEditFields" class="space-y-2"></div>
       <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-2 gap-2">
         <div>
           <label class="text-xs" style="color:var(--text-muted)">日幣現金 (JPY)</label>
@@ -1379,7 +1393,7 @@
       }
     }
 
-    // ==================== 批次匯入發票 CSV（精確定位品名與金額，防數量誤抓） ====================
+    // ==================== 批次匯入發票 CSV ====================
     function importInvoiceCSV(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1391,7 +1405,6 @@
           const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
           if (lines.length <= 1) return alert('CSV 內容為空');
 
-          // RFC 4180 標準拆分
           function parseCSVLine(line) {
             const result = [];
             let cur = '';
@@ -1427,18 +1440,12 @@
             headers = parseCSVLine(lines[0]);
           }
 
-          // 1. 嚴格比對品名（不允許模糊匹配到數量/單價）
           let itemIdx = headers.findIndex(h => h === '消費明細_品名' || h === '品名');
           let sellerIdx = headers.findIndex(h => h === '賣方名稱');
-          
-          // 2. 嚴格比對金額（優先品名金額，其次發票總額）
           let amtIdx = headers.findIndex(h => h === '消費明細_金額');
           if (amtIdx === -1) amtIdx = headers.findIndex(h => h === '發票金額');
-
-          // 3. 嚴格比對日期
           let dateIdx = headers.findIndex(h => h === '發票日期');
 
-          // 降級保護
           if (dateIdx === -1) dateIdx = 1;
           if (amtIdx === -1) amtIdx = 3;
           if (itemIdx === -1 && sellerIdx === -1) itemIdx = headers.length - 1;
@@ -1451,11 +1458,9 @@
               const dateRaw = cleanCols[dateIdx] || '';
               
               let displayName = '';
-              // 優先抓品名
               if (itemIdx !== -1 && cleanCols[itemIdx]) {
                 displayName = cleanCols[itemIdx];
               }
-              // 若無品名，或是純數字（數量誤讀防呆），則改抓賣方名稱
               if (!displayName || /^\d+$/.test(displayName)) {
                 if (sellerIdx !== -1 && cleanCols[sellerIdx]) {
                   displayName = cleanCols[sellerIdx];
@@ -1637,25 +1642,77 @@
       `).join('') || '<p class="text-center py-2" style="color:var(--text-muted)">尚無換匯紀錄</p>';
     }
 
-    // ==================== 帳戶與外匯/股價 API ====================
+    // ==================== 帳戶管理與手動拖曳排序 ====================
+    let draggedAccountItem = null;
+
     function openAccountEditModal() {
-      const container = document.getElementById('accountEditFields');
-      container.innerHTML = '';
-      (data.accountList || DEFAULT_ACCOUNTS).forEach(name => {
-        container.innerHTML += `
-          <div class="flex items-center gap-2">
-            <div class="flex-1">
-              <label class="text-xs" style="color:var(--text-muted)">${name}</label>
-              <input type="number" data-account="${name}" class="input mt-1 account-edit-input tabular" value="${data.accounts[name] || 0}" step="any" />
-            </div>
-            <button onclick="removeAccount('${name}')" class="btn text-xs mt-5">移除</button>
-          </div>`;
-      });
+      renderAccountEditList();
       document.getElementById('jpyCashInput').value = data.jpyCash || 0;
       document.getElementById('usdCashInput').value = data.usdCash || 0;
       document.getElementById('newAccountName').value = '';
       openModal('accountModal');
     }
+
+    function renderAccountEditList() {
+      const container = document.getElementById('accountEditFields');
+      container.innerHTML = '';
+      (data.accountList || DEFAULT_ACCOUNTS).forEach((name, index) => {
+        const item = document.createElement('div');
+        item.className = 'drag-item pill p-2.5 flex items-center gap-2 border border-zinc-200 dark:border-zinc-800';
+        item.draggable = true;
+        item.dataset.index = index;
+
+        item.innerHTML = `
+          <div class="drag-handle text-zinc-400 dark:text-zinc-600 px-1 py-2 text-base font-mono">⠿</div>
+          <div class="flex-1">
+            <span class="text-xs font-semibold">${name}</span>
+            <input type="number" data-account="${name}" class="input mt-1 account-edit-input tabular text-xs" value="${data.accounts[name] || 0}" step="any" />
+          </div>
+          <button onclick="removeAccount('${name}')" class="btn text-xs px-2.5 py-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30">移除</button>
+        `;
+
+        // 拖曳事件監聽
+        item.addEventListener('dragstart', handleDragStart);
+        item.addEventListener('dragover', handleDragOver);
+        item.addEventListener('drop', handleDrop);
+        item.addEventListener('dragend', handleDragEnd);
+
+        container.appendChild(item);
+      });
+    }
+
+    function handleDragStart(e) {
+      draggedAccountItem = this;
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const container = document.getElementById('accountEditFields');
+      const draggingElement = document.querySelector('.dragging');
+      const siblings = [...container.querySelectorAll('.drag-item:not(.dragging)')];
+      const nextSibling = siblings.find(sibling => {
+        return e.clientY <= sibling.getBoundingClientRect().top + sibling.offsetHeight / 2;
+      });
+      container.insertBefore(draggingElement, nextSibling);
+    }
+
+    function handleDrop(e) {
+      e.stopPropagation();
+    }
+
+    function handleDragEnd() {
+      this.classList.remove('dragging');
+      // 根據當前 DOM 順序重新更新 accountList 陣列
+      const newOrder = [];
+      document.querySelectorAll('#accountEditFields .account-edit-input').forEach(input => {
+        newOrder.push(input.dataset.account);
+      });
+      data.accountList = newOrder;
+    }
+
     function addNewAccount() {
       const name = document.getElementById('newAccountName').value.trim();
       if (!name) return alert('請輸入帳戶名稱');
@@ -1664,22 +1721,29 @@
       data.accountList.push(name);
       data.accounts[name] = 0;
       saveData();
-      openAccountEditModal();
+      renderAccountEditList();
       populateAllAccountSelects();
+      document.getElementById('newAccountName').value = '';
     }
+
     function removeAccount(name) {
       if (data.accountList.length <= 1) return alert('至少保留一個帳戶');
       if (!confirm(`確定移除「${name}」？`)) return;
       data.accountList = data.accountList.filter(a => a !== name);
       delete data.accounts[name];
       saveData();
-      openAccountEditModal();
+      renderAccountEditList();
       populateAllAccountSelects();
     }
+
     function saveAccounts() {
+      const newOrder = [];
       document.querySelectorAll('.account-edit-input').forEach(inp => {
-        data.accounts[inp.dataset.account] = parseFloat(inp.value) || 0;
+        const accName = inp.dataset.account;
+        data.accounts[accName] = parseFloat(inp.value) || 0;
+        newOrder.push(accName);
       });
+      data.accountList = newOrder;
       data.jpyCash = parseFloat(document.getElementById('jpyCashInput').value) || 0;
       data.usdCash = parseFloat(document.getElementById('usdCashInput').value) || 0;
       saveData();
@@ -1687,6 +1751,7 @@
       populateAllAccountSelects();
       renderDashboard();
     }
+
     async function updateFxRates() {
       const status = document.getElementById('apiStatus');
       status.textContent = '更新日幣與美金匯率中…';
@@ -1711,6 +1776,7 @@
       } catch (e) {}
       status.textContent = '外匯更新失敗';
     }
+
     async function updateStockPrices() {
       const status = document.getElementById('apiStatus');
       if (!data.stocks.length) return status.textContent = '尚無股票可更新';
@@ -1732,6 +1798,7 @@
       renderDashboard();
       status.textContent = `已更新現價（${updatedCount}/${data.stocks.length} 檔）`;
     }
+
     async function refreshAllAssets() {
       await updateFxRates();
       await updateStockPrices();
@@ -2580,7 +2647,7 @@
       const f = data.fixedItems.find(x => x.id === id);
       if (!f) return;
       data.accounts[f.account] = (data.accounts[f.account] || 0) + f.amount;
-      data.transactions.push({ id: uid(), date: todayStr(), name: f.name + '（固定）', amount, category: f.category, account: f.account, necessary: 'necessary', note: f.note || '', envelopeId: '', projectId: '', receipt: '' });
+      data.transactions.push({ id: uid(), date: todayStr(), name: f.name + '（固定）', amount: f.amount, category: f.category, account: f.account, necessary: 'necessary', note: f.note || '', envelopeId: '', projectId: '', receipt: '' });
       saveData();
       renderDashboard();
       alert('已計入本月帳務');
@@ -2589,7 +2656,6 @@
     function renderFixedSection() {
       if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, project: true, freelance: true };
 
-      // 1. 固定收支 Toggle
       const fixOpen = data.sectionsOpen.fixed !== false;
       document.getElementById('fixedArrow').textContent = fixOpen ? '▼' : '▶';
       document.getElementById('fixedBody').style.display = fixOpen ? 'block' : 'none';
@@ -2610,7 +2676,6 @@
         `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未設定固定收支</p>';
       }
 
-      // 2. 特殊專案 Toggle
       const projOpen = data.sectionsOpen.project !== false;
       document.getElementById('projectArrow').textContent = projOpen ? '▼' : '▶';
       document.getElementById('projectBody').style.display = projOpen ? 'block' : 'none';
@@ -2638,7 +2703,6 @@
         }).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未建立專案</p>';
       }
 
-      // 3. 接案追蹤 Toggle
       const freeOpen = data.sectionsOpen.freelance !== false;
       document.getElementById('freelanceArrow').textContent = freeOpen ? '▼' : '▶';
       document.getElementById('freelanceBody').style.display = freeOpen ? 'block' : 'none';
@@ -2683,7 +2747,6 @@
       const isDark = document.documentElement.classList.contains('dark');
       const textColor = isDark ? '#8e8e93' : '#1c1c1e';
 
-      // 1. 費用分類圓餅圖
       categoryChart = new Chart(document.getElementById('categoryPieChart').getContext('2d'), {
         type: 'doughnut',
         data: {
@@ -2699,7 +2762,6 @@
         }
       });
 
-      // 2. 帳戶支出分佈佔比圖 (黑白灰交錯)
       accountChart = new Chart(document.getElementById('accountPieChart').getContext('2d'), {
         type: 'doughnut',
         data: {
@@ -2715,7 +2777,6 @@
         }
       });
 
-      // 3. 必要 vs 非必要支出佔比圖
       necessaryChart = new Chart(document.getElementById('necessaryPieChart').getContext('2d'), {
         type: 'pie',
         data: {
