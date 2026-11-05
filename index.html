@@ -198,7 +198,6 @@
     .drag-item.dragging { opacity: 0.4; background: rgba(142,142,147,0.1); }
     .drag-handle { cursor: grab; user-select: none; touch-action: none; }
 
-    /* 凍結欄位與表頭 */
     .sticky-col {
       position: sticky;
       left: 0;
@@ -623,7 +622,7 @@
         <button onclick="addStockTransaction()" class="btn-primary btn w-full mt-4 py-3">新增交易</button>
       </div>
 
-      <!-- 交易流水帳（專屬對帳篩選列 + 檢視切換 + 凍結） -->
+      <!-- 交易流水帳（對帳篩選列 + 檢視切換 + 凍結） -->
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h2 class="semibold">交易流水帳</h2>
@@ -632,7 +631,6 @@
           </div>
         </div>
 
-        <!-- 對帳工具列 -->
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
           <div>
             <input type="month" id="filterStxMonth" class="input text-xs" onchange="renderStockTransactions()" />
@@ -713,7 +711,7 @@
       </div>
     </section>
 
-    <!-- 報表（三個圓餅圖合併至同一大卡片框，支援純日常/含投資切換） -->
+    <!-- 報表 -->
     <section id="tab-charts" class="tab-content space-y-4">
       <div class="card p-5 space-y-6">
         <div class="flex items-center justify-between">
@@ -1468,7 +1466,11 @@
         const tday = todayStr();
         document.getElementById('txDateText').value = tday;
         document.getElementById('txDateNative').value = tday;
-        resetTxMonthFilter();
+        if (!document.getElementById('filterDateFrom').value) {
+          resetTxMonthFilter();
+        } else {
+          renderTransactions();
+        }
       }
       if (tab === 'investments') renderInvestments();
       if (tab === 'stockTx') {
@@ -2206,9 +2208,7 @@
 
       data.accounts[account] = (data.accounts[account] || 0) + amount;
       
-      // 僅限當月收支才提撥什一池
-      const cm = currentMonthStr();
-      if ((category === '收' || category === '息') && amount > 0 && date.startsWith(cm)) {
+      if ((category === '收' || category === '息') && amount > 0 && date.startsWith(currentMonthStr())) {
         data.tithePool = (data.tithePool || 0) + Math.round(amount * 0.1);
       }
 
@@ -2288,9 +2288,7 @@
       const tx = data.transactions.find(t => t.id === id);
       if (!tx) return;
       data.accounts[tx.account] = (data.accounts[tx.account] || 0) - tx.amount;
-      
-      const cm = currentMonthStr();
-      if ((tx.category === '收' || tx.category === '息') && tx.amount > 0 && tx.date.startsWith(cm)) {
+      if ((tx.category === '收' || tx.category === '息') && tx.amount > 0 && tx.date.startsWith(currentMonthStr())) {
         data.tithePool = Math.max(0, (data.tithePool || 0) - Math.round(tx.amount * 0.1));
       }
       data.transactions = data.transactions.filter(t => t.id !== id);
@@ -2305,11 +2303,7 @@
       const d = new Date();
       const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
       document.getElementById('filterDateFrom').value = `${cm}-01`;
-      document.getElementById('filterDateTo').value = `${cm}-${lastDay}`;
-      document.getElementById('filterCategory').value = '';
-      document.getElementById('filterAccount').value = '';
-      document.getElementById('filterNecessary').value = '';
-      document.getElementById('filterKeyword').value = '';
+      document.getElementById('filterDateTo').value = `${cm}-${String(lastDay).padStart(2, '0')}`;
       renderTransactions();
     }
 
@@ -2538,7 +2532,7 @@
       document.getElementById('fundsTotalValue').textContent = formatMoney(fundsTotal);
     }
 
-    // ==================== 投資交易（支援股票與基金分流、即時試算覆寫、對帳篩選與檢視切換） ====================
+    // ==================== 投資交易 ====================
     function calcStockInputs() {
       const type = document.getElementById('stxType').value;
       const shares = parseFloat(document.getElementById('stxShares').value) || 0;
@@ -2622,3 +2616,661 @@
             stock.shares += shares;
             stock.cost = stock.shares > 0 ? (oldCostTotal + totalCost) / stock.shares : tx.price;
             stock.price = tx.price;
+          } else {
+            stock.shares = Math.max(0, stock.shares - shares);
+            if (stock.shares === 0) {
+              data.stocks = data.stocks.filter(s => s.id !== stock.id);
+            }
+          }
+        } else if (!isReverse) {
+          data.stocks.push({ id: uid(), symbol, shares, cost: tx.price, price: tx.price, yield: 6 });
+        }
+      } else if (tx.type === '賣出') {
+        data.accounts[account] = (data.accounts[account] || 0) + (totalCost * mult);
+        if (stock) {
+          if (!isReverse) {
+            stock.shares = Math.max(0, stock.shares - shares);
+            if (stock.shares === 0) data.stocks = data.stocks.filter(s => s.id !== stock.id);
+          } else {
+            stock.shares += shares;
+          }
+        } else if (isReverse) {
+          data.stocks.push({ id: uid(), symbol, shares, cost: tx.price, price: tx.price, yield: 6 });
+        }
+      } else if (tx.type === '配息') {
+        data.accounts[account] = (data.accounts[account] || 0) + (totalCost * mult);
+        if (!isReverse) {
+          data.transactions.push({
+            id: uid(), date: tx.date, name: symbol + ' 配息', amount: totalCost, category: '息', account, necessary: 'necessary', note: tx.note || '股息入帳', envelopeId: '', projectId: '', receipt: ''
+          });
+          if (tx.date.startsWith(currentMonthStr())) {
+            data.tithePool = (data.tithePool || 0) + Math.round(totalCost * 0.1);
+          }
+        } else {
+          data.transactions = data.transactions.filter(t => !(t.name.includes(symbol) && t.category === '息' && t.date === tx.date));
+          if (tx.date.startsWith(currentMonthStr())) {
+            data.tithePool = Math.max(0, (data.tithePool || 0) - Math.round(totalCost * 0.1));
+          }
+        }
+      } else if (tx.type === '折讓') {
+        data.accounts[account] = (data.accounts[account] || 0) + (totalCost * mult);
+      }
+    }
+
+    function addStockTransaction() {
+      const date = document.getElementById('stxDate').value || todayStr();
+      const account = document.getElementById('stxAccount').value;
+      const assetType = document.getElementById('stxAssetType').value;
+      const type = document.getElementById('stxType').value;
+      const symbol = document.getElementById('stxSymbol').value.trim();
+      const shares = parseFloat(document.getElementById('stxShares').value) || 0;
+      const price = parseFloat(document.getElementById('stxPrice').value) || 0;
+      const fee = parseFloat(document.getElementById('stxFee').value) || 0;
+      const tax = parseFloat(document.getElementById('stxTax').value) || 0;
+      const total = parseFloat(document.getElementById('stxTotal').value) || (shares * price);
+      const totalCost = parseFloat(document.getElementById('stxTotalCost').value) || (type === '買入' ? total + fee + tax : total - fee - tax);
+      const note = document.getElementById('stxNote').value.trim();
+
+      if (!symbol) return alert('請輸入標的名稱');
+
+      const tx = { id: uid(), date, account, assetType, type, symbol, shares, price, total, fee, tax, totalCost, note };
+      applyStockTxEffect(tx, false);
+
+      data.stockTransactions.push(tx);
+      saveData();
+
+      document.getElementById('stxSymbol').value = '';
+      document.getElementById('stxShares').value = '';
+      document.getElementById('stxPrice').value = '';
+      document.getElementById('stxFee').value = '0';
+      document.getElementById('stxTax').value = '0';
+      document.getElementById('stxTotal').value = '';
+      document.getElementById('stxTotalCost').value = '';
+      document.getElementById('stxNote').value = '';
+
+      renderStockTransactions();
+      renderInvestments();
+      renderDashboard();
+    }
+
+    function openStockTxEditModal(id) {
+      const tx = data.stockTransactions.find(t => t.id === id);
+      if (!tx) return;
+      document.getElementById('editStxId').value = tx.id;
+      document.getElementById('editStxDate').value = tx.date;
+      document.getElementById('editStxAccount').value = tx.account;
+      document.getElementById('editStxAssetType').value = tx.assetType || '股票';
+      document.getElementById('editStxType').value = tx.type;
+      document.getElementById('editStxSymbol').value = tx.symbol;
+      document.getElementById('editStxShares').value = tx.shares;
+      document.getElementById('editStxPrice').value = tx.price;
+      document.getElementById('editStxFee').value = tx.fee || 0;
+      document.getElementById('editStxTax').value = tx.tax || 0;
+      document.getElementById('editStxTotal').value = tx.total;
+      document.getElementById('editStxTotalCost').value = tx.totalCost !== undefined ? tx.totalCost : tx.total;
+      document.getElementById('editStxNote').value = tx.note || '';
+      openModal('stxEditModal');
+    }
+
+    function saveStockTxEdit() {
+      const id = document.getElementById('editStxId').value;
+      const tx = data.stockTransactions.find(t => t.id === id);
+      if (!tx) return;
+
+      const symbol = document.getElementById('editStxSymbol').value.trim();
+      if (!symbol) return alert('請輸入標的');
+
+      applyStockTxEffect(tx, true);
+
+      tx.date = document.getElementById('editStxDate').value || todayStr();
+      tx.account = document.getElementById('editStxAccount').value;
+      tx.assetType = document.getElementById('editStxAssetType').value;
+      tx.type = document.getElementById('editStxType').value;
+      tx.symbol = symbol;
+      tx.shares = parseFloat(document.getElementById('editStxShares').value) || 0;
+      tx.price = parseFloat(document.getElementById('editStxPrice').value) || 0;
+      tx.fee = parseFloat(document.getElementById('editStxFee').value) || 0;
+      tx.tax = parseFloat(document.getElementById('editStxTax').value) || 0;
+      tx.total = parseFloat(document.getElementById('editStxTotal').value) || (tx.shares * tx.price);
+      tx.totalCost = parseFloat(document.getElementById('editStxTotalCost').value) || (tx.type === '買入' ? tx.total + tx.fee + tx.tax : tx.total - tx.fee - tx.tax);
+      tx.note = document.getElementById('editStxNote').value.trim();
+
+      applyStockTxEffect(tx, false);
+
+      saveData();
+      closeModal('stxEditModal');
+      renderStockTransactions();
+      renderInvestments();
+      renderDashboard();
+    }
+
+    function deleteStockTransaction(id) {
+      const tx = data.stockTransactions.find(t => t.id === id);
+      if (!tx) return;
+      if (!confirm(`確定刪除此筆「${tx.type}」紀錄？持股與帳戶將自動回滾`)) return;
+
+      applyStockTxEffect(tx, true);
+
+      data.stockTransactions = data.stockTransactions.filter(t => t.id !== id);
+      saveData();
+      renderStockTransactions();
+      renderInvestments();
+      renderDashboard();
+    }
+
+    function toggleStxViewMode() {
+      data.stxViewMode = data.stxViewMode === 'card' ? 'table' : 'card';
+      saveData();
+      renderStockTransactions();
+    }
+
+    function clearStxFilters() {
+      document.getElementById('filterStxMonth').value = '';
+      document.getElementById('filterStxKeyword').value = '';
+      renderStockTransactions();
+    }
+
+    function renderStockTransactions() {
+      const month = document.getElementById('filterStxMonth').value;
+      const kw = document.getElementById('filterStxKeyword').value.trim().toLowerCase();
+
+      let list = [...data.stockTransactions].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      if (month) list = list.filter(t => t.date && t.date.startsWith(month));
+      if (kw) list = list.filter(t => (t.symbol || '').toLowerCase().includes(kw) || (t.account || '').toLowerCase().includes(kw) || (t.note || '').toLowerCase().includes(kw));
+
+      const periodTotal = list.reduce((s, t) => s + (t.totalCost !== undefined ? t.totalCost : t.total), 0);
+      document.getElementById('stxPeriodTotalCost').textContent = formatMoney(periodTotal);
+
+      const isCard = data.stxViewMode === 'card';
+      document.getElementById('stxViewModeBtn').textContent = isCard ? '切換為表格模式' : '切換為卡片模式';
+      document.getElementById('stxTableView').classList.toggle('hidden', isCard);
+      document.getElementById('stxCardView').classList.toggle('hidden', !isCard);
+
+      if (isCard) {
+        document.getElementById('stxCardView').innerHTML = list.map(t => `
+          <div class="pill p-3 space-y-1.5 text-xs">
+            <div class="flex justify-between items-center">
+              <div>
+                <span class="tabular font-semibold">${t.date}</span>
+                <span class="badge ${t.type === '買入' ? 'badge-nec' : 'badge-non'} ml-1">${t.type}</span>
+                <strong class="text-sm ml-1.5">${t.symbol}</strong>
+                <span class="text-[11px]" style="color:var(--text-muted)">(${t.account})</span>
+              </div>
+              <div class="flex gap-2">
+                <button onclick="openStockTxEditModal('${t.id}')" style="color:var(--text-muted)">編</button>
+                <button onclick="deleteStockTransaction('${t.id}')" style="color:var(--text-muted)">刪</button>
+              </div>
+            </div>
+            <div class="flex justify-between tabular" style="color:var(--text-muted)">
+              <span>${t.shares} 股/單位 × $${t.price} ｜ 費 $${t.fee} · 稅 $${t.tax}</span>
+              <strong class="heavy text-sm text-[var(--text)]">${formatMoney(t.totalCost !== undefined ? t.totalCost : t.total)}</strong>
+            </div>
+            ${t.note ? `<div class="text-[11px]" style="color:var(--text-muted)">備註：${t.note}</div>` : ''}
+          </div>
+        `).join('') || '<p class="text-center py-6 text-xs" style="color:var(--text-muted)">尚無交易紀錄</p>';
+      } else {
+        document.getElementById('stockTxTableBody').innerHTML = list.map(t => `
+          <tr class="whitespace-nowrap">
+            <td class="px-3 tabular sticky-col" style="color:var(--text-muted)">${t.date}</td>
+            <td class="px-3">${t.account}</td>
+            <td class="px-2"><span class="badge ${t.type === '買入' ? 'badge-nec' : 'badge-non'}">${t.type}</span></td>
+            <td class="px-3 semibold">${t.symbol}</td>
+            <td class="px-3 tabular text-right">${t.shares || 0}</td>
+            <td class="px-3 tabular text-right">${t.price || 0}</td>
+            <td class="px-3 tabular text-right">${formatMoney(t.total)}</td>
+            <td class="px-3 tabular text-right">${formatMoney(t.fee)}</td>
+            <td class="px-3 tabular text-right">${formatMoney(t.tax)}</td>
+            <td class="px-3 tabular heavy text-right">${formatMoney(t.totalCost !== undefined ? t.totalCost : t.total)}</td>
+            <td class="px-3 text-center">
+              <button onclick="openStockTxEditModal('${t.id}')" class="text-xs mr-1.5" style="color:var(--text-muted)">編</button>
+              <button onclick="deleteStockTransaction('${t.id}')" class="btn text-xs px-2 py-0.5">刪</button>
+            </td>
+          </tr>
+        `).join('') || '<tr><td colspan="11" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無交易紀錄</td></tr>';
+      }
+    }
+
+    // ==================== 專案 / 接案 / 固定（Toggle List） ====================
+    function openProjectModal(id = null) {
+      document.getElementById('projectEditId').value = id || '';
+      document.getElementById('projectModalTitle').textContent = id ? '編輯專案' : '新增專案';
+      if (id) {
+        const p = data.projects.find(x => x.id === id);
+        if (p) {
+          document.getElementById('projectName').value = p.name;
+          document.getElementById('projectBudget').value = p.budget;
+          document.getElementById('projectStatus').value = p.status || 'active';
+          document.getElementById('projectNote').value = p.note || '';
+        }
+      } else {
+        document.getElementById('projectName').value = '';
+        document.getElementById('projectBudget').value = '';
+        document.getElementById('projectStatus').value = 'active';
+        document.getElementById('projectNote').value = '';
+      }
+      openModal('projectModal');
+    }
+    function saveProject() {
+      const id = document.getElementById('projectEditId').value;
+      const name = document.getElementById('projectName').value.trim();
+      const budget = parseFloat(document.getElementById('projectBudget').value) || 0;
+      const status = document.getElementById('projectStatus').value;
+      const note = document.getElementById('projectNote').value.trim();
+      if (!name) return alert('請輸入專案名稱');
+      if (id) {
+        const p = data.projects.find(x => x.id === id);
+        if (p) { p.name = name; p.budget = budget; p.status = status; p.note = note; }
+      } else {
+        data.projects.push({ id: uid(), name, budget, status, note });
+      }
+      saveData();
+      closeModal('projectModal');
+      renderFixedSection();
+      populateProjectSelect();
+    }
+    function deleteProject(id) {
+      if (!confirm('確定刪除專案？')) return;
+      data.projects = data.projects.filter(p => p.id !== id);
+      saveData();
+      renderFixedSection();
+      populateProjectSelect();
+    }
+
+    function openFreelanceModal(id = null) {
+      document.getElementById('freelanceEditId').value = id || '';
+      document.getElementById('freelanceModalTitle').textContent = id ? '編輯接案' : '新增接案';
+      if (id) {
+        const f = data.freelances.find(x => x.id === id);
+        if (f) {
+          document.getElementById('freelanceName').value = f.name;
+          document.getElementById('freelanceExecDate').value = f.execDate || '';
+          document.getElementById('freelancePayDate').value = f.payDate || '';
+          document.getElementById('freelanceAmount').value = f.amount;
+          document.getElementById('freelanceStatus').value = f.status;
+          document.getElementById('freelanceAccount').value = f.account;
+          document.getElementById('freelanceNote').value = f.note || '';
+        }
+      } else {
+        document.getElementById('freelanceName').value = '';
+        document.getElementById('freelanceExecDate').value = todayStr();
+        document.getElementById('freelancePayDate').value = '';
+        document.getElementById('freelanceAmount').value = '';
+        document.getElementById('freelanceStatus').value = '進行中';
+        document.getElementById('freelanceNote').value = '';
+      }
+      openModal('freelanceModal');
+    }
+    function saveFreelance() {
+      const id = document.getElementById('freelanceEditId').value;
+      const name = document.getElementById('freelanceName').value.trim();
+      const execDate = document.getElementById('freelanceExecDate').value;
+      const payDate = document.getElementById('freelancePayDate').value;
+      const amount = parseFloat(document.getElementById('freelanceAmount').value) || 0;
+      const status = document.getElementById('freelanceStatus').value;
+      const account = document.getElementById('freelanceAccount').value;
+      const note = document.getElementById('freelanceNote').value.trim();
+      if (!name) return alert('請輸入案件名稱');
+      if (id) {
+        const f = data.freelances.find(x => x.id === id);
+        if (f) {
+          if (status === '已收款' && f.status !== '已收款') {
+            data.accounts[account] = (data.accounts[account] || 0) + amount;
+            if ((payDate || todayStr()).startsWith(currentMonthStr())) {
+              data.tithePool = (data.tithePool || 0) + Math.round(amount * 0.1);
+            }
+            data.transactions.push({ id: uid(), date: payDate || todayStr(), name: name + '（接案收款）', amount, category: '收', account, necessary: 'necessary', note, envelopeId: '', projectId: '', receipt: '' });
+          }
+          f.name = name; f.execDate = execDate; f.payDate = payDate; f.amount = amount; f.status = status; f.account = account; f.note = note;
+        }
+      } else {
+        data.freelances.push({ id: uid(), name, execDate, payDate, amount, status, account, note });
+        if (status === '已收款') {
+          data.accounts[account] = (data.accounts[account] || 0) + amount;
+          if ((payDate || todayStr()).startsWith(currentMonthStr())) {
+            data.tithePool = (data.tithePool || 0) + Math.round(amount * 0.1);
+          }
+          data.transactions.push({ id: uid(), date: payDate || todayStr(), name: name + '（接案收款）', amount, category: '收', account, necessary: 'necessary', note, envelopeId: '', projectId: '', receipt: '' });
+        }
+      }
+      saveData();
+      closeModal('freelanceModal');
+      renderFixedSection();
+      renderDashboard();
+    }
+    function deleteFreelance(id) {
+      data.freelances = data.freelances.filter(f => f.id !== id);
+      saveData();
+      renderFixedSection();
+    }
+
+    function openFixedModal(id = null) {
+      document.getElementById('fixedEditId').value = id || '';
+      document.getElementById('fixedModalTitle').textContent = id ? '編輯固定項目' : '新增固定項目';
+      if (id) {
+        const f = data.fixedItems.find(x => x.id === id);
+        if (f) {
+          document.getElementById('fixedName').value = f.name;
+          document.getElementById('fixedAmount').value = f.amount;
+          document.getElementById('fixedAccount').value = f.account;
+          document.getElementById('fixedCategory').value = f.category;
+          document.getElementById('fixedNote').value = f.note || '';
+        }
+      } else {
+        document.getElementById('fixedName').value = '';
+        document.getElementById('fixedAmount').value = '';
+        document.getElementById('fixedNote').value = '';
+      }
+      openModal('fixedModal');
+    }
+    function saveFixed() {
+      const id = document.getElementById('fixedEditId').value;
+      const name = document.getElementById('fixedName').value.trim();
+      const amount = parseFloat(document.getElementById('fixedAmount').value) || 0;
+      const account = document.getElementById('fixedAccount').value;
+      const category = document.getElementById('fixedCategory').value;
+      const note = document.getElementById('fixedNote').value.trim();
+      if (!name) return alert('請輸入名稱');
+      if (id) {
+        const f = data.fixedItems.find(x => x.id === id);
+        if (f) { f.name = name; f.amount = amount; f.account = account; f.category = category; f.note = note; }
+      } else {
+        data.fixedItems.push({ id: uid(), name, amount, account, category, note });
+      }
+      saveData();
+      closeModal('fixedModal');
+      renderFixedSection();
+    }
+    function deleteFixed(id) {
+      data.fixedItems = data.fixedItems.filter(f => f.id !== id);
+      saveData();
+      renderFixedSection();
+    }
+    function applyFixed(id) {
+      const f = data.fixedItems.find(x => x.id === id);
+      if (!f) return;
+      data.accounts[f.account] = (data.accounts[f.account] || 0) + f.amount;
+      data.transactions.push({ id: uid(), date: todayStr(), name: f.name + '（固定）', amount: f.amount, category: f.category, account: f.account, necessary: 'necessary', note: f.note || '', envelopeId: '', projectId: '', receipt: '' });
+      saveData();
+      renderDashboard();
+      alert('已計入本月帳務');
+    }
+
+    function renderFixedSection() {
+      if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, project: true, freelance: true };
+
+      const fixOpen = data.sectionsOpen.fixed !== false;
+      document.getElementById('fixedArrow').textContent = fixOpen ? '▼' : '▶';
+      document.getElementById('fixedBody').style.display = fixOpen ? 'block' : 'none';
+      if (fixOpen) {
+        document.getElementById('fixedList').innerHTML = data.fixedItems.map(f => `
+          <div class="pill p-3 flex justify-between items-center text-xs">
+            <div>
+              <span class="semibold">${f.name}</span>
+              <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
+              <span class="ml-2" style="color:var(--text-muted)">${f.account} · ${f.category}</span>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="applyFixed('${f.id}')" class="semibold text-xs">計入本月</button>
+              <button onclick="openFixedModal('${f.id}')" style="color:var(--text-muted)">編</button>
+              <button onclick="deleteFixed('${f.id}')" style="color:var(--text-muted)">刪</button>
+            </div>
+          </div>
+        `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未設定固定收支</p>';
+      }
+
+      const projOpen = data.sectionsOpen.project !== false;
+      document.getElementById('projectArrow').textContent = projOpen ? '▼' : '▶';
+      document.getElementById('projectBody').style.display = projOpen ? 'block' : 'none';
+      if (projOpen) {
+        document.getElementById('projectsList').innerHTML = data.projects.map(p => {
+          const spent = data.transactions.filter(t => t.projectId === p.id && t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
+          const remain = p.budget - spent;
+          return `
+            <div class="pill p-4 space-y-2 text-xs">
+              <div class="flex justify-between items-center">
+                <div>
+                  <span class="semibold text-sm">${p.name}</span>
+                  <span class="badge ${p.status === 'archived' ? 'badge-non' : 'badge-nec'} ml-2">${p.status === 'archived' ? '已封存' : '進行中'}</span>
+                </div>
+                <div class="flex gap-2">
+                  <button onclick="openProjectModal('${p.id}')" style="color:var(--text-muted)">編</button>
+                  <button onclick="deleteProject('${p.id}')" style="color:var(--text-muted)">刪</button>
+                </div>
+              </div>
+              <div class="flex justify-between tabular" style="color:var(--text-muted)">
+                <span>預算 ${formatMoney(p.budget)} · 已花 ${formatMoney(spent)}</span>
+                <span class="heavy">剩餘 ${formatMoney(remain)}</span>
+              </div>
+            </div>`;
+        }).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未建立專案</p>';
+      }
+
+      const freeOpen = data.sectionsOpen.freelance !== false;
+      document.getElementById('freelanceArrow').textContent = freeOpen ? '▼' : '▶';
+      document.getElementById('freelanceBody').style.display = freeOpen ? 'block' : 'none';
+      if (freeOpen) {
+        document.getElementById('freelanceList').innerHTML = data.freelances.map(f => `
+          <div class="pill p-3 flex justify-between items-center text-xs">
+            <div>
+              <span class="semibold">${f.name}</span>
+              <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
+              <span class="badge badge-nec ml-2">${f.status}</span>
+              <div class="text-[11px] mt-0.5" style="color:var(--text-muted)">
+                執行: ${f.execDate || '--'} · 收款: ${f.payDate || '--'}
+              </div>
+            </div>
+            <div class="flex gap-2">
+              <button onclick="openFreelanceModal('${f.id}')" style="color:var(--text-muted)">編</button>
+              <button onclick="deleteFreelance('${f.id}')" style="color:var(--text-muted)">刪</button>
+            </div>
+          </div>
+        `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚無接案紀錄</p>';
+      }
+    }
+
+    // ==================== 統計圖表 ====================
+    function toggleChartsInvestMode() {
+      data.chartsIncludeInvest = !data.chartsIncludeInvest;
+      document.getElementById('chartsIncludeInvestToggle').classList.toggle('on', data.chartsIncludeInvest);
+      saveData();
+      renderCharts();
+    }
+
+    function renderCharts() {
+      const cm = currentMonthStr();
+      document.getElementById('chartsIncludeInvestToggle').classList.toggle('on', !!data.chartsIncludeInvest);
+
+      let monthTxs = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount < 0 && t.category !== '轉帳/換匯');
+      
+      const catMap = {};
+      const accMap = {};
+      let nec = 0, non = 0;
+
+      monthTxs.forEach(t => {
+        catMap[t.category] = (catMap[t.category] || 0) + Math.abs(t.amount);
+        accMap[t.account] = (accMap[t.account] || 0) + Math.abs(t.amount);
+        if (t.necessary === 'necessary') nec += Math.abs(t.amount);
+        else non += Math.abs(t.amount);
+      });
+
+      if (data.chartsIncludeInvest) {
+        const monthStxs = data.stockTransactions.filter(t => t.date && t.date.startsWith(cm) && t.type === '買入');
+        monthStxs.forEach(t => {
+          const cost = t.totalCost !== undefined ? t.totalCost : t.total;
+          catMap['投'] = (catMap['投'] || 0) + cost;
+          accMap[t.account] = (accMap[t.account] || 0) + cost;
+          nec += cost;
+        });
+      }
+
+      if (categoryChart) categoryChart.destroy();
+      if (necessaryChart) necessaryChart.destroy();
+      if (accountChart) accountChart.destroy();
+
+      const isDark = document.documentElement.classList.contains('dark');
+      const textColor = isDark ? '#8e8e93' : '#1c1c1e';
+
+      categoryChart = new Chart(document.getElementById('categoryPieChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(catMap).length ? Object.keys(catMap) : ['無支出'],
+          datasets: [{
+            data: Object.values(catMap).length ? Object.values(catMap) : [1],
+            backgroundColor: ['#1c1c1e','#3a3a3c','#636366','#8e8e93','#aeaeb2','#c7c7cc','#d1d1d6']
+          }]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11 } } } },
+          cutout: '65%'
+        }
+      });
+
+      accountChart = new Chart(document.getElementById('accountPieChart').getContext('2d'), {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(accMap).length ? Object.keys(accMap) : ['無支出'],
+          datasets: [{
+            data: Object.values(accMap).length ? Object.values(accMap) : [1],
+            backgroundColor: ['#1c1c1e', '#8e8e93', '#3a3a3c', '#c7c7cc', '#636366', '#e5e5ea']
+          }]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11 } } } },
+          cutout: '60%'
+        }
+      });
+
+      necessaryChart = new Chart(document.getElementById('necessaryPieChart').getContext('2d'), {
+        type: 'pie',
+        data: {
+          labels: ['必要', '非必要'],
+          datasets: [{
+            data: [nec || 0.1, non || 0.1],
+            backgroundColor: ['#1c1c1e', '#8e8e93']
+          }]
+        },
+        options: {
+          plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11 } } } }
+        }
+      });
+    }
+
+    // ==================== 備份與智慧合併匯入 ====================
+    function exportData() {
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = '資產財務備份_' + todayStr() + '.json';
+      a.click();
+    }
+
+    function importData(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const incoming = JSON.parse(e.target.result);
+
+          if (Array.isArray(incoming)) {
+            let count = 0;
+            const existingStxIds = new Set((data.stockTransactions || []).map(t => t.id));
+            incoming.forEach(tx => {
+              if (!existingStxIds.has(tx.id)) {
+                if (typeof applyStockTxEffect === 'function') applyStockTxEffect(tx, false);
+                data.stockTransactions.push(tx);
+                count++;
+              }
+            });
+            saveData();
+            renderStockTransactions();
+            renderInvestments();
+            renderDashboard();
+            alert(`🎉 成功追加匯入 ${count} 筆股票交易！原有資料皆完整保留。`);
+            return;
+          }
+
+          const choice = confirm(
+            "【匯入模式確認】\n\n" +
+            "• 點「確定」：【智慧合併】（自動保留兩台裝置的日常記帳與股票，依 ID 比對不覆蓋）\n" +
+            "• 點「取消」：【完全覆蓋】（以匯入檔案為準，清除本機原有相異紀錄）"
+          );
+
+          if (choice) {
+            let txAdded = 0;
+            let stxAdded = 0;
+
+            const existingTxIds = new Set((data.transactions || []).map(t => t.id));
+            (incoming.transactions || []).forEach(tx => {
+              if (!existingTxIds.has(tx.id)) {
+                data.transactions.push(tx);
+                txAdded++;
+              }
+            });
+
+            const existingStxIds = new Set((data.stockTransactions || []).map(t => t.id));
+            (incoming.stockTransactions || []).forEach(stx => {
+              if (!existingStxIds.has(stx.id)) {
+                data.stockTransactions.push(stx);
+                stxAdded++;
+              }
+            });
+
+            (incoming.stocks || []).forEach(s => {
+              const cur = (data.stocks || []).find(x => x.symbol === s.symbol);
+              if (!cur) data.stocks.push(s);
+              else { cur.shares = s.shares; cur.cost = s.cost; cur.price = s.price; }
+            });
+
+            (incoming.funds || []).forEach(f => {
+              const cur = (data.funds || []).find(x => x.name === f.name);
+              if (!cur) data.funds.push(f);
+              else { cur.units = f.units; cur.price = f.price; cur.rate = f.rate; }
+            });
+
+            if (incoming.jpyRate) data.jpyRate = incoming.jpyRate;
+            if (incoming.usdRate) data.usdRate = incoming.usdRate;
+
+            saveData();
+            populateAllAccountSelects();
+            populateProjectSelect();
+            switchTab('dashboard');
+            alert(`🎉 智慧合併完成！\n新增 ${txAdded} 筆日常帳務、${stxAdded} 筆股票交易，手機與電腦資料已融合！`);
+          } else {
+            data = incoming;
+            saveData();
+            populateAllAccountSelects();
+            populateProjectSelect();
+            switchTab('dashboard');
+            alert('已依照匯入檔案完全覆蓋更新！');
+          }
+        } catch (err) {
+          alert('解析失敗：' + err.message);
+        }
+      };
+      reader.readAsText(file);
+      event.target.value = '';
+    }
+
+    function resetAllData() {
+      if (!confirm('確定要清除全部資料？此動作無法復原！')) return;
+      data = JSON.parse(JSON.stringify(DEFAULT_DATA));
+      saveData();
+      populateAllAccountSelects();
+      populateProjectSelect();
+      switchTab('dashboard');
+      alert('已重置為初始狀態');
+    }
+
+    // ==================== 啟動 ====================
+    document.addEventListener('DOMContentLoaded', () => {
+      initTheme();
+      loadData();
+      populateAllAccountSelects();
+      populateProjectSelect();
+      switchTab('dashboard');
+    });
+  </script>
+</body>
+</html>
