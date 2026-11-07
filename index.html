@@ -207,7 +207,6 @@
   <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
 </head>
 <body>
-  <!-- 寬度調整為全螢幕適應模式 (最大寬度 max-w-7xl) -->
   <div class="max-w-7xl mx-auto px-4 pt-6">
     <header class="flex items-center justify-between mb-6">
       <div class="flex items-center gap-3">
@@ -385,7 +384,7 @@
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">項目名稱</label>
-            <input type="text" id="txName" class="input mt-1" placeholder="午餐、鏡頭、轉帳..." />
+            <input type="text" id="txName" class="input mt-1" placeholder="午餐、轉帳..." />
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">金額（支援 -168+125）</label>
@@ -400,7 +399,7 @@
               <option value="保">保</option><option value="禮">禮</option><option value="雜">雜</option>
               <option value="轉帳/換匯">轉帳/換匯</option>
               <option value="投">投</option><option value="息">息</option><option value="折">折</option>
-              <option value="收">收（案件/薪水）</option><option value="什一">什一</option>
+              <option value="收">收</option><option value="什一">什一</option>
             </select>
           </div>
           <div>
@@ -443,7 +442,7 @@
         <button onclick="addTransaction()" class="btn-primary btn w-full mt-4 py-3">新增帳務</button>
       </div>
 
-      <!-- 帳務明細與篩選（支援卡片模式與寬版表格） -->
+      <!-- 帳務明細與篩選 -->
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h2 class="semibold">帳務明細</h2>
@@ -484,7 +483,6 @@
         </div>
         <div class="text-xs semibold mb-3">小計：<span id="txSubtotal" class="tabular heavy text-sm">$0</span></div>
 
-        <!-- 寬螢幕全展開表格檢視 -->
         <div id="txTableView" class="overflow-x-auto">
           <table class="w-full">
             <thead>
@@ -505,12 +503,11 @@
           </table>
         </div>
 
-        <!-- 手機友善卡片檢視 -->
         <div id="txCardView" class="hidden space-y-2.5 max-h-[600px] overflow-y-auto"></div>
       </div>
     </section>
 
-    <!-- 投資 -->
+    <!-- 投資（庫存完全由交易流水即時推算） -->
     <section id="tab-investments" class="tab-content space-y-4">
       <div class="card p-5 space-y-3" id="dividendGoalSection">
         <div class="flex items-center justify-between">
@@ -533,19 +530,21 @@
 
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <h2 class="semibold">ETF / 股票</h2>
+          <div>
+            <h2 class="semibold">ETF / 股票（即時由流水帳推算）</h2>
+            <p class="text-[11px]" style="color:var(--text-muted)">現價欄位可直接點擊修改</p>
+          </div>
           <div class="flex items-center gap-3">
             <label class="flex items-center gap-1.5 text-xs cursor-pointer select-none" style="color:var(--text-muted)">
               <input type="checkbox" id="showClosedStocksCheck" onchange="toggleShowClosedStocks(this.checked)" /> 顯示已結清標的
             </label>
-            <button onclick="openStockModal()" class="btn-primary btn text-xs">新增標的</button>
           </div>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead>
               <tr class="whitespace-nowrap">
-                <th>標的</th><th>股數</th><th>成本</th><th>現價</th><th>市值</th><th>損益</th><th>殖利率%</th><th></th>
+                <th>標的</th><th>持有股數</th><th>均價成本</th><th>現價 (可改)</th><th>台幣市值</th><th>參考損益</th><th>殖利率%</th>
               </tr>
             </thead>
             <tbody id="stocksTableBody"></tbody>
@@ -556,14 +555,16 @@
 
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3">
-          <h2 class="semibold">基金（支援日幣/美元/台幣獨立幣別）</h2>
-          <button onclick="openFundModal()" class="btn-primary btn text-xs">新增基金</button>
+          <div>
+            <h2 class="semibold">基金（支援日幣/美元/台幣獨立幣別）</h2>
+            <p class="text-[11px]" style="color:var(--text-muted)">原幣淨值與匯率可直接在欄位修改</p>
+          </div>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead>
               <tr class="whitespace-nowrap">
-                <th>標的</th><th>幣別</th><th>單位數</th><th>原幣單價</th><th>匯率</th><th>台幣市值</th><th></th>
+                <th>標的</th><th>幣別</th><th>持有單位</th><th>原幣淨值 (可改)</th><th>匯率 (可改)</th><th>台幣市值</th>
               </tr>
             </thead>
             <tbody id="fundsTableBody"></tbody>
@@ -602,7 +603,8 @@
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">標的代號 / 名稱</label>
-            <input type="text" id="stxSymbol" class="input mt-1" placeholder="00919 或 坦伯頓" />
+            <!-- 依要求清除提示文字 -->
+            <input type="text" id="stxSymbol" class="input mt-1" />
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">股數 / 單位數</label>
@@ -617,20 +619,22 @@
             <input type="number" id="stxFee" class="input mt-1 tabular" step="any" value="1" oninput="calcStockInputs()" />
           </div>
           <div>
-            <label class="text-xs" style="color:var(--text-muted)">證交稅（基金為 0）</label>
+            <label class="text-xs" style="color:var(--text-muted)">證交稅</label>
             <input type="number" id="stxTax" class="input mt-1 tabular" step="any" value="0" oninput="calcStockInputs()" />
           </div>
           <div>
-            <label class="text-xs" style="color:var(--text-muted)">價金總額（無條件捨去）</label>
-            <input type="number" id="stxTotal" class="input mt-1 tabular" step="any" placeholder="0" />
+            <label class="text-xs" style="color:var(--text-muted)">價金總額</label>
+            <input type="number" id="stxTotal" class="input mt-1 tabular" step="any" />
           </div>
           <div class="sm:col-span-2">
-            <label class="text-xs" style="color:var(--text-muted)">實扣/實收台幣（手動可改，定期定額直接填）</label>
-            <input type="number" id="stxTotalCost" class="input mt-1 tabular font-semibold" step="any" placeholder="例如定期定額填 5053" />
+            <!-- 依要求簡化標籤文字並移除 placeholder -->
+            <label class="text-xs" style="color:var(--text-muted)">實扣台幣</label>
+            <input type="number" id="stxTotalCost" class="input mt-1 tabular font-semibold" step="any" />
           </div>
           <div class="sm:col-span-2 md:col-span-4">
             <label class="text-xs" style="color:var(--text-muted)">備註</label>
-            <input type="text" id="stxNote" class="input mt-1" placeholder="定期定額、折讓備忘等" />
+            <!-- 依要求移除 placeholder -->
+            <input type="text" id="stxNote" class="input mt-1" />
           </div>
         </div>
         <button onclick="addStockTransaction()" class="btn-primary btn w-full mt-4 py-3">新增交易</button>
@@ -732,7 +736,7 @@
       </div>
     </section>
 
-    <!-- 報表（支援本月/全年/全部時間切換） -->
+    <!-- 報表 -->
     <section id="tab-charts" class="tab-content space-y-4">
       <div class="card p-5 space-y-6">
         <div class="flex items-center justify-between flex-wrap gap-2">
@@ -791,7 +795,7 @@
     </section>
   </div>
 
-  <!-- 貼底長方形導覽列 -->
+  <!-- 貼底導覽列 -->
   <nav class="bottom-bar">
     <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
@@ -880,11 +884,11 @@
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
-            <label style="color:var(--text-muted)">價金總額（可覆寫）</label>
+            <label style="color:var(--text-muted)">價金總額</label>
             <input type="number" id="editStxTotal" class="input mt-1 tabular" step="any" />
           </div>
           <div>
-            <label style="color:var(--text-muted)">實扣/實收台幣（可覆寫）</label>
+            <label style="color:var(--text-muted)">實扣台幣</label>
             <input type="number" id="editStxTotalCost" class="input mt-1 tabular font-semibold" step="any" />
           </div>
         </div>
@@ -953,7 +957,7 @@
     </div>
   </div>
 
-  <!-- 統一外匯管理與流水帳中心 Modal -->
+  <!-- 統一外匯管理 Modal -->
   <div id="fxCenterModal" class="modal-overlay hidden">
     <div class="modal">
       <h3 class="text-base bold mb-3">全外幣換匯中心</h3>
@@ -1027,7 +1031,7 @@
           <input type="text" id="fxNote" class="input mt-1 text-xs" placeholder="例如：日本旅遊、美金定存" />
         </div>
 
-        <button onclick="saveFxExchange()" class="btn-primary btn w-full mt-2">儲存 [ 記錄並同步更新帳戶餘額 ]</button>
+        <button onclick="saveFxExchange()" class="btn-primary btn w-full mt-2">儲存換匯</button>
       </div>
 
       <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800">
@@ -1082,7 +1086,7 @@
       <div class="mt-3">
         <label class="text-xs" style="color:var(--text-muted)">新增帳戶名稱</label>
         <div class="flex gap-2 mt-1">
-          <input type="text" id="newAccountName" class="input text-xs" placeholder="例如：玉山、街口" />
+          <input type="text" id="newAccountName" class="input text-xs" placeholder="例如：國泰、街口" />
           <button onclick="addNewAccount()" class="btn-primary btn text-xs px-4 whitespace-nowrap">新增</button>
         </div>
       </div>
@@ -1121,80 +1125,6 @@
       <div class="flex gap-2 mt-5">
         <button onclick="saveEnvelope()" class="btn-primary btn flex-1">儲存</button>
         <button onclick="closeModal('envelopeModal')" class="btn flex-1">取消</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 股票 Modal -->
-  <div id="stockModal" class="modal-overlay hidden">
-    <div class="modal">
-      <h3 class="text-base bold mb-4" id="stockModalTitle">新增持股標的</h3>
-      <input type="hidden" id="stockEditId" />
-      <div class="space-y-2 text-xs">
-        <div>
-          <label style="color:var(--text-muted)">標的代號 / 名稱</label>
-          <input type="text" id="stockSymbol" class="input mt-1" placeholder="00919 / 00918 / 00713" />
-        </div>
-        <div>
-          <label style="color:var(--text-muted)">持有股數</label>
-          <input type="number" id="stockShares" class="input mt-1 tabular" step="any" />
-        </div>
-        <div>
-          <label style="color:var(--text-muted)">成本單價</label>
-          <input type="number" id="stockCost" class="input mt-1 tabular" step="any" />
-        </div>
-        <div>
-          <label style="color:var(--text-muted)">現價</label>
-          <input type="number" id="stockPrice" class="input mt-1 tabular" step="any" />
-        </div>
-        <div>
-          <label style="color:var(--text-muted)">預估年化殖利率 %</label>
-          <input type="number" id="stockYield" class="input mt-1 tabular" step="any" value="6" />
-        </div>
-      </div>
-      <div class="flex gap-2 mt-5">
-        <button onclick="saveStock()" class="btn-primary btn flex-1">儲存</button>
-        <button onclick="closeModal('stockModal')" class="btn flex-1">取消</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- 基金 Modal -->
-  <div id="fundModal" class="modal-overlay hidden">
-    <div class="modal">
-      <h3 class="text-base bold mb-4" id="fundModalTitle">新增基金標的</h3>
-      <input type="hidden" id="fundEditId" />
-      <div class="space-y-2 text-xs">
-        <div>
-          <label style="color:var(--text-muted)">名稱</label>
-          <input type="text" id="fundName" class="input mt-1" placeholder="瑞銀日本股票、坦伯頓..." />
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label style="color:var(--text-muted)">計價幣別</label>
-            <select id="fundCurrency" class="input mt-1" onchange="onFundCurrencyChange()">
-              <option value="JPY">JPY (日幣)</option>
-              <option value="USD">USD (美元)</option>
-              <option value="TWD">TWD (台幣)</option>
-            </select>
-          </div>
-          <div>
-            <label style="color:var(--text-muted)">匯率</label>
-            <input type="number" id="fundRate" class="input mt-1 tabular" step="any" value="0.22" />
-          </div>
-        </div>
-        <div>
-          <label style="color:var(--text-muted)">單位數 (股數)</label>
-          <input type="number" id="fundUnits" class="input mt-1 tabular" step="any" />
-        </div>
-        <div>
-          <label style="color:var(--text-muted)">原幣單價 (最新淨值)</label>
-          <input type="number" id="fundPrice" class="input mt-1 tabular" step="any" />
-        </div>
-      </div>
-      <div class="flex gap-2 mt-5">
-        <button onclick="saveFund()" class="btn-primary btn flex-1">儲存</button>
-        <button onclick="closeModal('fundModal')" class="btn flex-1">取消</button>
       </div>
     </div>
   </div>
@@ -1288,7 +1218,7 @@
       <div class="space-y-2 text-xs">
         <div>
           <label style="color:var(--text-muted)">名稱</label>
-          <input type="text" id="fixedName" class="input mt-1" placeholder="房租、Adobe 訂閱..." />
+          <input type="text" id="fixedName" class="input mt-1" placeholder="軟體訂閱..." />
         </div>
         <div>
           <label style="color:var(--text-muted)">金額（支出為負，如 -15000）</label>
@@ -1359,7 +1289,7 @@
       }
     }
 
-    const DEFAULT_ACCOUNTS = ['中信','國泰','聯邦','元大','富邦莊敬','富邦仁愛','現金','他人支付'];
+    const DEFAULT_ACCOUNTS = ['現金','中信','國泰','聯邦','元大','富邦莊敬','富邦仁愛','他人支付'];
     const DEFAULT_DATA = {
       accounts: Object.fromEntries(DEFAULT_ACCOUNTS.map(a => [a, 0])),
       accountList: [...DEFAULT_ACCOUNTS],
@@ -1372,13 +1302,17 @@
       showTithe: true,
       chartsIncludeInvest: false,
       chartTimeRange: 'month',
-      txViewMode: 'card', // 手機預設為卡片模式，電腦可一鍵切換表格
+      txViewMode: 'card',
       stxViewMode: 'table',
       showClosedStocks: false,
+      stockPrices: {}, // 記錄標的最新現價
+      stockYields: {}, // 記錄殖利率
+      fundPrices: {},  // 記錄基金原幣淨值
+      fundRates: {},   // 記錄基金自訂匯率
       sectionsOpen: { fixed: true, project: true, freelance: true },
       tithePool: 0, titheDonatedThisMonth: 0, lastTitheMonth: '',
       budgetIncludeInvest: false,
-      envelopes: [], transactions: [], stocks: [], funds: [],
+      envelopes: [], transactions: [],
       stockTransactions: [], fixedItems: [], projects: [], freelances: []
     };
     let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
@@ -1449,9 +1383,15 @@
           if (!data.txViewMode) data.txViewMode = window.innerWidth > 768 ? 'table' : 'card';
           if (!data.stxViewMode) data.stxViewMode = 'table';
           if (data.showClosedStocks === undefined) data.showClosedStocks = false;
+          if (!data.stockPrices) data.stockPrices = {};
+          if (!data.stockYields) data.stockYields = {};
+          if (!data.fundPrices) data.fundPrices = {};
+          if (!data.fundRates) data.fundRates = {};
 
-          // 自動清洗舊股票流水帳金額為絕對值正數，擺脫混亂
+          // 全面清洗歷史股票流水帳的正負號問題
           (data.stockTransactions || []).forEach(st => {
+            if (st.shares !== undefined) st.shares = Math.abs(st.shares);
+            if (st.price !== undefined) st.price = Math.abs(st.price);
             if (st.total !== undefined) st.total = Math.abs(st.total);
             if (st.totalCost !== undefined) st.totalCost = Math.abs(st.totalCost);
             if (st.fee !== undefined) st.fee = Math.abs(st.fee);
@@ -1598,14 +1538,11 @@
             let inQuotes = false;
             for (let i = 0; i < line.length; i++) {
               const char = line[i];
-              if (char === '"') {
-                inQuotes = !inQuotes;
-              } else if (char === ',' && !inQuotes) {
+              if (char === '"') inQuotes = !inQuotes;
+              else if (char === ',' && !inQuotes) {
                 result.push(cur.trim().replace(/^"|"$/g, '').trim());
                 cur = '';
-              } else {
-                cur += char;
-              }
+              } else cur += char;
             }
             result.push(cur.trim().replace(/^"|"$/g, '').trim());
             return result;
@@ -1621,11 +1558,7 @@
               break;
             }
           }
-
-          if (headerIdx === -1) {
-            headerIdx = 0;
-            headers = parseCSVLine(lines[0]);
-          }
+          if (headerIdx === -1) { headerIdx = 0; headers = parseCSVLine(lines[0]); }
 
           let itemIdx = headers.findIndex(h => h === '消費明細_品名' || h === '品名');
           let sellerIdx = headers.findIndex(h => h === '賣方名稱');
@@ -1640,84 +1573,36 @@
           let count = 0;
           for (let i = headerIdx + 1; i < lines.length; i++) {
             const cleanCols = parseCSVLine(lines[i]);
-
             if (cleanCols.length > Math.max(dateIdx, amtIdx)) {
               const dateRaw = cleanCols[dateIdx] || '';
-              
-              let displayName = '';
-              if (itemIdx !== -1 && cleanCols[itemIdx]) {
-                displayName = cleanCols[itemIdx];
-              }
-              if (!displayName || /^\d+$/.test(displayName)) {
-                if (sellerIdx !== -1 && cleanCols[sellerIdx]) {
-                  displayName = cleanCols[sellerIdx];
-                } else {
-                  displayName = '載具消費';
-                }
-              }
-
+              let displayName = itemIdx !== -1 && cleanCols[itemIdx] ? cleanCols[itemIdx] : (sellerIdx !== -1 && cleanCols[sellerIdx] ? cleanCols[sellerIdx] : '載具消費');
               const amtRaw = cleanCols[amtIdx] ? cleanCols[amtIdx].replace(/[$,]/g, '') : '0';
               const amt = Math.abs(parseFloat(amtRaw) || 0);
 
               let dateFormatted = todayStr();
               const cleanDate = dateRaw.split(' ')[0].replace(/\//g, '-').replace(/\./g, '-');
-
               if (/^20\d{2}-\d{1,2}-\d{1,2}$/.test(cleanDate)) {
                 const p = cleanDate.split('-');
                 dateFormatted = `${p[0]}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
-              } else if (/^\d{2,3}-\d{1,2}-\d{1,2}$/.test(cleanDate)) {
-                const p = cleanDate.split('-');
-                const year = parseInt(p[0]) + 1911;
-                dateFormatted = `${year}-${p[1].padStart(2, '0')}-${p[2].padStart(2, '0')}`;
-              } else if (/^\d{7,8}$/.test(cleanDate)) {
-                if (cleanDate.startsWith('20')) {
-                  dateFormatted = `${cleanDate.slice(0, 4)}-${cleanDate.slice(4, 6)}-${cleanDate.slice(6, 8)}`;
-                } else {
-                  const rocYearLen = cleanDate.length - 4;
-                  const year = parseInt(cleanDate.slice(0, rocYearLen)) + 1911;
-                  const month = cleanDate.slice(rocYearLen, rocYearLen + 2);
-                  const day = cleanDate.slice(rocYearLen + 2);
-                  dateFormatted = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
-                }
               }
 
               if (amt > 0) {
                 data.transactions.push({
-                  id: uid(),
-                  date: dateFormatted,
-                  name: displayName,
-                  amount: -amt,
-                  category: '食',
-                  account: '他人支付',
-                  necessary: 'necessary',
-                  note: '',
-                  envelopeId: '',
-                  projectId: '',
-                  receipt: ''
+                  id: uid(), date: dateFormatted, name: displayName, amount: -amt, category: '食', account: '他人支付', necessary: 'necessary', note: '', envelopeId: '', projectId: '', receipt: ''
                 });
                 count++;
               }
             }
           }
-
           saveData();
           renderTransactions();
           renderDashboard();
-          if (count > 0) {
-            alert(`🎉 成功匯入 ${count} 筆載具發票紀錄！品名與金額已精確解析。`);
-          } else {
-            alert('未能識別出有效發票資料，請確認該 CSV 是否包含發票日期與金額。');
-          }
+          alert(`🎉 成功匯入 ${count} 筆載具發票紀錄！`);
         } catch (err) {
           alert('解析 CSV 失敗：' + err.message);
         }
       };
-
-      try {
-        reader.readAsText(file, 'Big5');
-      } catch (e) {
-        reader.readAsText(file, 'UTF-8');
-      }
+      try { reader.readAsText(file, 'Big5'); } catch (e) { reader.readAsText(file, 'UTF-8'); }
       event.target.value = '';
     }
 
@@ -1737,11 +1622,8 @@
       const toCur = document.getElementById('fxToCurrency').value;
       const preview = document.getElementById('fxCalculatedRate');
       if (fromAmt > 0 && toAmt > 0) {
-        const rate = fromAmt / toAmt;
-        preview.textContent = rate.toFixed(4) + ` ${fromCur}/${toCur}`;
-      } else {
-        preview.textContent = '--';
-      }
+        preview.textContent = (fromAmt / toAmt).toFixed(4) + ` ${fromCur}/${toCur}`;
+      } else preview.textContent = '--';
     }
 
     function saveFxExchange() {
@@ -1782,7 +1664,7 @@
       renderFxCenter();
       renderDashboard();
       renderTransactions();
-      alert('換匯紀錄已儲存，帳戶餘額已同步更新！');
+      alert('換匯紀錄已儲存！');
     }
 
     function deleteFxExchange(id) {
@@ -1943,13 +1825,7 @@
         const json = await res.json();
         if (json && json.rates && json.rates.TWD) {
           data.usdRate = json.rates.TWD;
-          if (json.rates.JPY) {
-            data.jpyRate = json.rates.TWD / json.rates.JPY;
-          }
-          data.funds.forEach(f => {
-            if (f.currency === 'JPY') f.rate = data.jpyRate;
-            else if (f.currency === 'USD') f.rate = data.usdRate;
-          });
+          if (json.rates.JPY) data.jpyRate = json.rates.TWD / json.rates.JPY;
           saveData();
           status.textContent = `匯率更新成功：USD ${data.usdRate.toFixed(2)} / JPY ${data.jpyRate.toFixed(4)}`;
           renderDashboard();
@@ -1962,24 +1838,26 @@
 
     async function updateStockPrices() {
       const status = document.getElementById('apiStatus');
-      if (!data.stocks.length) return status.textContent = '尚無股票可更新';
+      const computed = computePortfolioFromTransactions();
+      const symbols = Object.keys(computed.stocks);
+      if (!symbols.length) return status.textContent = '尚無股票可更新';
+
       status.textContent = '更新股票報價中…';
       let updatedCount = 0;
-      for (let s of data.stocks) {
+      for (let sym of symbols) {
         try {
-          const sym = s.symbol.trim();
           const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}.TW`;
           const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
           const res = await fetch(proxyUrl);
           const json = await res.json();
           const curPrice = json?.chart?.result?.[0]?.meta?.regularMarketPrice;
-          if (curPrice) { s.price = curPrice; updatedCount++; }
+          if (curPrice) { data.stockPrices[sym] = curPrice; updatedCount++; }
         } catch (err) {}
       }
       saveData();
       renderInvestments();
       renderDashboard();
-      status.textContent = `已更新現價（${updatedCount}/${data.stocks.length} 檔）`;
+      status.textContent = `已更新現價（${updatedCount}/${symbols.length} 檔）`;
     }
 
     async function refreshAllAssets() {
@@ -2065,14 +1943,66 @@
       alert('已記錄奉獻 $' + amount.toLocaleString());
     }
 
+    // ==================== 核心精算：由交易流水帳自動推算庫存 ====================
+    function computePortfolioFromTransactions() {
+      const stocks = {};
+      const funds = {};
+
+      const sortedTxs = [...data.stockTransactions].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+      sortedTxs.forEach(t => {
+        const sym = (t.symbol || '').trim();
+        if (!sym) return;
+        const shares = Math.abs(t.shares || 0);
+        const cost = Math.abs(t.totalCost !== undefined ? t.totalCost : t.total);
+        const assetType = t.assetType || '股票';
+
+        if (assetType === '基金') {
+          if (!funds[sym]) funds[sym] = { name: sym, currency: 'USD', units: 0, costTotal: 0 };
+          if (t.type === '買入') {
+            funds[sym].units += shares;
+            funds[sym].costTotal += cost;
+          } else if (t.type === '賣出') {
+            funds[sym].units = Math.max(0, funds[sym].units - shares);
+          }
+        } else {
+          // 股票 / ETF
+          if (!stocks[sym]) stocks[sym] = { symbol: sym, shares: 0, costTotal: 0, latestPrice: t.price || 0 };
+          if (t.type === '買入') {
+            stocks[sym].shares += shares;
+            stocks[sym].costTotal += cost;
+            if (t.price) stocks[sym].latestPrice = t.price;
+          } else if (t.type === '賣出') {
+            // 賣出以絕對值減除，解決買 1000 賣 1000 變 2000 股的負負得正問題
+            const curShares = stocks[sym].shares;
+            const avgCost = curShares > 0 ? stocks[sym].costTotal / curShares : 0;
+            stocks[sym].shares = Math.max(0, curShares - shares);
+            stocks[sym].costTotal = Math.max(0, stocks[sym].shares * avgCost);
+          }
+        }
+      });
+
+      return { stocks, funds };
+    }
+
     function renderDashboard() {
       let cash = (data.accountList || DEFAULT_ACCOUNTS).reduce((s, a) => s + (parseFloat(data.accounts[a]) || 0), 0);
       cash += (data.jpyCash || 0) * (data.jpyRate || 0.22);
       cash += (data.usdCash || 0) * (data.usdRate || 32.0);
 
+      const computed = computePortfolioFromTransactions();
       let invest = 0;
-      data.stocks.forEach(s => invest += (s.shares || 0) * (s.price || 0));
-      data.funds.forEach(f => invest += (f.units || 0) * (f.price || 0) * (f.rate || 1));
+
+      Object.values(computed.stocks).forEach(s => {
+        const price = data.stockPrices[s.symbol] || s.latestPrice || 0;
+        invest += s.shares * price;
+      });
+
+      Object.values(computed.funds).forEach(f => {
+        const price = data.fundPrices[f.name] || 0;
+        const rate = data.fundRates[f.name] || data.usdRate || 32.0;
+        invest += f.units * price * rate;
+      });
 
       document.getElementById('netWorth').textContent = formatMoney(cash + invest);
       document.getElementById('totalCash').textContent = formatMoney(cash);
@@ -2213,7 +2143,7 @@
       sel.value = cur;
     }
 
-    // ==================== 記帳與流水明細 ====================
+    // ==================== 記帳明細 ====================
     function onCategoryChange() {
       const cat = document.getElementById('txCategory').value;
       const env = data.envelopes.find(e => e.category === cat);
@@ -2400,7 +2330,7 @@
                   <span class="badge ${t.necessary === 'necessary' ? 'badge-nec' : 'badge-non'} ml-1.5">${t.category}</span>
                   <strong class="text-sm ml-2">${t.name}</strong>
                 </div>
-                <div class="flex items-center gap-2">
+                <div>
                   <strong class="heavy text-sm tabular ${t.amount < 0 ? '' : 'text-emerald-500'}">${formatMoney(t.amount)}</strong>
                 </div>
               </div>
@@ -2443,131 +2373,110 @@
       }
     }
 
-    // ==================== 投資組合與股息預估 ====================
+    // ==================== 投資組合渲染與即時改價 ====================
     function toggleShowClosedStocks(checked) {
       data.showClosedStocks = checked;
       saveData();
       renderInvestments();
     }
 
-    function openStockModal(id = null) {
-      document.getElementById('stockEditId').value = id || '';
-      document.getElementById('stockModalTitle').textContent = id ? '編輯標的' : '新增標的';
-      if (id) {
-        const s = data.stocks.find(x => x.id === id);
-        if (s) {
-          document.getElementById('stockSymbol').value = s.symbol;
-          document.getElementById('stockShares').value = s.shares;
-          document.getElementById('stockCost').value = s.cost;
-          document.getElementById('stockPrice').value = s.price;
-          document.getElementById('stockYield').value = s.yield || 6;
-        }
-      } else {
-        document.getElementById('stockSymbol').value = '';
-        document.getElementById('stockShares').value = '';
-        document.getElementById('stockCost').value = '';
-        document.getElementById('stockPrice').value = '';
-        document.getElementById('stockYield').value = '6';
-      }
-      openModal('stockModal');
-    }
-    function saveStock() {
-      const id = document.getElementById('stockEditId').value;
-      const symbol = document.getElementById('stockSymbol').value.trim();
-      const shares = parseFloat(document.getElementById('stockShares').value) || 0;
-      const cost = parseFloat(document.getElementById('stockCost').value) || 0;
-      const price = parseFloat(document.getElementById('stockPrice').value) || 0;
-      const yld = parseFloat(document.getElementById('stockYield').value) || 0;
-      if (!symbol) return alert('請輸入標的代號');
-      if (id) {
-        const s = data.stocks.find(x => x.id === id);
-        if (s) { s.symbol = symbol; s.shares = shares; s.cost = cost; s.price = price; s.yield = yld; }
-      } else {
-        data.stocks.push({ id: uid(), symbol, shares, cost, price, yield: yld });
-      }
-      saveData();
-      closeModal('stockModal');
-      renderInvestments();
-      renderDashboard();
-    }
-    function deleteStock(id) {
-      if (!confirm('確定刪除？')) return;
-      data.stocks = data.stocks.filter(s => s.id !== id);
+    function updateStockLivePrice(sym, val) {
+      data.stockPrices[sym] = parseFloat(val) || 0;
       saveData();
       renderInvestments();
       renderDashboard();
     }
 
-    function onFundCurrencyChange() {
-      const cur = document.getElementById('fundCurrency').value;
-      const rateInput = document.getElementById('fundRate');
-      if (cur === 'JPY') rateInput.value = (data.jpyRate || 0.22).toFixed(4);
-      else if (cur === 'USD') rateInput.value = (data.usdRate || 32.0).toFixed(2);
-      else rateInput.value = '1';
-    }
-    function openFundModal(id = null) {
-      document.getElementById('fundEditId').value = id || '';
-      document.getElementById('fundModalTitle').textContent = id ? '編輯基金' : '新增基金';
-      if (id) {
-        const f = data.funds.find(x => x.id === id);
-        if (f) {
-          document.getElementById('fundName').value = f.name;
-          document.getElementById('fundCurrency').value = f.currency || 'JPY';
-          document.getElementById('fundUnits').value = f.units;
-          document.getElementById('fundPrice').value = f.price;
-          document.getElementById('fundRate').value = f.rate;
-        }
-      } else {
-        document.getElementById('fundName').value = '';
-        document.getElementById('fundCurrency').value = 'JPY';
-        document.getElementById('fundUnits').value = '';
-        document.getElementById('fundPrice').value = '';
-        document.getElementById('fundRate').value = (data.jpyRate || 0.22).toFixed(4);
-      }
-      openModal('fundModal');
-    }
-    function saveFund() {
-      const id = document.getElementById('fundEditId').value;
-      const name = document.getElementById('fundName').value.trim();
-      const currency = document.getElementById('fundCurrency').value;
-      const units = parseFloat(document.getElementById('fundUnits').value) || 0;
-      const price = parseFloat(document.getElementById('fundPrice').value) || 0;
-      const rate = parseFloat(document.getElementById('fundRate').value) || 1;
-      if (!name) return alert('請輸入基金名稱');
-      if (id) {
-        const f = data.funds.find(x => x.id === id);
-        if (f) { f.name = name; f.currency = currency; f.units = units; f.price = price; f.rate = rate; }
-      } else {
-        data.funds.push({ id: uid(), name, currency, units, price, rate });
-      }
+    function updateFundLivePrice(name, val) {
+      data.fundPrices[name] = parseFloat(val) || 0;
       saveData();
-      closeModal('fundModal');
       renderInvestments();
       renderDashboard();
     }
-    function deleteFund(id) {
-      if (!confirm('確定刪除？')) return;
-      data.funds = data.funds.filter(f => f.id !== id);
+
+    function updateFundLiveRate(name, val) {
+      data.fundRates[name] = parseFloat(val) || 1;
       saveData();
       renderInvestments();
       renderDashboard();
     }
 
     function renderInvestments() {
+      const computed = computePortfolioFromTransactions();
+
       const goalSec = document.getElementById('dividendGoalSection');
       const divToggle = document.getElementById('dividendToggle');
       const divBody = document.getElementById('dividendBody');
       divToggle.classList.toggle('on', data.showDividendGoal !== false);
 
+      let estMonthly = 0;
+      let stocksTotal = 0;
+
+      let stockList = Object.values(computed.stocks);
+      if (!data.showClosedStocks) stockList = stockList.filter(s => s.shares > 0);
+      stockList.sort((a, b) => (b.shares > 0 ? 1 : 0) - (a.shares > 0 ? 1 : 0));
+
+      document.getElementById('showClosedStocksCheck').checked = !!data.showClosedStocks;
+
+      document.getElementById('stocksTableBody').innerHTML = stockList.map(s => {
+        const isClosed = s.shares === 0;
+        const price = data.stockPrices[s.symbol] !== undefined ? data.stockPrices[s.symbol] : s.latestPrice;
+        const avgCost = s.shares > 0 ? (s.costTotal / s.shares) : 0;
+        const mv = s.shares * price;
+        const pl = mv - s.costTotal;
+        const yld = data.stockYields[s.symbol] || 6;
+
+        stocksTotal += mv;
+        if (!isClosed) estMonthly += mv * (yld / 100) / 12;
+
+        return `
+          <tr class="whitespace-nowrap ${isClosed ? 'opacity-40 italic' : ''}">
+            <td class="semibold">${s.symbol} ${isClosed ? '<span class="text-[10px] ml-1 bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded">已結清</span>' : ''}</td>
+            <td class="tabular text-right">${s.shares}</td>
+            <td class="tabular text-right">${avgCost.toFixed(2)}</td>
+            <td class="tabular text-right">
+              <input type="number" step="any" class="input py-1 px-2 text-xs w-20 text-right tabular" value="${price}" onchange="updateStockLivePrice('${s.symbol}', this.value)" />
+            </td>
+            <td class="tabular heavy text-right">${formatMoney(mv)}</td>
+            <td class="tabular heavy text-right ${pl >= 0 ? '' : 'text-red-500'}">${formatMoney(pl)}</td>
+            <td class="tabular text-right">${yld}%</td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="7" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無股票交易資料</td></tr>';
+      document.getElementById('stocksTotalValue').textContent = formatMoney(stocksTotal);
+
+      // 基金推算渲染
+      let fundsTotal = 0;
+      let fundList = Object.values(computed.funds);
+      fundList.sort((a, b) => (b.units > 0 ? 1 : 0) - (a.units > 0 ? 1 : 0));
+
+      document.getElementById('fundsTableBody').innerHTML = fundList.map(f => {
+        const price = data.fundPrices[f.name] !== undefined ? data.fundPrices[f.name] : 0;
+        const rate = data.fundRates[f.name] !== undefined ? data.fundRates[f.name] : (data.usdRate || 32.0);
+        const mv = f.units * price * rate;
+        fundsTotal += mv;
+
+        return `
+          <tr class="whitespace-nowrap">
+            <td class="semibold">${f.name}</td>
+            <td>${f.currency}</td>
+            <td class="tabular text-right">${f.units}</td>
+            <td class="tabular text-right">
+              <input type="number" step="any" class="input py-1 px-2 text-xs w-20 text-right tabular" value="${price}" onchange="updateFundLivePrice('${f.name}', this.value)" />
+            </td>
+            <td class="tabular text-right">
+              <input type="number" step="any" class="input py-1 px-2 text-xs w-20 text-right tabular" value="${rate}" onchange="updateFundLiveRate('${f.name}', this.value)" />
+            </td>
+            <td class="tabular heavy text-right">${formatMoney(mv)}</td>
+          </tr>
+        `;
+      }).join('') || '<tr><td colspan="6" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無基金交易資料</td></tr>';
+      document.getElementById('fundsTotalValue').textContent = formatMoney(fundsTotal);
+
       if (data.showDividendGoal === false) {
         divBody.classList.add('hidden');
       } else {
         divBody.classList.remove('hidden');
-        let estMonthly = 0;
-        data.stocks.forEach(s => {
-          const mv = (s.shares || 0) * (s.price || 0);
-          estMonthly += mv * ((s.yield || 6) / 100) / 12;
-        });
         const goal = data.dividendGoal || 10000;
         const pct = Math.min(100, (estMonthly / goal) * 100);
         document.getElementById('estMonthlyDividend').textContent = formatMoney(Math.round(estMonthly));
@@ -2575,62 +2484,9 @@
         document.getElementById('dividendProgressPct').textContent = pct.toFixed(1) + '%';
         document.getElementById('dividendProgressBar').style.width = pct + '%';
       }
-
-      document.getElementById('showClosedStocksCheck').checked = !!data.showClosedStocks;
-
-      let stocksTotal = 0;
-      let displayStocks = [...data.stocks];
-      if (!data.showClosedStocks) {
-        displayStocks = displayStocks.filter(s => (s.shares || 0) > 0);
-      }
-      // 已結清標的排在最下方
-      displayStocks.sort((a, b) => (b.shares > 0 ? 1 : 0) - (a.shares > 0 ? 1 : 0));
-
-      document.getElementById('stocksTableBody').innerHTML = displayStocks.map(s => {
-        const isClosed = (s.shares || 0) === 0;
-        const mv = (s.shares || 0) * (s.price || 0);
-        const costTotal = (s.shares || 0) * (s.cost || 0);
-        const pl = mv - costTotal;
-        stocksTotal += mv;
-        return `
-          <tr class="whitespace-nowrap ${isClosed ? 'opacity-40 italic' : ''}">
-            <td class="semibold">${s.symbol} ${isClosed ? '<span class="text-[10px] ml-1 bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded">已結清</span>' : ''}</td>
-            <td class="tabular text-right">${s.shares}</td>
-            <td class="tabular text-right">${Math.round(s.cost * 100) / 100}</td>
-            <td class="tabular text-right">${s.price}</td>
-            <td class="tabular heavy text-right">${formatMoney(mv)}</td>
-            <td class="tabular heavy text-right">${formatMoney(pl)}</td>
-            <td class="tabular text-right">${s.yield || 0}%</td>
-            <td class="text-center">
-              <button onclick="openStockModal('${s.id}')" class="text-xs mr-1" style="color:var(--text-muted)">編</button>
-              <button onclick="deleteStock('${s.id}')" class="text-xs" style="color:var(--text-muted)">刪</button>
-            </td>
-          </tr>`;
-      }).join('') || '<tr><td colspan="8" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無股票標的</td></tr>';
-      document.getElementById('stocksTotalValue').textContent = formatMoney(stocksTotal);
-
-      let fundsTotal = 0;
-      document.getElementById('fundsTableBody').innerHTML = data.funds.map(f => {
-        const mv = (f.units || 0) * (f.price || 0) * (f.rate || 1);
-        fundsTotal += mv;
-        return `
-          <tr class="whitespace-nowrap">
-            <td class="semibold">${f.name}</td>
-            <td>${f.currency || 'TWD'}</td>
-            <td class="tabular text-right">${f.units}</td>
-            <td class="tabular text-right">${f.price}</td>
-            <td class="tabular text-right">${f.rate}</td>
-            <td class="tabular heavy text-right">${formatMoney(mv)}</td>
-            <td class="text-center">
-              <button onclick="openFundModal('${f.id}')" class="text-xs mr-1" style="color:var(--text-muted)">編</button>
-              <button onclick="deleteFund('${f.id}')" class="text-xs" style="color:var(--text-muted)">刪</button>
-            </td>
-          </tr>`;
-      }).join('') || '<tr><td colspan="7" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無基金標的</td></tr>';
-      document.getElementById('fundsTotalValue').textContent = formatMoney(fundsTotal);
     }
 
-    // ==================== 投資交易（無條件捨去、手動覆寫、智慧手續費） ====================
+    // ==================== 投資交易操作 ====================
     function onAssetTypeChange() {
       const assetType = document.getElementById('stxAssetType').value;
       const feeInput = document.getElementById('stxFee');
@@ -2663,21 +2519,13 @@
       const tax = Math.abs(parseFloat(document.getElementById('stxTax').value) || 0);
 
       let total = shares * price;
-      // 股票依照國泰台股規則：價金無條件捨去取整數
-      if (assetType === '股票') {
-        total = Math.floor(total);
-      } else {
-        total = Math.round(total * 100) / 100;
-      }
+      if (assetType === '股票') total = Math.floor(total);
+      else total = Math.round(total * 100) / 100;
 
       let totalCost = total;
-      if (type === '買入') {
-        totalCost = total + fee + tax;
-      } else if (type === '賣出') {
-        totalCost = total - fee - tax;
-      } else if (type === '配息') {
-        totalCost = Math.max(0, (total || shares) - fee);
-      }
+      if (type === '買入') totalCost = total + fee + tax;
+      else if (type === '賣出') totalCost = total - fee - tax;
+      else if (type === '配息') totalCost = Math.max(0, (total || shares) - fee);
 
       document.getElementById('stxTotal').value = total || '';
       document.getElementById('stxTotalCost').value = totalCost ? Math.floor(totalCost) : '';
@@ -2692,98 +2540,42 @@
       const tax = Math.abs(parseFloat(document.getElementById('editStxTax').value) || 0);
 
       let total = shares * price;
-      if (assetType === '股票') {
-        total = Math.floor(total);
-      } else {
-        total = Math.round(total * 100) / 100;
-      }
+      if (assetType === '股票') total = Math.floor(total);
+      else total = Math.round(total * 100) / 100;
 
       let totalCost = total;
-      if (type === '買入') {
-        totalCost = total + fee + tax;
-      } else if (type === '賣出') {
-        totalCost = total - fee - tax;
-      } else if (type === '配息') {
-        totalCost = Math.max(0, (total || shares) - fee);
-      }
+      if (type === '買入') totalCost = total + fee + tax;
+      else if (type === '賣出') totalCost = total - fee - tax;
+      else if (type === '配息') totalCost = Math.max(0, (total || shares) - fee);
 
       document.getElementById('editStxTotal').value = total || '';
       document.getElementById('editStxTotalCost').value = totalCost ? Math.floor(totalCost) : '';
     }
 
-    function applyStockTxEffect(tx, isReverse = false) {
+    function applyStockTxAccountOnly(tx, isReverse = false) {
       const mult = isReverse ? -1 : 1;
       const account = tx.account;
-      const symbol = tx.symbol;
-      const shares = Math.abs(tx.shares || 0);
-      const assetType = tx.assetType || '股票';
       const totalCost = Math.abs(tx.totalCost !== undefined ? tx.totalCost : (tx.total + (tx.fee || 0) + (tx.tax || 0)));
-
-      if (assetType === '基金') {
-        let fund = data.funds.find(f => f.name === symbol);
-        if (tx.type === '買入') {
-          data.accounts[account] = (data.accounts[account] || 0) - (totalCost * mult);
-          if (fund) {
-            if (!isReverse) fund.units = (fund.units || 0) + shares;
-            else fund.units = Math.max(0, (fund.units || 0) - shares);
-            fund.price = tx.price;
-          } else if (!isReverse) {
-            data.funds.push({ id: uid(), name: symbol, currency: 'USD', units: shares, price: tx.price, rate: data.usdRate || 32.0 });
-          }
-        } else if (tx.type === '賣出') {
-          data.accounts[account] = (data.accounts[account] || 0) + (totalCost * mult);
-          if (fund) {
-            if (!isReverse) fund.units = Math.max(0, (fund.units || 0) - shares);
-            else fund.units = (fund.units || 0) + shares;
-          }
-        }
-        return;
-      }
-
-      let stock = data.stocks.find(s => s.symbol === symbol);
 
       if (tx.type === '買入') {
         data.accounts[account] = (data.accounts[account] || 0) - (totalCost * mult);
-        if (stock) {
-          if (!isReverse) {
-            const oldCostTotal = stock.shares * stock.cost;
-            stock.shares += shares;
-            stock.cost = stock.shares > 0 ? (oldCostTotal + totalCost) / stock.shares : tx.price;
-            stock.price = tx.price;
-          } else {
-            stock.shares = Math.max(0, stock.shares - shares);
-          }
-        } else if (!isReverse) {
-          data.stocks.push({ id: uid(), symbol, shares, cost: tx.price, price: tx.price, yield: 6 });
-        }
-      } else if (tx.type === '賣出') {
+      } else if (tx.type === '賣出' || tx.type === '折讓') {
         data.accounts[account] = (data.accounts[account] || 0) + (totalCost * mult);
-        if (stock) {
-          if (!isReverse) {
-            stock.shares = Math.max(0, stock.shares - shares);
-          } else {
-            stock.shares += shares;
-          }
-        } else if (isReverse) {
-          data.stocks.push({ id: uid(), symbol, shares, cost: tx.price, price: tx.price, yield: 6 });
-        }
       } else if (tx.type === '配息') {
         data.accounts[account] = (data.accounts[account] || 0) + (totalCost * mult);
         if (!isReverse) {
           data.transactions.push({
-            id: uid(), date: tx.date, name: symbol + ' 配息', amount: totalCost, category: '息', account, necessary: 'necessary', note: tx.note || '股息入帳', envelopeId: '', projectId: '', receipt: ''
+            id: uid(), date: tx.date, name: tx.symbol + ' 配息', amount: totalCost, category: '息', account, necessary: 'necessary', note: tx.note || '股息入帳', envelopeId: '', projectId: '', receipt: ''
           });
           if (tx.date.startsWith(currentMonthStr())) {
             data.tithePool = (data.tithePool || 0) + Math.round(totalCost * 0.1);
           }
         } else {
-          data.transactions = data.transactions.filter(t => !(t.name.includes(symbol) && t.category === '息' && t.date === tx.date));
+          data.transactions = data.transactions.filter(t => !(t.name.includes(tx.symbol) && t.category === '息' && t.date === tx.date));
           if (tx.date.startsWith(currentMonthStr())) {
             data.tithePool = Math.max(0, (data.tithePool || 0) - Math.round(totalCost * 0.1));
           }
         }
-      } else if (tx.type === '折讓') {
-        data.accounts[account] = (data.accounts[account] || 0) + (totalCost * mult);
       }
     }
 
@@ -2804,7 +2596,7 @@
       if (!symbol) return alert('請輸入標的名稱');
 
       const tx = { id: uid(), date, account, assetType, type, symbol, shares, price, total, fee, tax, totalCost, note };
-      applyStockTxEffect(tx, false);
+      applyStockTxAccountOnly(tx, false);
 
       data.stockTransactions.push(tx);
       saveData();
@@ -2850,7 +2642,7 @@
       const symbol = document.getElementById('editStxSymbol').value.trim();
       if (!symbol) return alert('請輸入標的');
 
-      applyStockTxEffect(tx, true);
+      applyStockTxAccountOnly(tx, true);
 
       tx.date = document.getElementById('editStxDate').value || todayStr();
       tx.account = document.getElementById('editStxAccount').value;
@@ -2865,7 +2657,7 @@
       tx.totalCost = Math.abs(parseFloat(document.getElementById('editStxTotalCost').value) || (tx.type === '買入' ? tx.total + tx.fee + tx.tax : (tx.type === '配息' ? tx.total - tx.fee : tx.total - tx.fee - tx.tax)));
       tx.note = document.getElementById('editStxNote').value.trim();
 
-      applyStockTxEffect(tx, false);
+      applyStockTxAccountOnly(tx, false);
 
       saveData();
       closeModal('stxEditModal');
@@ -2877,9 +2669,9 @@
     function deleteStockTransaction(id) {
       const tx = data.stockTransactions.find(t => t.id === id);
       if (!tx) return;
-      if (!confirm(`確定刪除此筆「${tx.type}」紀錄？持股與帳戶將自動回滾`)) return;
+      if (!confirm(`確定刪除此筆「${tx.type}」紀錄？帳戶與庫存將自動回滾`)) return;
 
-      applyStockTxEffect(tx, true);
+      applyStockTxAccountOnly(tx, true);
 
       data.stockTransactions = data.stockTransactions.filter(t => t.id !== id);
       saveData();
@@ -2978,7 +2770,7 @@
       }
     }
 
-    // ==================== 專案 / 接案 / 固定（Toggle List） ====================
+    // ==================== 專案 / 接案 / 固定 ====================
     function openProjectModal(id = null) {
       document.getElementById('projectEditId').value = id || '';
       document.getElementById('projectModalTitle').textContent = id ? '編輯專案' : '新增專案';
@@ -3216,7 +3008,7 @@
       }
     }
 
-    // ==================== 統計圖表（支援時間範圍切換） ====================
+    // ==================== 統計圖表 ====================
     function setChartTimeRange(range) {
       data.chartTimeRange = range;
       ['chartRangeMonth', 'chartRangeYear', 'chartRangeAll'].forEach(id => {
@@ -3244,7 +3036,6 @@
 
       document.getElementById('chartsIncludeInvestToggle').classList.toggle('on', !!data.chartsIncludeInvest);
 
-      // 依選擇的區間篩選日常支出
       let txList = data.transactions.filter(t => t.amount < 0 && t.category !== '轉帳/換匯');
       if (range === 'month') txList = txList.filter(t => t.date && t.date.startsWith(cm));
       else if (range === 'year') txList = txList.filter(t => t.date && t.date.startsWith(cy));
@@ -3260,7 +3051,6 @@
         else non += Math.abs(t.amount);
       });
 
-      // 若開啟「含投資」，將買入納入分析
       if (data.chartsIncludeInvest) {
         let stxList = data.stockTransactions.filter(t => t.type === '買入');
         if (range === 'month') stxList = stxList.filter(t => t.date && t.date.startsWith(cm));
@@ -3349,7 +3139,7 @@
             const existingStxIds = new Set((data.stockTransactions || []).map(t => t.id));
             incoming.forEach(tx => {
               if (!existingStxIds.has(tx.id)) {
-                if (typeof applyStockTxEffect === 'function') applyStockTxEffect(tx, false);
+                if (typeof applyStockTxAccountOnly === 'function') applyStockTxAccountOnly(tx, false);
                 data.stockTransactions.push(tx);
                 count++;
               }
@@ -3386,18 +3176,6 @@
                 data.stockTransactions.push(stx);
                 stxAdded++;
               }
-            });
-
-            (incoming.stocks || []).forEach(s => {
-              const cur = (data.stocks || []).find(x => x.symbol === s.symbol);
-              if (!cur) data.stocks.push(s);
-              else { cur.shares = s.shares; cur.cost = s.cost; cur.price = s.price; }
-            });
-
-            (incoming.funds || []).forEach(f => {
-              const cur = (data.funds || []).find(x => x.name === f.name);
-              if (!cur) data.funds.push(f);
-              else { cur.units = f.units; cur.price = f.price; cur.rate = f.rate; }
             });
 
             if (incoming.jpyRate) data.jpyRate = incoming.jpyRate;
