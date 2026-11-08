@@ -52,12 +52,12 @@
       --card: #1c1c1e;
       --card-dark: #2c2c2e;
       --text: #f5f5f7;
-      --text-muted: #8e8e93;
+      --text-muted: #98989f;
       --border: rgba(255,255,255,0.08);
       --shadow: 0 8px 30px rgba(0,0,0,0.4);
       --shadow-soft: 0 4px 16px rgba(0,0,0,0.3);
     }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-style: normal; }
     body {
       margin: 0;
       background: var(--bg);
@@ -70,7 +70,7 @@
       -webkit-font-smoothing: antialiased;
     }
     .tabular { font-variant-numeric: tabular-nums; }
-    .heavy { font-weight: 800; letter-spacing: 0.04em; }
+    .heavy { font-weight: 800; letter-spacing: 0.02em; }
     .bold { font-weight: 700; }
     .semibold { font-weight: 600; }
     .card {
@@ -507,7 +507,7 @@
       </div>
     </section>
 
-    <!-- 投資（極簡乾淨標題，含編/刪、基金損益對齊與手動覆寫） -->
+    <!-- 投資 -->
     <section id="tab-investments" class="tab-content space-y-4">
       <div class="card p-5 space-y-3" id="dividendGoalSection">
         <div class="flex items-center justify-between">
@@ -543,7 +543,14 @@
           <table class="w-full">
             <thead>
               <tr class="whitespace-nowrap">
-                <th>標的</th><th>持有股數</th><th>均價成本</th><th>現價</th><th>台幣市值</th><th>損益</th><th>殖利率%</th><th class="text-center">操作</th>
+                <th>標的</th>
+                <th class="text-right">持有股數</th>
+                <th class="text-right">均價成本</th>
+                <th class="text-right">現價</th>
+                <th class="text-right">台幣市值</th>
+                <th class="text-right">損益</th>
+                <th class="text-right">殖利率%</th>
+                <th class="text-center">操作</th>
               </tr>
             </thead>
             <tbody id="stocksTableBody"></tbody>
@@ -567,7 +574,15 @@
           <table class="w-full">
             <thead>
               <tr class="whitespace-nowrap">
-                <th>標的</th><th>幣別</th><th>持有股數</th><th>均價成本</th><th>現價</th><th>匯率</th><th>台幣市值</th><th>損益</th><th class="text-center">操作</th>
+                <th>標的</th>
+                <th>幣別</th>
+                <th class="text-right">持有股數</th>
+                <th class="text-right">均價成本</th>
+                <th class="text-right">現價</th>
+                <th class="text-right">匯率</th>
+                <th class="text-right">台幣市值</th>
+                <th class="text-right">損益</th>
+                <th class="text-center">操作</th>
               </tr>
             </thead>
             <tbody id="fundsTableBody"></tbody>
@@ -577,7 +592,7 @@
       </div>
     </section>
 
-    <!-- 股票 / 基金 交易（統計列：總買入 ➔ 總賣出 ➔ 總配息 ➔ 損益） -->
+    <!-- 股票 / 基金 交易 -->
     <section id="tab-stockTx" class="tab-content space-y-4">
       <div class="card p-5">
         <h2 class="semibold mb-3">新增投資交易</h2>
@@ -641,7 +656,7 @@
         <button onclick="addStockTransaction()" class="btn-primary btn w-full mt-4 py-3">新增交易</button>
       </div>
 
-      <!-- 交易流水帳（專屬類別篩選器 + 檢視切換 + 凍結） -->
+      <!-- 交易流水帳 -->
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h2 class="semibold">交易流水帳</h2>
@@ -697,7 +712,7 @@
       </div>
     </section>
 
-    <!-- 專案（Toggle List） -->
+    <!-- 專案 -->
     <section id="tab-fixed" class="tab-content space-y-4">
       <div class="card p-5 space-y-3">
         <div class="flex items-center justify-between">
@@ -828,7 +843,7 @@
   </nav>
 
   <!-- ==================== 彈窗 MODALS ==================== -->
-  <!-- 標的設定編輯 Modal (修改股數、成本、現價、殖利率、幣別、匯率) -->
+  <!-- 標的設定編輯 Modal -->
   <div id="holdingEditModal" class="modal-overlay hidden">
     <div class="modal">
       <h3 class="text-base bold mb-4">編輯標的設定</h3>
@@ -1360,11 +1375,11 @@
       showClosedFunds: false,
       stockPrices: {},
       stockYields: {},
-      stockCustomOverrides: {}, // 股票手動覆寫 (股數、成本等)
+      stockCustomOverrides: {},
       fundPrices: {},
       fundRates: {},
       fundCurrencies: {},
-      fundCustomOverrides: {},  // 基金手動覆寫 (單位數、成本等)
+      fundCustomOverrides: {},
       ignoredHoldings: [],
       sectionsOpen: { fixed: true, project: true, freelance: true },
       tithePool: 0, titheDonatedThisMonth: 0, lastTitheMonth: '',
@@ -1381,6 +1396,19 @@
       const s = n < 0 ? '-' : '';
       return s + '$' + Math.abs(Math.round(n)).toLocaleString('zh-TW');
     }
+
+    // 損益專屬格式化：正數 Bold + 100%純亮白，負數 Heavy + 灰階
+    function formatPLHtml(pl) {
+      const rounded = Math.round(pl || 0);
+      if (rounded > 0) {
+        return `<span class="bold tabular" style="color:var(--text)">+${formatMoney(rounded)}</span>`;
+      } else if (rounded < 0) {
+        return `<span class="heavy tabular" style="color:var(--text-muted)">${formatMoney(rounded)}</span>`;
+      } else {
+        return `<span class="tabular" style="color:var(--text-muted)">$0</span>`;
+      }
+    }
+
     function parseAmount(str) {
       if (!str || typeof str !== 'string') return 0;
       str = str.trim().replace(/,/g, '');
@@ -1798,7 +1826,7 @@
             <span class="text-xs font-semibold">${name}</span>
             <input type="number" data-account="${name}" class="input mt-1 account-edit-input tabular text-xs" value="${data.accounts[name] || 0}" step="any" />
           </div>
-          <button onclick="removeAccount('${name}')" class="btn text-xs px-2.5 py-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30">移除</button>
+          <button onclick="removeAccount('${name}')" class="btn text-xs px-2.5 py-1" style="color:var(--text-muted)">移除</button>
         `;
 
         item.addEventListener('dragstart', handleDragStart);
@@ -2004,7 +2032,7 @@
       alert('已記錄奉獻 $' + amount.toLocaleString());
     }
 
-    // ==================== 核心精算：由交易流水推算庫存（支援手動全覆寫） ====================
+    // ==================== 核心精算：由交易流水推算庫存（支援重新買回新回合與手動覆寫） ====================
     function computePortfolioFromTransactions() {
       const stocks = {};
       const funds = {};
@@ -2032,6 +2060,7 @@
             };
           }
           if (t.type === '買入') {
+            if (funds[sym].units === 0) funds[sym].costTotal = 0; // 若已結清後重新買回，開啟全新成本回合
             funds[sym].units += shares;
             funds[sym].costTotal += cost;
             funds[sym].totalBoughtCost += cost;
@@ -2040,7 +2069,7 @@
             const curUnits = funds[sym].units;
             const avgCost = curUnits > 0 ? (funds[sym].costTotal / curUnits) : 0;
             funds[sym].units = Math.max(0, curUnits - shares);
-            funds[sym].costTotal = Math.max(0, funds[sym].units * avgCost);
+            funds[sym].costTotal = funds[sym].units > 0 ? Math.max(0, funds[sym].units * avgCost) : 0;
             funds[sym].totalSoldIncome += cost;
           } else if (t.type === '配息') {
             funds[sym].totalDividend += cost;
@@ -2055,6 +2084,7 @@
             };
           }
           if (t.type === '買入') {
+            if (stocks[sym].shares === 0) stocks[sym].costTotal = 0; // 若已結清後重新買回，開啟全新成本回合
             stocks[sym].shares += shares;
             stocks[sym].costTotal += cost;
             stocks[sym].totalBoughtCost += cost;
@@ -2063,7 +2093,7 @@
             const curShares = stocks[sym].shares;
             const avgCost = curShares > 0 ? (stocks[sym].costTotal / curShares) : 0;
             stocks[sym].shares = Math.max(0, curShares - shares);
-            stocks[sym].costTotal = Math.max(0, stocks[sym].shares * avgCost);
+            stocks[sym].costTotal = stocks[sym].shares > 0 ? Math.max(0, stocks[sym].shares * avgCost) : 0;
             stocks[sym].totalSoldIncome += cost;
           } else if (t.type === '配息') {
             stocks[sym].totalDividend += cost;
@@ -2455,7 +2485,7 @@
                   <strong class="text-sm ml-2">${t.name}</strong>
                 </div>
                 <div>
-                  <strong class="heavy text-sm tabular ${t.amount < 0 ? '' : 'text-emerald-500'}">${formatMoney(t.amount)}</strong>
+                  <strong class="heavy text-sm tabular">${formatMoney(t.amount)}</strong>
                 </div>
               </div>
               <div class="flex justify-between items-center text-[11px]" style="color:var(--text-muted)">
@@ -2679,7 +2709,6 @@
           pl = mv - s.costTotal;
         }
 
-        // 自動公式計算殖利率：若無手動設定，有配息紀錄則自動算，否則顯示空白或手動輸入
         let yldDisplay = '';
         if (data.stockYields[s.symbol] !== undefined) {
           yldDisplay = data.stockYields[s.symbol];
@@ -2692,17 +2721,22 @@
         if (!isClosed && numericYld > 0) estMonthly += mv * (numericYld / 100) / 12;
 
         return `
-          <tr class="whitespace-nowrap ${isClosed ? 'opacity-40 italic' : ''}">
+          <tr class="whitespace-nowrap ${isClosed ? 'opacity-40' : ''}">
             <td class="semibold">${s.symbol} ${isClosed ? '<span class="text-[10px] ml-1 bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded">已結清</span>' : ''}</td>
             <td class="tabular text-right">${s.shares}</td>
             <td class="tabular text-right">${avgCost.toFixed(2)}</td>
             <td class="tabular text-right">
-              <input type="number" step="any" class="input py-1 px-2 text-xs w-20 text-right tabular" value="${price}" onchange="updateStockLivePrice('${s.symbol}', this.value)" />
+              <div class="flex justify-end">
+                <input type="number" step="any" class="input py-1 px-2 text-xs w-20 text-right tabular" value="${price}" onchange="updateStockLivePrice('${s.symbol}', this.value)" />
+              </div>
             </td>
-            <td class="tabular heavy text-right">${formatMoney(mv)}</td>
-            <td class="tabular heavy text-right ${pl >= 0 ? '' : 'text-red-500'}">${pl >= 0 ? '+' : ''}${formatMoney(pl)}</td>
+            <td class="tabular bold text-right">${formatMoney(mv)}</td>
+            <td class="text-right">${formatPLHtml(pl)}</td>
             <td class="tabular text-right">
-              <input type="number" step="any" class="input py-1 px-2 text-xs w-16 text-right tabular" value="${yldDisplay}" placeholder="--" onchange="updateStockLiveYield('${s.symbol}', this.value)" />%
+              <div class="flex justify-end items-center gap-1">
+                <input type="number" step="any" class="input py-1 px-2 text-xs w-16 text-right tabular" value="${yldDisplay}" placeholder="--" onchange="updateStockLiveYield('${s.symbol}', this.value)" />
+                <span>%</span>
+              </div>
             </td>
             <td class="text-center">
               <button onclick="openHoldingEdit('stock', '${s.symbol}')" class="text-xs mr-1" style="color:var(--text-muted)">編</button>
@@ -2713,7 +2747,7 @@
       }).join('') || '<tr><td colspan="8" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無股票交易資料</td></tr>';
       document.getElementById('stocksTotalValue').textContent = formatMoney(stocksTotal);
 
-      // 基金推算渲染（對齊股票支援損益與隱藏已結清）
+      // 基金推算渲染
       let fundsTotal = 0;
       let fundList = Object.values(computed.funds);
       if (!data.showClosedFunds) fundList = fundList.filter(f => f.units > 0);
@@ -2742,7 +2776,7 @@
         }
 
         return `
-          <tr class="whitespace-nowrap ${isClosed ? 'opacity-40 italic' : ''}">
+          <tr class="whitespace-nowrap ${isClosed ? 'opacity-40' : ''}">
             <td class="semibold">${f.name} ${isClosed ? '<span class="text-[10px] ml-1 bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded">已結清</span>' : ''}</td>
             <td>
               <select class="input py-1 px-2 text-xs w-20 tabular" onchange="updateFundLiveCurrency('${f.name}', this.value)">
@@ -2754,13 +2788,17 @@
             <td class="tabular text-right">${f.units}</td>
             <td class="tabular text-right">${avgCost.toFixed(2)}</td>
             <td class="tabular text-right">
-              <input type="number" step="any" class="input py-1 px-2 text-xs w-20 text-right tabular" value="${price}" onchange="updateFundLivePrice('${f.name}', this.value)" />
+              <div class="flex justify-end">
+                <input type="number" step="any" class="input py-1 px-2 text-xs w-20 text-right tabular" value="${price}" onchange="updateFundLivePrice('${f.name}', this.value)" />
+              </div>
             </td>
             <td class="tabular text-right">
-              <input type="number" step="any" class="input py-1 px-2 text-xs w-20 text-right tabular" value="${rate}" ${cur === 'TWD' ? 'disabled' : ''} onchange="updateFundLiveRate('${f.name}', this.value)" />
+              <div class="flex justify-end">
+                <input type="number" step="any" class="input py-1 px-2 text-xs w-20 text-right tabular" value="${rate}" ${cur === 'TWD' ? 'disabled' : ''} onchange="updateFundLiveRate('${f.name}', this.value)" />
+              </div>
             </td>
-            <td class="tabular heavy text-right">${formatMoney(mv)}</td>
-            <td class="tabular heavy text-right ${pl >= 0 ? '' : 'text-red-500'}">${pl >= 0 ? '+' : ''}${formatMoney(pl)}</td>
+            <td class="tabular bold text-right">${formatMoney(mv)}</td>
+            <td class="text-right">${formatPLHtml(pl)}</td>
             <td class="text-center">
               <button onclick="openHoldingEdit('fund', '${f.name}')" class="text-xs mr-1" style="color:var(--text-muted)">編</button>
               <button onclick="deleteHolding('${f.name}')" class="text-xs" style="color:var(--text-muted)">刪</button>
@@ -2892,6 +2930,16 @@
 
       if (!symbol) return alert('請輸入標的名稱');
 
+      // 若之前是手動覆寫為 0 或被隱藏，新交易自動解除忽略並同步更新手動覆寫狀態
+      if (data.ignoredHoldings) {
+        data.ignoredHoldings = data.ignoredHoldings.filter(x => x !== symbol);
+      }
+      if (assetType === '基金' && data.fundCustomOverrides && data.fundCustomOverrides[symbol]) {
+        delete data.fundCustomOverrides[symbol];
+      } else if (assetType !== '基金' && data.stockCustomOverrides && data.stockCustomOverrides[symbol]) {
+        delete data.stockCustomOverrides[symbol];
+      }
+
       const tx = { id: uid(), date, account, assetType, type, symbol, shares, price, total, fee, tax, totalCost, note };
       applyStockTxAccountOnly(tx, false);
 
@@ -3007,10 +3055,13 @@
 
       const summaryDiv = document.getElementById('stxPeriodSummaryText');
       summaryDiv.innerHTML = `
-        <span>總買入：<strong class="heavy text-sm">${formatMoney(buyTotal)}</strong></span>
-        <span class="ml-2">總賣出：<strong class="heavy text-sm">${formatMoney(sellTotal)}</strong></span>
-        <span class="ml-2">總配息：<strong class="heavy text-sm text-emerald-500">${formatMoney(divTotal)}</strong></span>
-        <span class="ml-2">損益：<strong class="heavy text-sm ${plTotal >= 0 ? 'text-emerald-500' : 'text-red-500'}">${plTotal >= 0 ? '+' : ''}${formatMoney(plTotal)}</strong></span>
+        <span>總買入：<strong class="bold text-sm" style="color:var(--text)">${formatMoney(buyTotal)}</strong></span>
+        <span class="mx-1.5" style="color:var(--text-muted)">｜</span>
+        <span>總賣出：<strong class="bold text-sm" style="color:var(--text)">${formatMoney(sellTotal)}</strong></span>
+        <span class="mx-1.5" style="color:var(--text-muted)">｜</span>
+        <span>總配息：<strong class="bold text-sm" style="color:var(--text)">${formatMoney(divTotal)}</strong></span>
+        <span class="mx-1.5" style="color:var(--text-muted)">｜</span>
+        <span>損益：${formatPLHtml(plTotal)}</span>
       `;
 
       const isCard = data.stxViewMode === 'card';
@@ -3024,7 +3075,7 @@
             <div class="flex justify-between items-center">
               <div>
                 <span class="tabular font-semibold">${t.date}</span>
-                <span class="badge ${t.type === '買入' ? 'badge-nec' : (t.type === '配息' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-600' : 'badge-non')} ml-1">${t.type}</span>
+                <span class="badge ${t.type === '買入' ? 'badge-nec' : 'badge-non'} ml-1">${t.type}</span>
                 <strong class="text-sm ml-1.5">${t.symbol}</strong>
                 <span class="text-[11px]" style="color:var(--text-muted)">(${t.account})</span>
               </div>
@@ -3035,7 +3086,7 @@
             </div>
             <div class="flex justify-between tabular" style="color:var(--text-muted)">
               <span>${t.shares} 股/單位 × $${t.price} ｜ 費 $${t.fee} · 稅 $${t.tax}</span>
-              <strong class="heavy text-sm ${t.type === '配息' ? 'text-emerald-500' : 'text-[var(--text)]'}">${formatMoney(t.totalCost !== undefined ? t.totalCost : t.total)}</strong>
+              <strong class="bold text-sm" style="color:var(--text)">${formatMoney(t.totalCost !== undefined ? t.totalCost : t.total)}</strong>
             </div>
             ${t.note ? `<div class="text-[11px]" style="color:var(--text-muted)">備註：${t.note}</div>` : ''}
           </div>
@@ -3045,14 +3096,14 @@
           <tr class="whitespace-nowrap">
             <td class="px-3 tabular sticky-col" style="color:var(--text-muted)">${t.date}</td>
             <td class="px-3">${t.account}</td>
-            <td class="px-2"><span class="badge ${t.type === '買入' ? 'badge-nec' : (t.type === '配息' ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-600' : 'badge-non')}">${t.type}</span></td>
+            <td class="px-2"><span class="badge ${t.type === '買入' ? 'badge-nec' : 'badge-non'}">${t.type}</span></td>
             <td class="px-3 semibold">${t.symbol}</td>
             <td class="px-3 tabular text-right">${t.shares || 0}</td>
             <td class="px-3 tabular text-right">${t.price || 0}</td>
             <td class="px-3 tabular text-right">${formatMoney(t.total)}</td>
             <td class="px-3 tabular text-right">${formatMoney(t.fee)}</td>
             <td class="px-3 tabular text-right">${formatMoney(t.tax)}</td>
-            <td class="px-3 tabular heavy text-right ${t.type === '配息' ? 'text-emerald-500' : ''}">${formatMoney(t.totalCost !== undefined ? t.totalCost : t.total)}</td>
+            <td class="px-3 tabular bold text-right" style="color:var(--text)">${formatMoney(t.totalCost !== undefined ? t.totalCost : t.total)}</td>
             <td class="px-3 text-center">
               <button onclick="openStockTxEditModal('${t.id}')" class="text-xs mr-1.5" style="color:var(--text-muted)">編</button>
               <button onclick="deleteStockTransaction('${t.id}')" class="btn text-xs px-2 py-0.5">刪</button>
@@ -3300,7 +3351,7 @@
       }
     }
 
-    // ==================== 統計圖表 ====================
+    // ==================== 統計圖表（莫蘭迪低飽和度高辨識配色） ====================
     function setChartTimeRange(range) {
       data.chartTimeRange = range;
       ['chartRangeMonth', 'chartRangeYear', 'chartRangeAll'].forEach(id => {
@@ -3361,7 +3412,21 @@
       if (accountChart) accountChart.destroy();
 
       const isDark = document.documentElement.classList.contains('dark');
-      const textColor = isDark ? '#8e8e93' : '#1c1c1e';
+      const textColor = isDark ? '#98989f' : '#1c1c1e';
+      const borderColor = isDark ? '#1c1c1e' : '#ffffff';
+
+      const morandiPalette = [
+        '#5c6b73', // 霧灰藍
+        '#849974', // 鼠尾草綠
+        '#d4a373', // 暖駝色
+        '#9e7b85', // 豆沙藕紫
+        '#9db4c0', // 冰川灰藍
+        '#7a6c5d', // 摩卡灰褐
+        '#b5838d', // 煙燻玫瑰
+        '#6d597a', // 暮光深紫
+        '#a39a92', // 亞麻暖灰
+        '#4a5759'  // 石墨青
+      ];
 
       categoryChart = new Chart(document.getElementById('categoryPieChart').getContext('2d'), {
         type: 'doughnut',
@@ -3369,7 +3434,9 @@
           labels: Object.keys(catMap).length ? Object.keys(catMap) : ['無支出'],
           datasets: [{
             data: Object.values(catMap).length ? Object.values(catMap) : [1],
-            backgroundColor: ['#1c1c1e','#3a3a3c','#636366','#8e8e93','#aeaeb2','#c7c7cc','#d1d1d6']
+            backgroundColor: morandiPalette,
+            borderColor: borderColor,
+            borderWidth: 2
           }]
         },
         options: {
@@ -3384,7 +3451,9 @@
           labels: Object.keys(accMap).length ? Object.keys(accMap) : ['無支出'],
           datasets: [{
             data: Object.values(accMap).length ? Object.values(accMap) : [1],
-            backgroundColor: ['#1c1c1e', '#8e8e93', '#3a3a3c', '#c7c7cc', '#636366', '#e5e5ea']
+            backgroundColor: morandiPalette,
+            borderColor: borderColor,
+            borderWidth: 2
           }]
         },
         options: {
@@ -3399,7 +3468,9 @@
           labels: ['必要', '非必要'],
           datasets: [{
             data: [nec || 0.1, non || 0.1],
-            backgroundColor: ['#1c1c1e', '#8e8e93']
+            backgroundColor: ['#5c6b73', '#c2b2b4'],
+            borderColor: borderColor,
+            borderWidth: 2
           }]
         },
         options: {
