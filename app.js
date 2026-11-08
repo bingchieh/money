@@ -103,14 +103,15 @@ function formatMoney(n) {
   return s + '$' + Math.abs(Math.round(n)).toLocaleString('zh-TW');
 }
 
+// 格式化損益：正負數保持 100% 相同字級，賺錢 Bold，賠錢 Heavy 且透明度微調
 function formatPLHtml(pl) {
   const rounded = Math.round(pl || 0);
   if (rounded > 0) {
-    return `<span class="bold tabular" style="color:var(--text)">+${formatMoney(rounded)}</span>`;
+    return `<span class="bold tabular text-sm" style="color:var(--text)">+${formatMoney(rounded)}</span>`;
   } else if (rounded < 0) {
-    return `<span class="heavy tabular" style="color:var(--text-muted)">${formatMoney(rounded)}</span>`;
+    return `<span class="heavy tabular text-sm opacity-80" style="color:var(--text)">${formatMoney(rounded)}</span>`;
   } else {
-    return `<span class="tabular" style="color:var(--text-muted)">$0</span>`;
+    return `<span class="tabular text-sm opacity-60" style="color:var(--text)">$0</span>`;
   }
 }
 
@@ -1043,17 +1044,11 @@ function renderDashboard() {
   const cm = currentMonthStr();
   const inc = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount > 0 && t.category !== '轉帳/換匯').reduce((s, t) => s + t.amount, 0);
   const exp = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount < 0 && t.category !== '轉帳/換匯').reduce((s, t) => s + Math.abs(t.amount), 0);
-  const netFlow = inc - exp;
 
   document.getElementById('netWorth').textContent = formatMoney(totalCash + invest);
   document.getElementById('totalTwdCash').textContent = formatMoney(twdCash);
-  document.getElementById('twdMonthlyFlowDisplay').textContent = (netFlow >= 0 ? '+' : '') + formatMoney(netFlow);
   document.getElementById('totalCash').textContent = formatMoney(totalCash);
   document.getElementById('totalInvest').textContent = formatMoney(invest);
-
-  document.getElementById('usdRateDisplay').textContent = getCurrencyRate('USD').toFixed(2);
-  document.getElementById('jpyRateDisplay').textContent = getCurrencyRate('JPY').toFixed(4);
-  document.getElementById('cnyRateDisplay').textContent = getCurrencyRate('CNY').toFixed(2);
 
   if (document.activeElement !== document.getElementById('monthlyBudgetInput')) {
     document.getElementById('monthlyBudgetInput').value = data.monthlyBudget || '';
@@ -1080,22 +1075,30 @@ function renderDashboard() {
     document.getElementById('tithePool').textContent = formatMoney(data.tithePool || 0);
   }
 
+  // 帳戶餘額卡片：外幣標題加上「≈X萬」，主金額位置、字級與台幣 100% 切齊
   const accDiv = document.getElementById('accountsOverview');
   const twdCards = (data.accountList || DEFAULT_ACCOUNTS).map(name => {
     const bal = data.accounts[name] || 0;
     return `
-      <div class="pill p-2.5 text-center">
-        <p class="text-[11px]" style="color:var(--text-muted)">${name}</p>
-        <p class="heavy text-xs tabular mt-0.5">${formatMoney(bal)}</p>
+      <div class="pill p-3 flex flex-col justify-between h-20 text-center">
+        <p class="text-[11px] truncate" style="color:var(--text-muted)">${name}</p>
+        <p class="heavy text-sm tabular">${formatMoney(bal)}</p>
       </div>`;
   }).join('');
 
   const fxCards = FX_CURRENCIES.filter(c => c === 'USD' || c === 'JPY' || ((data.fxCash && data.fxCash[c]) || 0) > 0).map(c => {
     const bal = (data.fxCash && data.fxCash[c]) || 0;
+    const rate = getCurrencyRate(c);
+    const twdEq = Math.round(bal * rate);
+    const twdDisplay = twdEq >= 10000 ? `≈ ${(twdEq / 10000).toFixed(1)}萬` : `≈ $${twdEq.toLocaleString()}`;
+
     return `
-      <div class="pill p-2.5 text-center">
-        <p class="text-[11px]" style="color:var(--text-muted)">${FX_NAMES[c]} (${c})</p>
-        <p class="heavy text-xs tabular mt-0.5">${FX_SYMBOLS[c]}${bal.toLocaleString()}</p>
+      <div class="pill p-3 flex flex-col justify-between h-20 text-center">
+        <div class="flex items-center justify-center gap-1 text-[11px]" style="color:var(--text-muted)">
+          <span class="truncate">${FX_NAMES[c]}</span>
+          <span class="tabular opacity-80 shrink-0">· ${twdDisplay}</span>
+        </div>
+        <p class="heavy text-sm tabular">${FX_SYMBOLS[c]}${bal.toLocaleString()}</p>
       </div>`;
   }).join('');
 
@@ -1609,7 +1612,7 @@ function renderInvestments() {
 
     return `
       <tr class="whitespace-nowrap ${isClosed ? 'opacity-40' : ''}">
-        <td class="semibold">${s.symbol} ${isClosed ? '<span class="text-[10px] ml-1 bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded">已結清</span>' : ''}</td>
+        <td class="semibold">${s.symbol} ${isClosed ? '<span class="badge-closed ml-1.5">已結清</span>' : ''}</td>
         <td class="tabular text-right">${s.shares}</td>
         <td class="tabular text-right">${avgCost.toFixed(2)}</td>
         <td class="tabular text-right">
@@ -1660,7 +1663,7 @@ function renderInvestments() {
 
     return `
       <tr class="whitespace-nowrap ${isClosed ? 'opacity-40' : ''}">
-        <td class="semibold">${f.name} ${isClosed ? '<span class="text-[10px] ml-1 bg-zinc-200 dark:bg-zinc-800 px-1.5 py-0.5 rounded">已結清</span>' : ''}</td>
+        <td class="semibold">${f.name} ${isClosed ? '<span class="badge-closed ml-1.5">已結清</span>' : ''}</td>
         <td>
           <select class="input py-1 px-2 text-xs w-20 tabular" onchange="updateFundLiveCurrency('${f.name}', this.value)">
             <option value="TWD" ${cur === 'TWD' ? 'selected' : ''}>TWD</option>
@@ -1938,6 +1941,7 @@ function renderStockTransactions() {
   const divTotal = list.filter(t => t.type === '配息').reduce((s, t) => s + (t.totalCost !== undefined ? t.totalCost : t.total), 0);
   const plTotal = (sellTotal + divTotal) - buyTotal;
 
+  // 統計列：字級等大，賺錢 Bold，賠錢 Heavy 且透明度對比，不再有變小縮排錯覺
   const summaryDiv = document.getElementById('stxPeriodSummaryText');
   summaryDiv.innerHTML = `
     <span>總買入：<strong class="bold text-sm" style="color:var(--text)">${formatMoney(buyTotal)}</strong></span>
@@ -2315,6 +2319,7 @@ const STATIC_PALETTES = {
   p3: ['#4B6587', '#F0E5CF', '#C8C6C6', '#F7F6F2', '#738BA8', '#D1C2A5', '#8C8A8A', '#2F435E']
 };
 
+// 灰階「面積自適應明度排序」：深色大片暗、小片極亮，且相鄰極大跳色
 function generateAdaptiveGrayPalette(count, isDark) {
   if (count <= 1) return isDark ? ['#4E4E58'] : ['#E0E0E6'];
 
@@ -2346,10 +2351,10 @@ function setChartTimeRange(range) {
   ['chartRangeMonth', 'chartRangeYear', 'chartRangeAll'].forEach(id => {
     const btn = document.getElementById(id);
     if (!btn) return;
-    btn.className = 'btn text-xs px-3 py-1 bg-transparent border-none shadow-none';
+    btn.classList.remove('active');
   });
   const activeBtn = document.getElementById('chartRange' + range.charAt(0).toUpperCase() + range.slice(1));
-  if (activeBtn) activeBtn.className = 'btn text-xs px-3 py-1 bg-white dark:bg-zinc-700 shadow-sm';
+  if (activeBtn) activeBtn.classList.add('active');
   saveData();
   renderCharts();
 }
@@ -2371,9 +2376,9 @@ function renderCharts() {
     const btn = document.getElementById('paletteBtn_' + k);
     if (!btn) return;
     if (k === pKey) {
-      btn.className = 'btn text-xs px-2.5 py-1 bg-white dark:bg-zinc-700 shadow-sm';
+      btn.classList.add('active');
     } else {
-      btn.className = 'btn text-xs px-2.5 py-1 bg-transparent border-none shadow-none';
+      btn.classList.remove('active');
     }
   });
 

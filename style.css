@@ -24,7 +24,7 @@
 }
 
 :root {
-  --bg: #f2f3f7;
+  --bg: #f4f5f8;
   --card: #ffffff;
   --card-dark: #1c1c1e;
   --text: #1c1c1e;
@@ -138,6 +138,46 @@ body {
   background: rgba(142, 142, 147, 0.12);
   color: var(--text);
   border: 1px solid var(--border);
+}
+
+/* 篩選膠囊列：解決淺色模式下黑底黑字問題 */
+.btn-capsule-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 14px;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid var(--border);
+}
+
+.dark .btn-capsule-group {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.btn-capsule-item {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  font-weight: 500;
+}
+
+.btn-capsule-item.active {
+  background: var(--card);
+  color: var(--text);
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.dark .btn-capsule-item.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
 }
 
 input[type="number"]::-webkit-inner-spin-button, 
@@ -342,6 +382,23 @@ td {
   background: transparent;
   border: 1px solid var(--border);
   color: var(--text-muted);
+}
+
+/* 解決「已結清」標籤在淺色模式看不見字的問題 */
+.badge-closed {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.08);
+  color: #55555c;
+  vertical-align: middle;
+}
+
+.dark .badge-closed {
+  background: rgba(255, 255, 255, 0.12);
+  color: #d1d1d6;
 }
 
 .toggle {
