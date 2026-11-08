@@ -117,6 +117,23 @@
     }
     input[type=number] { -moz-appearance: textfield; }
 
+    /* 修復深色模式下原生日期與月份選擇器的黑色日曆圖示 */
+    input[type="date"]::-webkit-calendar-picker-indicator,
+    input[type="month"]::-webkit-calendar-picker-indicator {
+      cursor: pointer;
+      opacity: 0.65;
+      transition: opacity 0.2s;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator:hover,
+    input[type="month"]::-webkit-calendar-picker-indicator:hover {
+      opacity: 1;
+    }
+    .dark input[type="date"]::-webkit-calendar-picker-indicator,
+    .dark input[type="month"]::-webkit-calendar-picker-indicator {
+      filter: invert(1) brightness(1.2);
+      opacity: 0.85;
+    }
+
     .input {
       width: 100%;
       background: var(--bg);
@@ -131,7 +148,7 @@
     }
     select.input {
       appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%238e8e93' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2398989f' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
       background-position: right 14px center;
       padding-right: 36px;
@@ -170,7 +187,7 @@
     .modal-overlay.hidden { display: none; }
     .modal {
       background: var(--card); border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.2);
-      max-width: 440px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 24px;
+      max-width: 460px; width: 100%; max-height: 88vh; overflow-y: auto; padding: 24px;
       border: 1px solid var(--border); color: var(--text);
     }
     table { width: 100%; border-collapse: collapse; }
@@ -239,17 +256,25 @@
         <span id="apiStatus" class="text-xs" style="color:var(--text-muted)"></span>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div class="card-dark p-5">
           <p class="text-xs opacity-70">淨資產總額</p>
-          <p class="text-3xl heavy tabular mt-1" id="netWorth">$0</p>
+          <p class="text-2xl heavy tabular mt-1" id="netWorth">$0</p>
+        </div>
+        <div class="card p-5">
+          <p class="text-xs" style="color:var(--text-muted)">台幣現金總額</p>
+          <p class="text-2xl heavy tabular mt-1" id="totalTwdCash">$0</p>
+          <p class="text-[11px] mt-1 tabular" style="color:var(--text-muted)">
+            本月台幣現金流 <strong id="twdMonthlyFlowDisplay">$0</strong>
+          </p>
         </div>
         <div class="card p-5">
           <p class="text-xs" style="color:var(--text-muted)">現金總額（含外幣現值）</p>
           <p class="text-2xl heavy tabular mt-1" id="totalCash">$0</p>
-          <p class="text-[11px] mt-1 space-x-2" style="color:var(--text-muted)">
-            <span>JPY <strong id="jpyRateDisplay">--</strong></span>
+          <p class="text-[11px] mt-1 space-x-1.5 tabular" style="color:var(--text-muted)">
             <span>USD <strong id="usdRateDisplay">--</strong></span>
+            <span>JPY <strong id="jpyRateDisplay">--</strong></span>
+            <span>CNY <strong id="cnyRateDisplay">--</strong></span>
           </p>
         </div>
         <div class="card p-5">
@@ -280,7 +305,7 @@
           <div>
             <label class="text-xs block mb-1.5" style="color:var(--text-muted)">當月總預算</label>
             <div class="flex items-center gap-3">
-              <input type="number" id="monthlyBudgetInput" class="input tabular flex-1" placeholder="50000" />
+              <input type="number" id="monthlyBudgetInput" class="input tabular flex-1" />
               <button onclick="saveMonthlyBudget()" class="btn-primary btn px-5 shrink-0 min-w-[76px] whitespace-nowrap">儲存</button>
             </div>
           </div>
@@ -336,7 +361,7 @@
             </div>
           </div>
           <div class="flex gap-2">
-            <input type="number" id="titheDonateAmount" class="input tabular flex-1" placeholder="本次奉獻金額" />
+            <input type="number" id="titheDonateAmount" class="input tabular flex-1" />
             <button onclick="recordTitheDonation()" class="btn-primary btn px-4 shrink-0 whitespace-nowrap">記錄奉獻</button>
           </div>
         </div>
@@ -370,9 +395,9 @@
           <div>
             <label class="text-xs" style="color:var(--text-muted)">日期</label>
             <div class="relative mt-1 flex items-center">
-              <input type="text" id="txDateText" class="input tabular pr-10" placeholder="YYYY-MM-DD" onchange="syncDateFromText(this.value)" />
+              <input type="text" id="txDateText" class="input tabular pr-10" onchange="syncDateFromText(this.value)" />
               <input type="date" id="txDateNative" class="absolute right-2 opacity-0 w-8 h-8 cursor-pointer z-10" onchange="syncDateFromNative(this.value)" />
-              <div class="absolute right-3 pointer-events-none text-[var(--text-muted)]">
+              <div class="absolute right-3 pointer-events-none flex items-center justify-center" style="color:var(--text-muted)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
                   <line x1="16" x2="16" y1="2" y2="6"/>
@@ -474,7 +499,7 @@
               <option value="necessary">必要</option>
               <option value="non">非必要</option>
             </select>
-            <input type="text" id="filterKeyword" class="input text-xs" placeholder="關鍵字搜尋（名稱/備忘）" oninput="renderTransactions()" />
+            <input type="text" id="filterKeyword" class="input text-xs" oninput="renderTransactions()" />
           </div>
         </div>
         <div class="flex gap-2 mb-3">
@@ -678,7 +703,7 @@
             </select>
           </div>
           <div>
-            <input type="text" id="filterStxKeyword" class="input text-xs" placeholder="搜尋標的、帳戶或備註..." oninput="renderStockTransactions()" />
+            <input type="text" id="filterStxKeyword" class="input text-xs" oninput="renderStockTransactions()" />
           </div>
         </div>
 
@@ -764,6 +789,18 @@
             <span style="color:var(--text-muted)">純日常</span>
             <div id="chartsIncludeInvestToggle" class="toggle" onclick="toggleChartsInvestMode()"></div>
             <span style="color:var(--text-muted)">含投資</span>
+          </div>
+        </div>
+
+        <!-- 圓餅圖配色切換器 -->
+        <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
+          <span class="text-xs" style="color:var(--text-muted)">圖表色調</span>
+          <div class="flex flex-wrap gap-1.5 bg-zinc-100 dark:bg-zinc-800 p-1 rounded-xl">
+            <button id="paletteBtn_gray" onclick="setChartPalette('gray')" class="btn text-xs px-2.5 py-1 bg-transparent border-none shadow-none">跳色灰階</button>
+            <button id="paletteBtn_p1" onclick="setChartPalette('p1')" class="btn text-xs px-2.5 py-1 bg-transparent border-none shadow-none">組合 1</button>
+            <button id="paletteBtn_p2" onclick="setChartPalette('p2')" class="btn text-xs px-2.5 py-1 bg-transparent border-none shadow-none">組合 2</button>
+            <button id="paletteBtn_p3" onclick="setChartPalette('p3')" class="btn text-xs px-2.5 py-1 bg-transparent border-none shadow-none">組合 3</button>
+            <button id="paletteBtn_p4" onclick="setChartPalette('p4')" class="btn text-xs px-2.5 py-1 bg-transparent border-none shadow-none">組合 4</button>
           </div>
         </div>
 
@@ -884,6 +921,10 @@
             <option value="TWD">TWD (台幣)</option>
             <option value="USD">USD (美元)</option>
             <option value="JPY">JPY (日幣)</option>
+            <option value="EUR">EUR (歐元)</option>
+            <option value="CNY">CNY (人民幣)</option>
+            <option value="GBP">GBP (英鎊)</option>
+            <option value="KRW">KRW (韓元)</option>
           </select>
         </div>
       </div>
@@ -1024,22 +1065,39 @@
     </div>
   </div>
 
-  <!-- 統一外匯管理 Modal -->
+  <!-- 統一外匯管理 Modal（支援同帳戶、6外幣、編輯歷史） -->
   <div id="fxCenterModal" class="modal-overlay hidden">
     <div class="modal">
-      <h3 class="text-base bold mb-3">全外幣換匯中心</h3>
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-base bold" id="fxModalTitle">全外幣換匯中心</h3>
+        <button id="fxCancelEditBtn" onclick="cancelFxEdit()" class="btn text-xs px-2.5 py-1 hidden">取消編輯</button>
+      </div>
+      <input type="hidden" id="fxEditId" />
+
       <div class="grid grid-cols-3 gap-2 mb-4">
         <div class="pill p-2 text-center">
-          <p class="text-[10px]" style="color:var(--text-muted)">USD 平均</p>
-          <p class="semibold text-xs tabular mt-0.5" id="avgUsdCost">--</p>
+          <p class="text-[10px]" style="color:var(--text-muted)">USD 均價</p>
+          <p class="semibold text-xs tabular mt-0.5" id="avgCost_USD">--</p>
         </div>
         <div class="pill p-2 text-center">
-          <p class="text-[10px]" style="color:var(--text-muted)">JPY 平均</p>
-          <p class="semibold text-xs tabular mt-0.5" id="avgJpyCost">--</p>
+          <p class="text-[10px]" style="color:var(--text-muted)">JPY 均價</p>
+          <p class="semibold text-xs tabular mt-0.5" id="avgCost_JPY">--</p>
         </div>
         <div class="pill p-2 text-center">
-          <p class="text-[10px]" style="color:var(--text-muted)">EUR 平均</p>
-          <p class="semibold text-xs tabular mt-0.5" id="avgEurCost">--</p>
+          <p class="text-[10px]" style="color:var(--text-muted)">CNY 均價</p>
+          <p class="semibold text-xs tabular mt-0.5" id="avgCost_CNY">--</p>
+        </div>
+        <div class="pill p-2 text-center">
+          <p class="text-[10px]" style="color:var(--text-muted)">KRW 均價</p>
+          <p class="semibold text-xs tabular mt-0.5" id="avgCost_KRW">--</p>
+        </div>
+        <div class="pill p-2 text-center">
+          <p class="text-[10px]" style="color:var(--text-muted)">EUR 均價</p>
+          <p class="semibold text-xs tabular mt-0.5" id="avgCost_EUR">--</p>
+        </div>
+        <div class="pill p-2 text-center">
+          <p class="text-[10px]" style="color:var(--text-muted)">GBP 均價</p>
+          <p class="semibold text-xs tabular mt-0.5" id="avgCost_GBP">--</p>
         </div>
       </div>
 
@@ -1051,10 +1109,14 @@
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label style="color:var(--text-muted)">支出幣別</label>
-            <select id="fxFromCurrency" class="input mt-1 text-xs">
+            <select id="fxFromCurrency" class="input mt-1 text-xs" onchange="calcFxRatePreview()">
               <option value="TWD">TWD (台幣)</option>
               <option value="USD">USD (美元)</option>
               <option value="JPY">JPY (日幣)</option>
+              <option value="KRW">KRW (韓元)</option>
+              <option value="CNY">CNY (人民幣)</option>
+              <option value="EUR">EUR (歐元)</option>
+              <option value="GBP">GBP (英鎊)</option>
             </select>
           </div>
           <div>
@@ -1064,28 +1126,30 @@
         </div>
         <div>
           <label style="color:var(--text-muted)">支出金額</label>
-          <input type="number" id="fxFromAmount" class="input mt-1 tabular text-xs" oninput="calcFxRatePreview()" />
+          <input type="number" id="fxFromAmount" class="input mt-1 tabular text-xs" step="any" oninput="calcFxRatePreview()" />
         </div>
 
         <div class="grid grid-cols-2 gap-2 pt-1 border-t border-zinc-200 dark:border-zinc-800">
           <div>
             <label style="color:var(--text-muted)">換得幣別</label>
-            <select id="fxToCurrency" class="input mt-1 text-xs">
+            <select id="fxToCurrency" class="input mt-1 text-xs" onchange="calcFxRatePreview()">
               <option value="JPY">JPY (日幣)</option>
               <option value="USD">USD (美元)</option>
-              <option value="EUR">EUR (歐元)</option>
               <option value="KRW">KRW (韓元)</option>
+              <option value="CNY">CNY (人民幣)</option>
+              <option value="EUR">EUR (歐元)</option>
               <option value="GBP">GBP (英鎊)</option>
+              <option value="TWD">TWD (台幣)</option>
             </select>
           </div>
           <div>
-            <label style="color:var(--text-muted)">入帳帳戶</label>
+            <label style="color:var(--text-muted)">入帳帳戶（可與扣款同銀行）</label>
             <select id="fxToAccount" class="input mt-1 text-xs"></select>
           </div>
         </div>
         <div>
-          <label style="color:var(--text-muted)">換得外幣金額</label>
-          <input type="number" id="fxToAmount" class="input mt-1 tabular text-xs" oninput="calcFxRatePreview()" />
+          <label style="color:var(--text-muted)">換得金額</label>
+          <input type="number" id="fxToAmount" class="input mt-1 tabular text-xs" step="any" oninput="calcFxRatePreview()" />
         </div>
 
         <div class="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-center" style="background:var(--bg)">
@@ -1098,12 +1162,12 @@
           <input type="text" id="fxNote" class="input mt-1 text-xs" />
         </div>
 
-        <button onclick="saveFxExchange()" class="btn-primary btn w-full mt-2">儲存換匯</button>
+        <button id="fxSubmitBtn" onclick="saveFxExchange()" class="btn-primary btn w-full mt-2">儲存換匯</button>
       </div>
 
       <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800">
         <p class="text-xs semibold mb-2">歷史換匯紀錄</p>
-        <div id="fxHistoryList" class="max-h-36 overflow-y-auto space-y-1.5 text-xs"></div>
+        <div id="fxHistoryList" class="max-h-44 overflow-y-auto space-y-1.5 text-xs"></div>
       </div>
 
       <button onclick="closeModal('fxCenterModal')" class="btn btn-secondary w-full mt-4">關閉</button>
@@ -1140,18 +1204,37 @@
         <span class="text-[11px]" style="color:var(--text-muted)">按住 ⠿ 可拖曳排序</span>
       </div>
       <div id="accountEditFields" class="space-y-2"></div>
-      <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 grid grid-cols-2 gap-2">
-        <div>
-          <label class="text-xs" style="color:var(--text-muted)">日幣現金 (JPY)</label>
-          <input type="number" id="jpyCashInput" class="input mt-1 tabular" step="any" />
-        </div>
-        <div>
-          <label class="text-xs" style="color:var(--text-muted)">美金現金 (USD)</label>
-          <input type="number" id="usdCashInput" class="input mt-1 tabular" step="any" />
+      <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+        <p class="text-xs semibold mb-2">外幣持有部位（含網銀外幣與現鈔）</p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div>
+            <label class="text-[11px]" style="color:var(--text-muted)">美元 (USD)</label>
+            <input type="number" id="fxCashInput_USD" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
+          </div>
+          <div>
+            <label class="text-[11px]" style="color:var(--text-muted)">日幣 (JPY)</label>
+            <input type="number" id="fxCashInput_JPY" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
+          </div>
+          <div>
+            <label class="text-[11px]" style="color:var(--text-muted)">人民幣 (CNY)</label>
+            <input type="number" id="fxCashInput_CNY" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
+          </div>
+          <div>
+            <label class="text-[11px]" style="color:var(--text-muted)">韓元 (KRW)</label>
+            <input type="number" id="fxCashInput_KRW" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
+          </div>
+          <div>
+            <label class="text-[11px]" style="color:var(--text-muted)">歐元 (EUR)</label>
+            <input type="number" id="fxCashInput_EUR" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
+          </div>
+          <div>
+            <label class="text-[11px]" style="color:var(--text-muted)">英鎊 (GBP)</label>
+            <input type="number" id="fxCashInput_GBP" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
+          </div>
         </div>
       </div>
       <div class="mt-3">
-        <label class="text-xs" style="color:var(--text-muted)">新增帳戶名稱</label>
+        <label class="text-xs" style="color:var(--text-muted)">新增台幣帳戶名稱</label>
         <div class="flex gap-2 mt-1">
           <input type="text" id="newAccountName" class="input text-xs" />
           <button onclick="addNewAccount()" class="btn-primary btn text-xs px-4 whitespace-nowrap">新增</button>
@@ -1245,7 +1328,7 @@
             <input type="date" id="freelanceExecDate" class="input mt-1" />
           </div>
           <div>
-            <label style="color:var(--text-muted)">收款日期</label>
+            <label style="color:var(--text-muted)">收款日期（未填則帶入執行日）</label>
             <input type="date" id="freelancePayDate" class="input mt-1" />
           </div>
         </div>
@@ -1321,6 +1404,9 @@
     const memoryStore = {};
     let storageAvailable = false;
     let html5QrCode = null;
+    const FX_CURRENCIES = ['USD', 'JPY', 'CNY', 'KRW', 'EUR', 'GBP'];
+    const FX_SYMBOLS = { USD: '$', JPY: '¥', CNY: '¥', KRW: '₩', EUR: '€', GBP: '£' };
+    const FX_NAMES = { USD: '美金', JPY: '日幣', CNY: '人民幣', KRW: '韓元', EUR: '歐元', GBP: '英鎊' };
 
     function safeGetItem(key) {
       try {
@@ -1360,6 +1446,8 @@
     const DEFAULT_DATA = {
       accounts: Object.fromEntries(DEFAULT_ACCOUNTS.map(a => [a, 0])),
       accountList: [...DEFAULT_ACCOUNTS],
+      fxCash: { USD: 0, JPY: 0, CNY: 0, KRW: 0, EUR: 0, GBP: 0 },
+      fxRates: { USD: 32.0, JPY: 0.22, CNY: 4.45, KRW: 0.024, EUR: 34.5, GBP: 40.5 },
       jpyCash: 0, jpyRate: 0.22,
       usdCash: 0, usdRate: 32.0,
       fxExchanges: [],
@@ -1369,6 +1457,7 @@
       showTithe: true,
       chartsIncludeInvest: false,
       chartTimeRange: 'month',
+      chartPalette: 'gray',
       txViewMode: 'card',
       stxViewMode: 'table',
       showClosedStocks: false,
@@ -1446,6 +1535,15 @@
     }
 
     function saveData() {
+      // 同步舊版屬性以維持向下相容
+      if (data.fxCash) {
+        data.usdCash = data.fxCash.USD || 0;
+        data.jpyCash = data.fxCash.JPY || 0;
+      }
+      if (data.fxRates) {
+        data.usdRate = data.fxRates.USD || 32.0;
+        data.jpyRate = data.fxRates.JPY || 0.22;
+      }
       safeSetItem('pf_app_v3', JSON.stringify(data));
       updateStorageStatus();
     }
@@ -1459,12 +1557,31 @@
           if (!data.accountList || !data.accountList.length) data.accountList = [...DEFAULT_ACCOUNTS];
           data.accountList.forEach(a => { if (data.accounts[a] === undefined) data.accounts[a] = 0; });
           if (!data.fxExchanges) data.fxExchanges = [];
+          if (!data.fxCash) {
+            data.fxCash = {
+              USD: parseFloat(p.usdCash) || 0,
+              JPY: parseFloat(p.jpyCash) || 0,
+              CNY: 0, KRW: 0, EUR: 0, GBP: 0
+            };
+          } else {
+            FX_CURRENCIES.forEach(c => { if (data.fxCash[c] === undefined) data.fxCash[c] = 0; });
+          }
+          if (!data.fxRates) {
+            data.fxRates = {
+              USD: parseFloat(p.usdRate) || 32.0,
+              JPY: parseFloat(p.jpyRate) || 0.22,
+              CNY: 4.45, KRW: 0.024, EUR: 34.5, GBP: 40.5
+            };
+          } else {
+            FX_CURRENCIES.forEach(c => { if (!data.fxRates[c]) data.fxRates[c] = DEFAULT_DATA.fxRates[c]; });
+          }
           if (data.dividendGoal === undefined) data.dividendGoal = 10000;
           if (data.showDividendGoal === undefined) data.showDividendGoal = true;
           if (data.showTithe === undefined) data.showTithe = true;
           if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, project: true, freelance: true };
           if (data.chartsIncludeInvest === undefined) data.chartsIncludeInvest = false;
           if (!data.chartTimeRange) data.chartTimeRange = 'month';
+          if (!data.chartPalette) data.chartPalette = 'gray';
           if (!data.txViewMode) data.txViewMode = window.innerWidth > 768 ? 'table' : 'card';
           if (!data.stxViewMode) data.stxViewMode = 'table';
           if (data.showClosedStocks === undefined) data.showClosedStocks = false;
@@ -1486,6 +1603,26 @@
             if (st.fee !== undefined) st.fee = Math.abs(st.fee);
             if (st.tax !== undefined) st.tax = Math.abs(st.tax);
           });
+
+          // 自動校正先前補登接案時被誤設為今日的「（接案收款）」帳務日期
+          let freelanceFixed = false;
+          (data.freelances || []).forEach(f => {
+            if (f.status === '已收款') {
+              const targetDate = f.payDate || f.execDate;
+              const tx = (data.transactions || []).find(t =>
+                (f.linkedTxId && t.id === f.linkedTxId) ||
+                (t.name === f.name + '（接案收款）' && Math.abs(t.amount - f.amount) < 1)
+              );
+              if (tx) {
+                if (!f.linkedTxId) { f.linkedTxId = tx.id; freelanceFixed = true; }
+                if (targetDate && tx.date !== targetDate) {
+                  tx.date = targetDate;
+                  freelanceFixed = true;
+                }
+              }
+            }
+          });
+          if (freelanceFixed) saveData();
         } catch {
           data = JSON.parse(JSON.stringify(DEFAULT_DATA));
         }
@@ -1532,8 +1669,10 @@
       if (tab === 'transactions') {
         populateEnvelopeSelect();
         const tday = todayStr();
-        document.getElementById('txDateText').value = tday;
-        document.getElementById('txDateNative').value = tday;
+        if (!document.getElementById('txDateText').value) {
+          document.getElementById('txDateText').value = tday;
+          document.getElementById('txDateNative').value = tday;
+        }
         if (!document.getElementById('filterDateFrom').value) {
           resetTxMonthFilter();
         } else {
@@ -1562,7 +1701,9 @@
           sel.innerHTML += `<option value="${acc}">${acc}</option>`;
         });
         if (id === 'fxFromAccount' || id === 'fxToAccount') {
-          sel.innerHTML += `<option value="日幣現金">日幣現金</option><option value="美金現金">美金現金</option>`;
+          FX_CURRENCIES.forEach(c => {
+            sel.innerHTML += `<option value="${FX_NAMES[c]}現金">${FX_NAMES[c]}現金 (${c})</option>`;
+          });
         }
         if (cur) sel.value = cur;
       });
@@ -1695,8 +1836,9 @@
       event.target.value = '';
     }
 
-    // ==================== 全外幣換匯中心 ====================
+    // ==================== 全外幣換匯中心（支援同帳戶、6外幣與歷史編輯） ====================
     function openFxCenterModal() {
+      cancelFxEdit();
       document.getElementById('fxDate').value = todayStr();
       populateAllAccountSelects();
       calcFxRatePreview();
@@ -1711,11 +1853,63 @@
       const toCur = document.getElementById('fxToCurrency').value;
       const preview = document.getElementById('fxCalculatedRate');
       if (fromAmt > 0 && toAmt > 0) {
-        preview.textContent = (fromAmt / toAmt).toFixed(4) + ` ${fromCur}/${toCur}`;
+        const decimals = (toCur === 'JPY' || toCur === 'KRW') ? 4 : 2;
+        preview.textContent = (fromAmt / toAmt).toFixed(decimals) + ` ${fromCur}/${toCur}`;
       } else preview.textContent = '--';
     }
 
+    // 獨立處理台幣帳戶與外幣池的增減，同銀行換匯也不會把外幣跟台幣混加
+    function applyFxBalanceChange(fx, isReverse = false) {
+      const m = isReverse ? -1 : 1;
+      if (!data.fxCash) data.fxCash = { USD: 0, JPY: 0, CNY: 0, KRW: 0, EUR: 0, GBP: 0 };
+
+      // 扣款端
+      if (fx.fromCur === 'TWD') {
+        data.accounts[fx.fromAcc] = (data.accounts[fx.fromAcc] || 0) - m * fx.fromAmt;
+      } else if (data.fxCash[fx.fromCur] !== undefined) {
+        data.fxCash[fx.fromCur] = Math.max(0, (data.fxCash[fx.fromCur] || 0) - m * fx.fromAmt);
+      }
+
+      // 入帳端
+      if (fx.toCur === 'TWD') {
+        data.accounts[fx.toAcc] = (data.accounts[fx.toAcc] || 0) + m * fx.toAmt;
+      } else if (data.fxCash[fx.toCur] !== undefined) {
+        data.fxCash[fx.toCur] = Math.max(0, (data.fxCash[fx.toCur] || 0) + m * fx.toAmt);
+      }
+    }
+
+    function openFxEdit(id) {
+      const fx = data.fxExchanges.find(x => x.id === id);
+      if (!fx) return;
+      document.getElementById('fxEditId').value = fx.id;
+      document.getElementById('fxModalTitle').textContent = '編輯換匯紀錄';
+      document.getElementById('fxSubmitBtn').textContent = '儲存修改';
+      document.getElementById('fxCancelEditBtn').classList.remove('hidden');
+
+      document.getElementById('fxDate').value = fx.date || todayStr();
+      document.getElementById('fxFromCurrency').value = fx.fromCur || 'TWD';
+      document.getElementById('fxFromAccount').value = fx.fromAcc;
+      document.getElementById('fxFromAmount').value = fx.fromAmt;
+      document.getElementById('fxToCurrency').value = fx.toCur || 'JPY';
+      document.getElementById('fxToAccount').value = fx.toAcc;
+      document.getElementById('fxToAmount').value = fx.toAmt;
+      document.getElementById('fxNote').value = fx.note || '';
+      calcFxRatePreview();
+    }
+
+    function cancelFxEdit() {
+      document.getElementById('fxEditId').value = '';
+      document.getElementById('fxModalTitle').textContent = '全外幣換匯中心';
+      document.getElementById('fxSubmitBtn').textContent = '儲存換匯';
+      document.getElementById('fxCancelEditBtn').classList.add('hidden');
+      document.getElementById('fxFromAmount').value = '';
+      document.getElementById('fxToAmount').value = '';
+      document.getElementById('fxNote').value = '';
+      calcFxRatePreview();
+    }
+
     function saveFxExchange() {
+      const editId = document.getElementById('fxEditId').value;
       const date = document.getElementById('fxDate').value || todayStr();
       const fromCur = document.getElementById('fxFromCurrency').value;
       const fromAcc = document.getElementById('fxFromAccount').value;
@@ -1726,78 +1920,113 @@
       const note = document.getElementById('fxNote').value.trim();
 
       if (fromAmt <= 0 || toAmt <= 0) return alert('請輸入有效的換匯金額');
-      if (fromAcc === toAcc) return alert('扣款與入帳帳戶不可相同');
-
-      if (fromAcc === '日幣現金') data.jpyCash = Math.max(0, (data.jpyCash || 0) - fromAmt);
-      else if (fromAcc === '美金現金') data.usdCash = Math.max(0, (data.usdCash || 0) - fromAmt);
-      else data.accounts[fromAcc] = (data.accounts[fromAcc] || 0) - fromAmt;
-
-      if (toAcc === '日幣現金') data.jpyCash = (data.jpyCash || 0) + toAmt;
-      else if (toAcc === '美金現金') data.usdCash = (data.usdCash || 0) + toAmt;
-      else data.accounts[toAcc] = (data.accounts[toAcc] || 0) + toAmt;
+      if (fromCur === toCur && fromAcc === toAcc) return alert('同幣別且同帳戶無須換匯');
 
       const rate = fromAmt / toAmt;
-      data.fxExchanges.push({ id: uid(), date, fromCur, fromAcc, fromAmt, toCur, toAcc, toAmt, rate, note });
+      const txTitle = `換匯：${fromAcc} (${fromCur}) ➔ ${toAcc} (${toAmt.toLocaleString()} ${toCur})`;
+      const txNote = note || `匯率 ${rate.toFixed(4)}`;
 
-      data.transactions.push({
-        id: uid(), date,
-        name: `換匯：${fromAcc} ➔ ${toAcc} (${toAmt} ${toCur})`,
-        amount: -fromAmt, category: '轉帳/換匯', account: fromAcc,
-        necessary: 'necessary', note: note || `匯率 ${rate.toFixed(4)}`, envelopeId: '', projectId: '', receipt: ''
-      });
+      if (editId) {
+        const oldFx = data.fxExchanges.find(x => x.id === editId);
+        if (!oldFx) return;
+        applyFxBalanceChange(oldFx, true);
+
+        oldFx.date = date;
+        oldFx.fromCur = fromCur;
+        oldFx.fromAcc = fromAcc;
+        oldFx.fromAmt = fromAmt;
+        oldFx.toCur = toCur;
+        oldFx.toAcc = toAcc;
+        oldFx.toAmt = toAmt;
+        oldFx.rate = rate;
+        oldFx.note = note;
+
+        applyFxBalanceChange(oldFx, false);
+
+        // 同步更新記帳明細中的對應紀錄
+        const linkedTx = data.transactions.find(t =>
+          (oldFx.linkedTxId && t.id === oldFx.linkedTxId) ||
+          (t.category === '轉帳/換匯' && t.date === oldFx.date && t.name.startsWith('換匯：'))
+        );
+        if (linkedTx) {
+          linkedTx.date = date;
+          linkedTx.name = txTitle;
+          linkedTx.amount = fromCur === 'TWD' ? -fromAmt : (toCur === 'TWD' ? toAmt : 0);
+          linkedTx.account = fromAcc;
+          linkedTx.note = txNote;
+        }
+        cancelFxEdit();
+      } else {
+        const linkedTxId = uid();
+        const newFx = { id: uid(), date, fromCur, fromAcc, fromAmt, toCur, toAcc, toAmt, rate, note, linkedTxId };
+        applyFxBalanceChange(newFx, false);
+        data.fxExchanges.push(newFx);
+
+        data.transactions.push({
+          id: linkedTxId, date,
+          name: txTitle,
+          amount: fromCur === 'TWD' ? -fromAmt : (toCur === 'TWD' ? toAmt : 0),
+          category: '轉帳/換匯', account: fromAcc,
+          necessary: 'necessary', note: txNote, envelopeId: '', projectId: '', receipt: ''
+        });
+
+        document.getElementById('fxFromAmount').value = '';
+        document.getElementById('fxToAmount').value = '';
+        document.getElementById('fxNote').value = '';
+        calcFxRatePreview();
+      }
 
       saveData();
-      document.getElementById('fxFromAmount').value = '';
-      document.getElementById('fxToAmount').value = '';
-      document.getElementById('fxNote').value = '';
       renderFxCenter();
       renderDashboard();
       renderTransactions();
-      alert('換匯紀錄已儲存！');
     }
 
     function deleteFxExchange(id) {
       const fx = data.fxExchanges.find(x => x.id === id);
       if (!fx) return;
-      if (!confirm('確定刪除此換匯紀錄？帳戶餘額將自動回滾')) return;
+      if (!confirm('確定刪除此換匯紀錄？帳戶與外幣餘額將自動回滾')) return;
 
-      if (fx.fromAcc === '日幣現金') data.jpyCash = (data.jpyCash || 0) + fx.fromAmt;
-      else if (fx.fromAcc === '美金現金') data.usdCash = (data.usdCash || 0) + fx.fromAmt;
-      else data.accounts[fx.fromAcc] = (data.accounts[fx.fromAcc] || 0) + fx.fromAmt;
-
-      if (fx.toAcc === '日幣現金') data.jpyCash = Math.max(0, (data.jpyCash || 0) - fx.toAmt);
-      else if (fx.toAcc === '美金現金') data.usdCash = Math.max(0, (data.usdCash || 0) - fx.toAmt);
-      else data.accounts[fx.toAcc] = (data.accounts[fx.toAcc] || 0) - fx.toAmt;
-
+      applyFxBalanceChange(fx, true);
+      if (fx.linkedTxId) {
+        data.transactions = data.transactions.filter(t => t.id !== fx.linkedTxId);
+      }
       data.fxExchanges = data.fxExchanges.filter(x => x.id !== id);
+      if (document.getElementById('fxEditId').value === id) cancelFxEdit();
       saveData();
       renderFxCenter();
       renderDashboard();
+      renderTransactions();
     }
 
     function renderFxCenter() {
-      const jpyTwd = data.fxExchanges.filter(x => x.toCur === 'JPY' && x.fromCur === 'TWD').reduce((s, x) => s + x.fromAmt, 0);
-      const jpyTotal = data.fxExchanges.filter(x => x.toCur === 'JPY' && x.fromCur === 'TWD').reduce((s, x) => s + x.toAmt, 0);
-      document.getElementById('avgJpyCost').textContent = jpyTotal > 0 ? (jpyTwd / jpyTotal).toFixed(4) : '--';
+      FX_CURRENCIES.forEach(cur => {
+        const el = document.getElementById('avgCost_' + cur);
+        if (!el) return;
+        const twdSpent = data.fxExchanges.filter(x => x.toCur === cur && x.fromCur === 'TWD').reduce((s, x) => s + x.fromAmt, 0);
+        const curGot = data.fxExchanges.filter(x => x.toCur === cur && x.fromCur === 'TWD').reduce((s, x) => s + x.toAmt, 0);
+        const decimals = (cur === 'JPY' || cur === 'KRW') ? 4 : 2;
+        el.textContent = curGot > 0 ? (twdSpent / curGot).toFixed(decimals) : '--';
+      });
 
-      const usdTwd = data.fxExchanges.filter(x => x.toCur === 'USD' && x.fromCur === 'TWD').reduce((s, x) => s + x.fromAmt, 0);
-      const usdTotal = data.fxExchanges.filter(x => x.toCur === 'USD' && x.fromCur === 'TWD').reduce((s, x) => s + x.toAmt, 0);
-      document.getElementById('avgUsdCost').textContent = usdTotal > 0 ? (usdTwd / usdTotal).toFixed(2) : '--';
-
-      const eurTwd = data.fxExchanges.filter(x => x.toCur === 'EUR' && x.fromCur === 'TWD').reduce((s, x) => s + x.fromAmt, 0);
-      const eurTotal = data.fxExchanges.filter(x => x.toCur === 'EUR' && x.fromCur === 'TWD').reduce((s, x) => s + x.toAmt, 0);
-      document.getElementById('avgEurCost').textContent = eurTotal > 0 ? (eurTwd / eurTotal).toFixed(2) : '--';
-
-      document.getElementById('fxHistoryList').innerHTML = data.fxExchanges.map(x => `
-        <div class="pill p-2.5 flex justify-between items-center text-xs">
-          <div>
-            <span class="semibold">${x.date}</span>
-            <span class="tabular ml-1.5">${x.fromAcc} ($${x.fromAmt.toLocaleString()}) ➔ ${x.toAcc} (${x.toAmt.toLocaleString()} ${x.toCur})</span>
-            <span class="ml-1" style="color:var(--text-muted)">· 匯率 ${x.rate.toFixed(4)}</span>
+      const sortedFx = [...data.fxExchanges].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      document.getElementById('fxHistoryList').innerHTML = sortedFx.map(x => {
+        const decimals = (x.toCur === 'JPY' || x.toCur === 'KRW') ? 4 : 2;
+        return `
+          <div class="pill p-2.5 flex justify-between items-center text-xs">
+            <div>
+              <span class="semibold tabular">${x.date}</span>
+              <span class="tabular ml-1.5">${x.fromAcc} (${x.fromAmt.toLocaleString()} ${x.fromCur}) ➔ ${x.toAcc} (${x.toAmt.toLocaleString()} ${x.toCur})</span>
+              <span class="ml-1" style="color:var(--text-muted)">· 匯率 ${(x.rate || 0).toFixed(decimals)}</span>
+              ${x.note ? `<div class="text-[11px] mt-0.5" style="color:var(--text-muted)">備註：${x.note}</div>` : ''}
+            </div>
+            <div class="flex gap-1.5 shrink-0 ml-2">
+              <button onclick="openFxEdit('${x.id}')" class="btn text-xs px-2 py-0.5" style="color:var(--text-muted)">編</button>
+              <button onclick="deleteFxExchange('${x.id}')" class="btn text-xs px-2 py-0.5" style="color:var(--text-muted)">刪</button>
+            </div>
           </div>
-          <button onclick="deleteFxExchange('${x.id}')" class="btn text-xs px-2 py-0.5" style="color:var(--text-muted)">刪</button>
-        </div>
-      `).join('') || '<p class="text-center py-2" style="color:var(--text-muted)">尚無換匯紀錄</p>';
+        `;
+      }).join('') || '<p class="text-center py-2" style="color:var(--text-muted)">尚無換匯紀錄</p>';
     }
 
     // ==================== 帳戶管理與手動拖曳排序 ====================
@@ -1805,8 +2034,10 @@
 
     function openAccountEditModal() {
       renderAccountEditList();
-      document.getElementById('jpyCashInput').value = data.jpyCash || 0;
-      document.getElementById('usdCashInput').value = data.usdCash || 0;
+      FX_CURRENCIES.forEach(c => {
+        const inp = document.getElementById('fxCashInput_' + c);
+        if (inp) inp.value = (data.fxCash && data.fxCash[c]) || 0;
+      });
       document.getElementById('newAccountName').value = '';
       openModal('accountModal');
     }
@@ -1898,8 +2129,11 @@
         newOrder.push(accName);
       });
       data.accountList = newOrder;
-      data.jpyCash = parseFloat(document.getElementById('jpyCashInput').value) || 0;
-      data.usdCash = parseFloat(document.getElementById('usdCashInput').value) || 0;
+      if (!data.fxCash) data.fxCash = {};
+      FX_CURRENCIES.forEach(c => {
+        const inp = document.getElementById('fxCashInput_' + c);
+        if (inp) data.fxCash[c] = parseFloat(inp.value) || 0;
+      });
       saveData();
       closeModal('accountModal');
       populateAllAccountSelects();
@@ -1908,15 +2142,19 @@
 
     async function updateFxRates() {
       const status = document.getElementById('apiStatus');
-      status.textContent = '更新日幣與美金匯率中…';
+      status.textContent = '更新外幣匯率中…';
       try {
         const res = await fetch('https://open.er-api.com/v6/latest/USD');
         const json = await res.json();
         if (json && json.rates && json.rates.TWD) {
-          data.usdRate = json.rates.TWD;
-          if (json.rates.JPY) data.jpyRate = json.rates.TWD / json.rates.JPY;
+          const usdToTwd = json.rates.TWD;
+          if (!data.fxRates) data.fxRates = {};
+          data.fxRates.USD = usdToTwd;
+          ['JPY', 'CNY', 'KRW', 'EUR', 'GBP'].forEach(c => {
+            if (json.rates[c]) data.fxRates[c] = usdToTwd / json.rates[c];
+          });
           saveData();
-          status.textContent = `匯率更新成功：USD ${data.usdRate.toFixed(2)} / JPY ${data.jpyRate.toFixed(4)}`;
+          status.textContent = `匯率更新成功：USD ${data.fxRates.USD.toFixed(2)} / JPY ${data.fxRates.JPY.toFixed(4)} / CNY ${data.fxRates.CNY.toFixed(2)}`;
           renderDashboard();
           renderInvestments();
           return;
@@ -2032,7 +2270,7 @@
       alert('已記錄奉獻 $' + amount.toLocaleString());
     }
 
-    // ==================== 核心精算：由交易流水推算庫存（支援重新買回新回合與手動覆寫） ====================
+    // ==================== 核心精算：由交易流水推算庫存 ====================
     function computePortfolioFromTransactions() {
       const stocks = {};
       const funds = {};
@@ -2060,7 +2298,7 @@
             };
           }
           if (t.type === '買入') {
-            if (funds[sym].units === 0) funds[sym].costTotal = 0; // 若已結清後重新買回，開啟全新成本回合
+            if (funds[sym].units === 0) funds[sym].costTotal = 0;
             funds[sym].units += shares;
             funds[sym].costTotal += cost;
             funds[sym].totalBoughtCost += cost;
@@ -2075,7 +2313,6 @@
             funds[sym].totalDividend += cost;
           }
         } else {
-          // 股票 / ETF
           if (!stocks[sym]) {
             stocks[sym] = {
               symbol: sym, shares: 0, costTotal: 0, latestPrice: t.price || 0,
@@ -2084,7 +2321,7 @@
             };
           }
           if (t.type === '買入') {
-            if (stocks[sym].shares === 0) stocks[sym].costTotal = 0; // 若已結清後重新買回，開啟全新成本回合
+            if (stocks[sym].shares === 0) stocks[sym].costTotal = 0;
             stocks[sym].shares += shares;
             stocks[sym].costTotal += cost;
             stocks[sym].totalBoughtCost += cost;
@@ -2104,7 +2341,6 @@
         }
       });
 
-      // 載入股票手動強制覆寫
       Object.keys(data.stockCustomOverrides || {}).forEach(sym => {
         if (ignored.has(sym)) return;
         const o = data.stockCustomOverrides[sym];
@@ -2119,7 +2355,6 @@
         if (o.price !== undefined) stocks[sym].latestPrice = o.price;
       });
 
-      // 載入基金手動強制覆寫
       Object.keys(data.fundCustomOverrides || {}).forEach(name => {
         if (ignored.has(name)) return;
         const o = data.fundCustomOverrides[name];
@@ -2137,10 +2372,21 @@
       return { stocks, funds };
     }
 
+    function getCurrencyRate(cur, customRate) {
+      if (cur === 'TWD') return 1;
+      if (customRate !== undefined) return customRate;
+      return (data.fxRates && data.fxRates[cur]) || DEFAULT_DATA.fxRates[cur] || 1;
+    }
+
     function renderDashboard() {
-      let cash = (data.accountList || DEFAULT_ACCOUNTS).reduce((s, a) => s + (parseFloat(data.accounts[a]) || 0), 0);
-      cash += (data.jpyCash || 0) * (data.jpyRate || 0.22);
-      cash += (data.usdCash || 0) * (data.usdRate || 32.0);
+      const twdCash = (data.accountList || DEFAULT_ACCOUNTS).reduce((s, a) => s + (parseFloat(data.accounts[a]) || 0), 0);
+      let fxTotalTwd = 0;
+      FX_CURRENCIES.forEach(c => {
+        const amt = (data.fxCash && data.fxCash[c]) || 0;
+        const rate = getCurrencyRate(c);
+        fxTotalTwd += amt * rate;
+      });
+      const totalCash = twdCash + fxTotalTwd;
 
       const computed = computePortfolioFromTransactions();
       let invest = 0;
@@ -2152,17 +2398,24 @@
 
       Object.values(computed.funds).forEach(f => {
         const price = data.fundPrices[f.name] !== undefined ? data.fundPrices[f.name] : (f.latestPrice || 0);
-        let rate = 1;
-        if (f.currency === 'USD') rate = data.fundRates[f.name] || data.usdRate || 32.0;
-        else if (f.currency === 'JPY') rate = data.fundRates[f.name] || data.jpyRate || 0.22;
+        const rate = getCurrencyRate(f.currency, data.fundRates[f.name]);
         invest += f.units * price * rate;
       });
 
-      document.getElementById('netWorth').textContent = formatMoney(cash + invest);
-      document.getElementById('totalCash').textContent = formatMoney(cash);
+      const cm = currentMonthStr();
+      const inc = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount > 0 && t.category !== '轉帳/換匯').reduce((s, t) => s + t.amount, 0);
+      const exp = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount < 0 && t.category !== '轉帳/換匯').reduce((s, t) => s + Math.abs(t.amount), 0);
+      const netFlow = inc - exp;
+
+      document.getElementById('netWorth').textContent = formatMoney(totalCash + invest);
+      document.getElementById('totalTwdCash').textContent = formatMoney(twdCash);
+      document.getElementById('twdMonthlyFlowDisplay').textContent = (netFlow >= 0 ? '+' : '') + formatMoney(netFlow);
+      document.getElementById('totalCash').textContent = formatMoney(totalCash);
       document.getElementById('totalInvest').textContent = formatMoney(invest);
-      document.getElementById('jpyRateDisplay').textContent = (data.jpyRate || 0.22).toFixed(4);
-      document.getElementById('usdRateDisplay').textContent = (data.usdRate || 32.0).toFixed(2);
+
+      document.getElementById('usdRateDisplay').textContent = getCurrencyRate('USD').toFixed(2);
+      document.getElementById('jpyRateDisplay').textContent = getCurrencyRate('JPY').toFixed(4);
+      document.getElementById('cnyRateDisplay').textContent = getCurrencyRate('CNY').toFixed(2);
 
       if (document.activeElement !== document.getElementById('monthlyBudgetInput')) {
         document.getElementById('monthlyBudgetInput').value = data.monthlyBudget || '';
@@ -2174,9 +2427,6 @@
       document.getElementById('monthSpent').textContent = formatMoney(spent);
       document.getElementById('monthRemain').textContent = formatMoney(remain);
 
-      const cm = currentMonthStr();
-      const inc = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount > 0 && t.category !== '轉帳/換匯').reduce((s, t) => s + t.amount, 0);
-      const exp = data.transactions.filter(t => t.date && t.date.startsWith(cm) && t.amount < 0 && t.category !== '轉帳/換匯').reduce((s, t) => s + Math.abs(t.amount), 0);
       document.getElementById('dashMonthIncome').textContent = formatMoney(inc);
       document.getElementById('dashMonthExpense').textContent = formatMoney(exp);
 
@@ -2193,22 +2443,25 @@
       }
 
       const accDiv = document.getElementById('accountsOverview');
-      accDiv.innerHTML = (data.accountList || DEFAULT_ACCOUNTS).map(name => {
+      const twdCards = (data.accountList || DEFAULT_ACCOUNTS).map(name => {
         const bal = data.accounts[name] || 0;
         return `
           <div class="pill p-2.5 text-center">
             <p class="text-[11px]" style="color:var(--text-muted)">${name}</p>
             <p class="heavy text-xs tabular mt-0.5">${formatMoney(bal)}</p>
           </div>`;
-      }).join('') + `
-        <div class="pill p-2.5 text-center">
-          <p class="text-[11px]" style="color:var(--text-muted)">日幣現金</p>
-          <p class="heavy text-xs tabular mt-0.5">¥${(data.jpyCash || 0).toLocaleString()}</p>
-        </div>
-        <div class="pill p-2.5 text-center">
-          <p class="text-[11px]" style="color:var(--text-muted)">美金現金</p>
-          <p class="heavy text-xs tabular mt-0.5">$${(data.usdCash || 0).toLocaleString()}</p>
-        </div>`;
+      }).join('');
+
+      const fxCards = FX_CURRENCIES.filter(c => c === 'USD' || c === 'JPY' || ((data.fxCash && data.fxCash[c]) || 0) > 0).map(c => {
+        const bal = (data.fxCash && data.fxCash[c]) || 0;
+        return `
+          <div class="pill p-2.5 text-center">
+            <p class="text-[11px]" style="color:var(--text-muted)">${FX_NAMES[c]} (${c})</p>
+            <p class="heavy text-xs tabular mt-0.5">${FX_SYMBOLS[c]}${bal.toLocaleString()}</p>
+          </div>`;
+      }).join('');
+
+      accDiv.innerHTML = twdCards + fxCards;
     }
 
     // ==================== 信封袋 ====================
@@ -2569,9 +2822,7 @@
 
     function updateFundLiveCurrency(name, val) {
       data.fundCurrencies[name] = val;
-      if (val === 'TWD') data.fundRates[name] = 1;
-      else if (val === 'USD') data.fundRates[name] = data.usdRate || 32.0;
-      else if (val === 'JPY') data.fundRates[name] = data.jpyRate || 0.22;
+      data.fundRates[name] = getCurrencyRate(val);
       saveData();
       renderInvestments();
       renderDashboard();
@@ -2579,9 +2830,8 @@
 
     function onEditModalCurrencyChange(val) {
       const rateInput = document.getElementById('editHoldingRate');
-      if (val === 'TWD') rateInput.value = 1;
-      else if (val === 'USD') rateInput.value = (data.usdRate || 32.0).toFixed(2);
-      else if (val === 'JPY') rateInput.value = (data.jpyRate || 0.22).toFixed(4);
+      const r = getCurrencyRate(val);
+      rateInput.value = (val === 'JPY' || val === 'KRW') ? r.toFixed(4) : r.toFixed(2);
     }
 
     function openHoldingEdit(type, sym) {
@@ -2617,9 +2867,7 @@
         const cur = data.fundCurrencies[sym] || 'USD';
         const avgCost = f.units > 0 ? (f.costTotal / f.units) : 0;
         const curPrice = data.fundPrices[sym] !== undefined ? data.fundPrices[sym] : (f.latestPrice || 0);
-        let curRate = 1;
-        if (cur === 'USD') curRate = data.fundRates[sym] || data.usdRate || 32.0;
-        else if (cur === 'JPY') curRate = data.fundRates[sym] || data.jpyRate || 0.22;
+        const curRate = getCurrencyRate(cur, data.fundRates[sym]);
 
         document.getElementById('editHoldingSharesLabel').textContent = '持有股數 (單位數)';
         document.getElementById('editHoldingCostLabel').textContent = '均價成本 (原幣)';
@@ -2734,7 +2982,7 @@
             <td class="text-right">${formatPLHtml(pl)}</td>
             <td class="tabular text-right">
               <div class="flex justify-end items-center gap-1">
-                <input type="number" step="any" class="input py-1 px-2 text-xs w-16 text-right tabular" value="${yldDisplay}" placeholder="--" onchange="updateStockLiveYield('${s.symbol}', this.value)" />
+                <input type="number" step="any" class="input py-1 px-2 text-xs w-16 text-right tabular" value="${yldDisplay}" onchange="updateStockLiveYield('${s.symbol}', this.value)" />
                 <span>%</span>
               </div>
             </td>
@@ -2747,7 +2995,6 @@
       }).join('') || '<tr><td colspan="8" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無股票交易資料</td></tr>';
       document.getElementById('stocksTotalValue').textContent = formatMoney(stocksTotal);
 
-      // 基金推算渲染
       let fundsTotal = 0;
       let fundList = Object.values(computed.funds);
       if (!data.showClosedFunds) fundList = fundList.filter(f => f.units > 0);
@@ -2759,10 +3006,7 @@
         const isClosed = f.units === 0;
         const cur = f.currency || 'USD';
         const price = data.fundPrices[f.name] !== undefined ? data.fundPrices[f.name] : (f.latestPrice || 0);
-        let defaultRate = 1;
-        if (cur === 'USD') defaultRate = data.usdRate || 32.0;
-        else if (cur === 'JPY') defaultRate = data.jpyRate || 0.22;
-        const rate = data.fundRates[f.name] !== undefined ? data.fundRates[f.name] : defaultRate;
+        const rate = getCurrencyRate(cur, data.fundRates[f.name]);
 
         const avgCost = f.units > 0 ? (f.costTotal / f.units) : 0;
         const mv = f.units * price * rate;
@@ -2783,6 +3027,10 @@
                 <option value="TWD" ${cur === 'TWD' ? 'selected' : ''}>TWD</option>
                 <option value="USD" ${cur === 'USD' ? 'selected' : ''}>USD</option>
                 <option value="JPY" ${cur === 'JPY' ? 'selected' : ''}>JPY</option>
+                <option value="EUR" ${cur === 'EUR' ? 'selected' : ''}>EUR</option>
+                <option value="CNY" ${cur === 'CNY' ? 'selected' : ''}>CNY</option>
+                <option value="GBP" ${cur === 'GBP' ? 'selected' : ''}>GBP</option>
+                <option value="KRW" ${cur === 'KRW' ? 'selected' : ''}>KRW</option>
               </select>
             </td>
             <td class="tabular text-right">${f.units}</td>
@@ -2930,7 +3178,6 @@
 
       if (!symbol) return alert('請輸入標的名稱');
 
-      // 若之前是手動覆寫為 0 或被隱藏，新交易自動解除忽略並同步更新手動覆寫狀態
       if (data.ignoredHoldings) {
         data.ignoredHoldings = data.ignoredHoldings.filter(x => x !== symbol);
       }
@@ -3113,7 +3360,7 @@
       }
     }
 
-    // ==================== 專案 / 接案 / 固定 ====================
+    // ==================== 專案 / 接案 / 固定（完整修復接案連動日期） ====================
     function openProjectModal(id = null) {
       document.getElementById('projectEditId').value = id || '';
       document.getElementById('projectModalTitle').textContent = id ? '編輯專案' : '新增專案';
@@ -3183,45 +3430,86 @@
       }
       openModal('freelanceModal');
     }
+
     function saveFreelance() {
       const id = document.getElementById('freelanceEditId').value;
       const name = document.getElementById('freelanceName').value.trim();
       const execDate = document.getElementById('freelanceExecDate').value;
       const payDate = document.getElementById('freelancePayDate').value;
+      const effectiveDate = payDate || execDate || todayStr();
       const amount = parseFloat(document.getElementById('freelanceAmount').value) || 0;
       const status = document.getElementById('freelanceStatus').value;
       const account = document.getElementById('freelanceAccount').value;
       const note = document.getElementById('freelanceNote').value.trim();
       if (!name) return alert('請輸入案件名稱');
+
       if (id) {
         const f = data.freelances.find(x => x.id === id);
         if (f) {
-          if (status === '已收款' && f.status !== '已收款') {
-            data.accounts[account] = (data.accounts[account] || 0) + amount;
-            if ((payDate || todayStr()).startsWith(currentMonthStr())) {
-              data.tithePool = (data.tithePool || 0) + Math.round(amount * 0.1);
+          const linkedTx = (data.transactions || []).find(t =>
+            (f.linkedTxId && t.id === f.linkedTxId) ||
+            (t.name === f.name + '（接案收款）')
+          );
+
+          if (status === '已收款') {
+            if (f.status !== '已收款' || !linkedTx) {
+              // 新增入帳
+              const newTxId = uid();
+              f.linkedTxId = newTxId;
+              data.accounts[account] = (data.accounts[account] || 0) + amount;
+              if (effectiveDate.startsWith(currentMonthStr())) {
+                data.tithePool = (data.tithePool || 0) + Math.round(amount * 0.1);
+              }
+              data.transactions.push({
+                id: newTxId, date: effectiveDate, name: name + '（接案收款）',
+                amount, category: '收', account, necessary: 'necessary', note, envelopeId: '', projectId: '', receipt: ''
+              });
+            } else if (linkedTx) {
+              // 原本已收款，同步更新對應記帳紀錄的日期、金額、帳戶與名稱
+              data.accounts[linkedTx.account] = (data.accounts[linkedTx.account] || 0) - linkedTx.amount;
+              data.accounts[account] = (data.accounts[account] || 0) + amount;
+              linkedTx.date = effectiveDate;
+              linkedTx.name = name + '（接案收款）';
+              linkedTx.amount = amount;
+              linkedTx.account = account;
+              linkedTx.note = note;
+              f.linkedTxId = linkedTx.id;
             }
-            data.transactions.push({ id: uid(), date: payDate || todayStr(), name: name + '（接案收款）', amount, category: '收', account, necessary: 'necessary', note, envelopeId: '', projectId: '', receipt: '' });
+          } else if (f.status === '已收款' && linkedTx) {
+            // 從已收款改回未收款，回滾帳務
+            data.accounts[linkedTx.account] = (data.accounts[linkedTx.account] || 0) - linkedTx.amount;
+            data.transactions = data.transactions.filter(t => t.id !== linkedTx.id);
+            f.linkedTxId = '';
           }
+
           f.name = name; f.execDate = execDate; f.payDate = payDate; f.amount = amount; f.status = status; f.account = account; f.note = note;
         }
       } else {
-        data.freelances.push({ id: uid(), name, execDate, payDate, amount, status, account, note });
+        const newTxId = status === '已收款' ? uid() : '';
+        data.freelances.push({ id: uid(), name, execDate, payDate, amount, status, account, note, linkedTxId: newTxId });
         if (status === '已收款') {
           data.accounts[account] = (data.accounts[account] || 0) + amount;
-          if ((payDate || todayStr()).startsWith(currentMonthStr())) {
+          if (effectiveDate.startsWith(currentMonthStr())) {
             data.tithePool = (data.tithePool || 0) + Math.round(amount * 0.1);
           }
-          data.transactions.push({ id: uid(), date: payDate || todayStr(), name: name + '（接案收款）', amount, category: '收', account, necessary: 'necessary', note, envelopeId: '', projectId: '', receipt: '' });
+          data.transactions.push({
+            id: newTxId, date: effectiveDate, name: name + '（接案收款）',
+            amount, category: '收', account, necessary: 'necessary', note, envelopeId: '', projectId: '', receipt: ''
+          });
         }
       }
       saveData();
       closeModal('freelanceModal');
       renderFixedSection();
       renderDashboard();
+      renderTransactions();
     }
+
     function deleteFreelance(id) {
-      data.freelances = data.freelances.filter(f => f.id !== id);
+      const f = data.freelances.find(x => x.id === id);
+      if (!f) return;
+      if (!confirm(`確定刪除接案「${f.name}」？`)) return;
+      data.freelances = data.freelances.filter(x => x.id !== id);
       saveData();
       renderFixedSection();
     }
@@ -3338,8 +3626,8 @@
               <span class="semibold">${f.name}</span>
               <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
               <span class="badge badge-nec ml-2">${f.status}</span>
-              <div class="text-[11px] mt-0.5" style="color:var(--text-muted)">
-                執行: ${f.execDate || '--'} · 收款: ${f.payDate || '--'}
+              <div class="text-[11px] mt-0.5 tabular" style="color:var(--text-muted)">
+                執行: ${f.execDate || '--'} · 收款: ${f.payDate || f.execDate || '--'}
               </div>
             </div>
             <div class="flex gap-2">
@@ -3351,7 +3639,26 @@
       }
     }
 
-    // ==================== 統計圖表（莫蘭迪低飽和度高辨識配色） ====================
+    // ==================== 統計圖表（5種色調切換：跳色灰階 + 組合1~4） ====================
+    const CHART_PALETTES = {
+      // 跳色灰階：明度大幅交錯（深黑 ➔ 淺灰 ➔ 中深灰 ➔ 銀白 ➔ 中灰 ➔ 暖淺灰 ➔ 石墨 ➔ 霧灰），相鄰切片絕不相近
+      gray: ['#222225', '#C8C8CE', '#525258', '#EAEAEF', '#7A7A82', '#B0B0B8', '#38383D', '#DCDCE2', '#64646B', '#96969E'],
+      // 組合 1：#B5C0D0 #CCD3CA #F5E8DD #EED3D9（搭配延伸跳色）
+      p1: ['#B5C0D0', '#EED3D9', '#CCD3CA', '#F5E8DD', '#8392A5', '#C7A9B0', '#96A393', '#D6C2B2'],
+      // 組合 2：#EAC7C7 #A0C3D2 #F7F5EB #EAE0DA（將兩淺色錯開不緊鄰）
+      p2: ['#EAC7C7', '#A0C3D2', '#F7F5EB', '#B89E97', '#EAE0DA', '#7699A8', '#C9A3A3', '#8E857E'],
+      // 組合 3：#F5EFE6 #E8DFCA #AEBDCA #7895B2（深淺交錯排列）
+      p3: ['#7895B2', '#F5EFE6', '#AEBDCA', '#E8DFCA', '#55718C', '#C7B9A1', '#8FA2B3', '#B0A48E'],
+      // 組合 4：#F0E5CF #F7F6F2 #C8C6C6 #4B6587（深丹寧藍與暖米灰交錯）
+      p4: ['#4B6587', '#F0E5CF', '#C8C6C6', '#F7F6F2', '#738BA8', '#D1C2A5', '#8C8A8A', '#2F435E']
+    };
+
+    function setChartPalette(key) {
+      data.chartPalette = key;
+      saveData();
+      renderCharts();
+    }
+
     function setChartTimeRange(range) {
       data.chartTimeRange = range;
       ['chartRangeMonth', 'chartRangeYear', 'chartRangeAll'].forEach(id => {
@@ -3376,6 +3683,17 @@
       const cm = currentMonthStr();
       const cy = new Date().getFullYear().toString();
       const range = data.chartTimeRange || 'month';
+      const pKey = data.chartPalette || 'gray';
+
+      ['gray', 'p1', 'p2', 'p3', 'p4'].forEach(k => {
+        const btn = document.getElementById('paletteBtn_' + k);
+        if (!btn) return;
+        if (k === pKey) {
+          btn.className = 'btn text-xs px-2.5 py-1 bg-white dark:bg-zinc-700 shadow-sm';
+        } else {
+          btn.className = 'btn text-xs px-2.5 py-1 bg-transparent border-none shadow-none';
+        }
+      });
 
       document.getElementById('chartsIncludeInvestToggle').classList.toggle('on', !!data.chartsIncludeInvest);
 
@@ -3414,19 +3732,7 @@
       const isDark = document.documentElement.classList.contains('dark');
       const textColor = isDark ? '#98989f' : '#1c1c1e';
       const borderColor = isDark ? '#1c1c1e' : '#ffffff';
-
-      const morandiPalette = [
-        '#5c6b73', // 霧灰藍
-        '#849974', // 鼠尾草綠
-        '#d4a373', // 暖駝色
-        '#9e7b85', // 豆沙藕紫
-        '#9db4c0', // 冰川灰藍
-        '#7a6c5d', // 摩卡灰褐
-        '#b5838d', // 煙燻玫瑰
-        '#6d597a', // 暮光深紫
-        '#a39a92', // 亞麻暖灰
-        '#4a5759'  // 石墨青
-      ];
+      const activePalette = CHART_PALETTES[pKey] || CHART_PALETTES.gray;
 
       categoryChart = new Chart(document.getElementById('categoryPieChart').getContext('2d'), {
         type: 'doughnut',
@@ -3434,7 +3740,7 @@
           labels: Object.keys(catMap).length ? Object.keys(catMap) : ['無支出'],
           datasets: [{
             data: Object.values(catMap).length ? Object.values(catMap) : [1],
-            backgroundColor: morandiPalette,
+            backgroundColor: activePalette,
             borderColor: borderColor,
             borderWidth: 2
           }]
@@ -3451,7 +3757,7 @@
           labels: Object.keys(accMap).length ? Object.keys(accMap) : ['無支出'],
           datasets: [{
             data: Object.values(accMap).length ? Object.values(accMap) : [1],
-            backgroundColor: morandiPalette,
+            backgroundColor: activePalette,
             borderColor: borderColor,
             borderWidth: 2
           }]
@@ -3468,7 +3774,7 @@
           labels: ['必要', '非必要'],
           datasets: [{
             data: [nec || 0.1, non || 0.1],
-            backgroundColor: ['#5c6b73', '#c2b2b4'],
+            backgroundColor: [activePalette[0], activePalette[1]],
             borderColor: borderColor,
             borderWidth: 2
           }]
@@ -3541,8 +3847,8 @@
               }
             });
 
-            if (incoming.jpyRate) data.jpyRate = incoming.jpyRate;
-            if (incoming.usdRate) data.usdRate = incoming.usdRate;
+            if (incoming.fxRates) data.fxRates = Object.assign({}, data.fxRates, incoming.fxRates);
+            if (incoming.fxCash) data.fxCash = Object.assign({}, data.fxCash, incoming.fxCash);
 
             saveData();
             populateAllAccountSelects();
@@ -3550,8 +3856,9 @@
             switchTab('dashboard');
             alert(`🎉 智慧合併完成！\n新增 ${txAdded} 筆日常帳務、${stxAdded} 筆股票交易，手機與電腦資料已融合！`);
           } else {
-            data = incoming;
+            data = Object.assign({}, DEFAULT_DATA, incoming);
             saveData();
+            loadData();
             populateAllAccountSelects();
             populateProjectSelect();
             switchTab('dashboard');
