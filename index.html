@@ -375,7 +375,7 @@
               <div class="absolute right-3 pointer-events-none text-[var(--text-muted)]">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
-                  <line x1="16" x2="16" y1="2" y2="6"/>
+                  <line x1="16" x2="16" y1="2" x2="6"/>
                   <line x1="8" x2="8" y1="2" y2="6"/>
                   <line x1="3" x2="21" y1="10" y2="10"/>
                 </svg>
@@ -384,11 +384,11 @@
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">項目名稱</label>
-            <input type="text" id="txName" class="input mt-1" placeholder="午餐、轉帳..." />
+            <input type="text" id="txName" class="input mt-1" />
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">金額（支援 -168+125）</label>
-            <input type="text" id="txAmount" class="input mt-1 tabular" placeholder="-500 或 100000" />
+            <input type="text" id="txAmount" class="input mt-1 tabular" />
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">分類</label>
@@ -399,7 +399,7 @@
               <option value="保">保</option><option value="禮">禮</option><option value="雜">雜</option>
               <option value="轉帳/換匯">轉帳/換匯</option>
               <option value="投">投</option><option value="息">息</option><option value="折">折</option>
-              <option value="收">收</option><option value="什一">什一</option>
+              <option value="收">收（案件/薪水）</option><option value="什一">什一</option>
             </select>
           </div>
           <div>
@@ -436,7 +436,7 @@
 
           <div class="sm:col-span-2 md:col-span-3">
             <label class="text-xs" style="color:var(--text-muted)">備忘註記</label>
-            <input type="text" id="txNote" class="input mt-1" placeholder="大額細節、保固說明或備忘" />
+            <input type="text" id="txNote" class="input mt-1" />
           </div>
         </div>
         <button onclick="addTransaction()" class="btn-primary btn w-full mt-4 py-3">新增帳務</button>
@@ -507,7 +507,7 @@
       </div>
     </section>
 
-    <!-- 投資（庫存完全由交易流水即時推算） -->
+    <!-- 投資（庫存完全由交易流水即時推算，具備編/刪與表格修改） -->
     <section id="tab-investments" class="tab-content space-y-4">
       <div class="card p-5 space-y-3" id="dividendGoalSection">
         <div class="flex items-center justify-between">
@@ -532,7 +532,7 @@
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
           <div>
             <h2 class="semibold">ETF / 股票（即時由流水帳推算）</h2>
-            <p class="text-[11px]" style="color:var(--text-muted)">現價欄位可直接點擊修改</p>
+            <p class="text-[11px]" style="color:var(--text-muted)">現價與殖利率可直接在欄位修改</p>
           </div>
           <div class="flex items-center gap-3">
             <label class="flex items-center gap-1.5 text-xs cursor-pointer select-none" style="color:var(--text-muted)">
@@ -544,7 +544,7 @@
           <table class="w-full">
             <thead>
               <tr class="whitespace-nowrap">
-                <th>標的</th><th>持有股數</th><th>均價成本</th><th>現價 (可改)</th><th>台幣市值</th><th>參考損益</th><th>殖利率%</th>
+                <th>標的</th><th>持有股數</th><th>均價成本</th><th>現價 (可改)</th><th>台幣市值</th><th>參考損益</th><th>殖利率% (可改)</th><th class="text-center">操作</th>
               </tr>
             </thead>
             <tbody id="stocksTableBody"></tbody>
@@ -557,14 +557,14 @@
         <div class="flex items-center justify-between mb-3">
           <div>
             <h2 class="semibold">基金（支援日幣/美元/台幣獨立幣別）</h2>
-            <p class="text-[11px]" style="color:var(--text-muted)">原幣淨值與匯率可直接在欄位修改</p>
+            <p class="text-[11px]" style="color:var(--text-muted)">原幣淨值、幣別與匯率可直接在欄位修改</p>
           </div>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full">
             <thead>
               <tr class="whitespace-nowrap">
-                <th>標的</th><th>幣別</th><th>持有單位</th><th>原幣淨值 (可改)</th><th>匯率 (可改)</th><th>台幣市值</th>
+                <th>標的</th><th>幣別</th><th>持有單位</th><th>原幣淨值 (可改)</th><th>匯率 (可改)</th><th>台幣市值</th><th class="text-center">操作</th>
               </tr>
             </thead>
             <tbody id="fundsTableBody"></tbody>
@@ -574,7 +574,7 @@
       </div>
     </section>
 
-    <!-- 股票 / 基金 交易 -->
+    <!-- 股票 / 基金 交易（已移除折讓，手續費算入買入成本） -->
     <section id="tab-stockTx" class="tab-content space-y-4">
       <div class="card p-5">
         <h2 class="semibold mb-3">新增投資交易</h2>
@@ -597,13 +597,13 @@
           <div>
             <label class="text-xs" style="color:var(--text-muted)">交易類別</label>
             <select id="stxType" class="input mt-1" onchange="onStxTypeChange()">
-              <option value="買入">買入</option><option value="賣出">賣出</option>
-              <option value="配息">配息</option><option value="折讓">折讓</option>
+              <option value="買入">買入</option>
+              <option value="賣出">賣出</option>
+              <option value="配息">配息</option>
             </select>
           </div>
           <div>
             <label class="text-xs" style="color:var(--text-muted)">標的代號 / 名稱</label>
-            <!-- 依要求清除提示文字 -->
             <input type="text" id="stxSymbol" class="input mt-1" />
           </div>
           <div>
@@ -619,7 +619,7 @@
             <input type="number" id="stxFee" class="input mt-1 tabular" step="any" value="1" oninput="calcStockInputs()" />
           </div>
           <div>
-            <label class="text-xs" style="color:var(--text-muted)">證交稅</label>
+            <label class="text-xs" style="color:var(--text-muted)">證交稅（基金為 0）</label>
             <input type="number" id="stxTax" class="input mt-1 tabular" step="any" value="0" oninput="calcStockInputs()" />
           </div>
           <div>
@@ -627,13 +627,11 @@
             <input type="number" id="stxTotal" class="input mt-1 tabular" step="any" />
           </div>
           <div class="sm:col-span-2">
-            <!-- 依要求簡化標籤文字並移除 placeholder -->
-            <label class="text-xs" style="color:var(--text-muted)">實扣台幣</label>
+            <label class="text-xs" style="color:var(--text-muted)">實扣 / 實收台幣</label>
             <input type="number" id="stxTotalCost" class="input mt-1 tabular font-semibold" step="any" />
           </div>
           <div class="sm:col-span-2 md:col-span-4">
             <label class="text-xs" style="color:var(--text-muted)">備註</label>
-            <!-- 依要求移除 placeholder -->
             <input type="text" id="stxNote" class="input mt-1" />
           </div>
         </div>
@@ -659,7 +657,6 @@
               <option value="買入">買入</option>
               <option value="賣出">賣出</option>
               <option value="配息">配息</option>
-              <option value="折讓">折讓</option>
             </select>
           </div>
           <div>
@@ -828,6 +825,37 @@
   </nav>
 
   <!-- ==================== 彈窗 MODALS ==================== -->
+  <!-- 標的設定編輯 Modal (修改殖利率、幣別) -->
+  <div id="holdingEditModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4">編輯標的設定</h3>
+      <input type="hidden" id="editHoldingSymbol" />
+      <input type="hidden" id="editHoldingType" />
+      <div class="space-y-3 text-xs">
+        <div>
+          <label style="color:var(--text-muted)">標的代號 / 名稱</label>
+          <input type="text" id="editHoldingNameDisplay" class="input mt-1 bg-zinc-100 dark:bg-zinc-800" disabled />
+        </div>
+        <div id="holdingYieldField">
+          <label style="color:var(--text-muted)">預估年化殖利率 %</label>
+          <input type="number" id="editHoldingYield" class="input mt-1 tabular" step="any" />
+        </div>
+        <div id="holdingCurrencyField">
+          <label style="color:var(--text-muted)">計價幣別</label>
+          <select id="editHoldingCurrency" class="input mt-1">
+            <option value="TWD">TWD (台幣)</option>
+            <option value="USD">USD (美元)</option>
+            <option value="JPY">JPY (日幣)</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveHoldingEdit()" class="btn-primary btn flex-1 py-2.5">儲存</button>
+        <button onclick="closeModal('holdingEditModal')" class="btn flex-1 py-2.5">取消</button>
+      </div>
+    </div>
+  </div>
+
   <!-- 股票交易編輯 Modal -->
   <div id="stxEditModal" class="modal-overlay hidden">
     <div class="modal">
@@ -853,8 +881,9 @@
           <div>
             <label style="color:var(--text-muted)">交易類別</label>
             <select id="editStxType" class="input mt-1" onchange="calcEditStockInputs()">
-              <option value="買入">買入</option><option value="賣出">賣出</option>
-              <option value="配息">配息</option><option value="折讓">折讓</option>
+              <option value="買入">買入</option>
+              <option value="賣出">賣出</option>
+              <option value="配息">配息</option>
             </select>
           </div>
         </div>
@@ -888,7 +917,7 @@
             <input type="number" id="editStxTotal" class="input mt-1 tabular" step="any" />
           </div>
           <div>
-            <label style="color:var(--text-muted)">實扣台幣</label>
+            <label style="color:var(--text-muted)">實扣 / 實收台幣</label>
             <input type="number" id="editStxTotalCost" class="input mt-1 tabular font-semibold" step="any" />
           </div>
         </div>
@@ -997,7 +1026,7 @@
         </div>
         <div>
           <label style="color:var(--text-muted)">支出金額</label>
-          <input type="number" id="fxFromAmount" class="input mt-1 tabular text-xs" placeholder="例如 22000" oninput="calcFxRatePreview()" />
+          <input type="number" id="fxFromAmount" class="input mt-1 tabular text-xs" oninput="calcFxRatePreview()" />
         </div>
 
         <div class="grid grid-cols-2 gap-2 pt-1 border-t border-zinc-200 dark:border-zinc-800">
@@ -1018,7 +1047,7 @@
         </div>
         <div>
           <label style="color:var(--text-muted)">換得外幣金額</label>
-          <input type="number" id="fxToAmount" class="input mt-1 tabular text-xs" placeholder="例如 100000" oninput="calcFxRatePreview()" />
+          <input type="number" id="fxToAmount" class="input mt-1 tabular text-xs" oninput="calcFxRatePreview()" />
         </div>
 
         <div class="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-center" style="background:var(--bg)">
@@ -1028,7 +1057,7 @@
 
         <div>
           <label style="color:var(--text-muted)">備註</label>
-          <input type="text" id="fxNote" class="input mt-1 text-xs" placeholder="例如：日本旅遊、美金定存" />
+          <input type="text" id="fxNote" class="input mt-1 text-xs" />
         </div>
 
         <button onclick="saveFxExchange()" class="btn-primary btn w-full mt-2">儲存換匯</button>
@@ -1086,7 +1115,7 @@
       <div class="mt-3">
         <label class="text-xs" style="color:var(--text-muted)">新增帳戶名稱</label>
         <div class="flex gap-2 mt-1">
-          <input type="text" id="newAccountName" class="input text-xs" placeholder="例如：國泰、街口" />
+          <input type="text" id="newAccountName" class="input text-xs" />
           <button onclick="addNewAccount()" class="btn-primary btn text-xs px-4 whitespace-nowrap">新增</button>
         </div>
       </div>
@@ -1105,7 +1134,7 @@
       <div class="space-y-3">
         <div>
           <label class="text-xs" style="color:var(--text-muted)">信封名稱</label>
-          <input type="text" id="envelopeName" class="input mt-1" placeholder="飲食、行、美、娛樂..." />
+          <input type="text" id="envelopeName" class="input mt-1" />
         </div>
         <div>
           <label class="text-xs" style="color:var(--text-muted)">每月預算</label>
@@ -1137,7 +1166,7 @@
       <div class="space-y-2 text-xs">
         <div>
           <label style="color:var(--text-muted)">專案名稱</label>
-          <input type="text" id="projectName" class="input mt-1" placeholder="日本旅遊、婚禮..." />
+          <input type="text" id="projectName" class="input mt-1" />
         </div>
         <div>
           <label style="color:var(--text-muted)">專案總預算</label>
@@ -1170,7 +1199,7 @@
       <div class="space-y-2 text-xs">
         <div>
           <label style="color:var(--text-muted)">案件名稱</label>
-          <input type="text" id="freelanceName" class="input mt-1" placeholder="活動攝影、海報設計..." />
+          <input type="text" id="freelanceName" class="input mt-1" />
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div>
@@ -1218,7 +1247,7 @@
       <div class="space-y-2 text-xs">
         <div>
           <label style="color:var(--text-muted)">名稱</label>
-          <input type="text" id="fixedName" class="input mt-1" placeholder="軟體訂閱..." />
+          <input type="text" id="fixedName" class="input mt-1" />
         </div>
         <div>
           <label style="color:var(--text-muted)">金額（支出為負，如 -15000）</label>
@@ -1289,7 +1318,7 @@
       }
     }
 
-    const DEFAULT_ACCOUNTS = ['現金','中信','國泰','聯邦','元大','富邦莊敬','富邦仁愛','他人支付'];
+    const DEFAULT_ACCOUNTS = ['中信','國泰','聯邦','元大','富邦莊敬','富邦仁愛','現金','他人支付'];
     const DEFAULT_DATA = {
       accounts: Object.fromEntries(DEFAULT_ACCOUNTS.map(a => [a, 0])),
       accountList: [...DEFAULT_ACCOUNTS],
@@ -1305,10 +1334,12 @@
       txViewMode: 'card',
       stxViewMode: 'table',
       showClosedStocks: false,
-      stockPrices: {}, // 記錄標的最新現價
-      stockYields: {}, // 記錄殖利率
-      fundPrices: {},  // 記錄基金原幣淨值
-      fundRates: {},   // 記錄基金自訂匯率
+      stockPrices: {},
+      stockYields: {},
+      fundPrices: {},
+      fundRates: {},
+      fundCurrencies: {},
+      ignoredHoldings: [], // 記錄被手動刪除/隱藏的標的
       sectionsOpen: { fixed: true, project: true, freelance: true },
       tithePool: 0, titheDonatedThisMonth: 0, lastTitheMonth: '',
       budgetIncludeInvest: false,
@@ -1387,8 +1418,10 @@
           if (!data.stockYields) data.stockYields = {};
           if (!data.fundPrices) data.fundPrices = {};
           if (!data.fundRates) data.fundRates = {};
+          if (!data.fundCurrencies) data.fundCurrencies = {};
+          if (!data.ignoredHoldings) data.ignoredHoldings = [];
 
-          // 全面清洗歷史股票流水帳的正負號問題
+          // 清洗歷史股票流水帳正負號問題
           (data.stockTransactions || []).forEach(st => {
             if (st.shares !== undefined) st.shares = Math.abs(st.shares);
             if (st.price !== undefined) st.price = Math.abs(st.price);
@@ -1520,7 +1553,7 @@
       }
     }
 
-    // ==================== 批次匯入發票 CSV ====================
+    // ==================== 批次匯入發票 CSV (保持原樣，使用者自行手動分類) ====================
     function importInvoiceCSV(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -1943,22 +1976,26 @@
       alert('已記錄奉獻 $' + amount.toLocaleString());
     }
 
-    // ==================== 核心精算：由交易流水帳自動推算庫存 ====================
+    // ==================== 核心精算：由交易流水帳自動推算庫存 (手續費計入成本) ====================
     function computePortfolioFromTransactions() {
       const stocks = {};
       const funds = {};
+      const ignored = new Set(data.ignoredHoldings || []);
 
       const sortedTxs = [...data.stockTransactions].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
 
       sortedTxs.forEach(t => {
         const sym = (t.symbol || '').trim();
-        if (!sym) return;
+        if (!sym || ignored.has(sym)) return;
+
         const shares = Math.abs(t.shares || 0);
-        const cost = Math.abs(t.totalCost !== undefined ? t.totalCost : t.total);
+        // 買入總成本嚴格包含手續費與稅金
+        const cost = Math.abs(t.totalCost !== undefined ? t.totalCost : (t.total + (t.fee || 0) + (t.tax || 0)));
         const assetType = t.assetType || '股票';
 
         if (assetType === '基金') {
-          if (!funds[sym]) funds[sym] = { name: sym, currency: 'USD', units: 0, costTotal: 0 };
+          const cur = data.fundCurrencies[sym] || 'USD';
+          if (!funds[sym]) funds[sym] = { name: sym, currency: cur, units: 0, costTotal: 0 };
           if (t.type === '買入') {
             funds[sym].units += shares;
             funds[sym].costTotal += cost;
@@ -1973,9 +2010,8 @@
             stocks[sym].costTotal += cost;
             if (t.price) stocks[sym].latestPrice = t.price;
           } else if (t.type === '賣出') {
-            // 賣出以絕對值減除，解決買 1000 賣 1000 變 2000 股的負負得正問題
             const curShares = stocks[sym].shares;
-            const avgCost = curShares > 0 ? stocks[sym].costTotal / curShares : 0;
+            const avgCost = curShares > 0 ? (stocks[sym].costTotal / curShares) : 0;
             stocks[sym].shares = Math.max(0, curShares - shares);
             stocks[sym].costTotal = Math.max(0, stocks[sym].shares * avgCost);
           }
@@ -2000,7 +2036,9 @@
 
       Object.values(computed.funds).forEach(f => {
         const price = data.fundPrices[f.name] || 0;
-        const rate = data.fundRates[f.name] || data.usdRate || 32.0;
+        let rate = 1;
+        if (f.currency === 'USD') rate = data.fundRates[f.name] || data.usdRate || 32.0;
+        else if (f.currency === 'JPY') rate = data.fundRates[f.name] || data.jpyRate || 0.22;
         invest += f.units * price * rate;
       });
 
@@ -2373,7 +2411,7 @@
       }
     }
 
-    // ==================== 投資組合渲染與即時改價 ====================
+    // ==================== 投資組合渲染與即時改價 (含編/刪) ====================
     function toggleShowClosedStocks(checked) {
       data.showClosedStocks = checked;
       saveData();
@@ -2387,6 +2425,12 @@
       renderDashboard();
     }
 
+    function updateStockLiveYield(sym, val) {
+      data.stockYields[sym] = parseFloat(val) || 0;
+      saveData();
+      renderInvestments();
+    }
+
     function updateFundLivePrice(name, val) {
       data.fundPrices[name] = parseFloat(val) || 0;
       saveData();
@@ -2396,6 +2440,61 @@
 
     function updateFundLiveRate(name, val) {
       data.fundRates[name] = parseFloat(val) || 1;
+      saveData();
+      renderInvestments();
+      renderDashboard();
+    }
+
+    function updateFundLiveCurrency(name, val) {
+      data.fundCurrencies[name] = val;
+      if (val === 'TWD') data.fundRates[name] = 1;
+      else if (val === 'USD') data.fundRates[name] = data.usdRate || 32.0;
+      else if (val === 'JPY') data.fundRates[name] = data.jpyRate || 0.22;
+      saveData();
+      renderInvestments();
+      renderDashboard();
+    }
+
+    function openHoldingEdit(type, sym) {
+      document.getElementById('editHoldingType').value = type;
+      document.getElementById('editHoldingSymbol').value = sym;
+      document.getElementById('editHoldingNameDisplay').value = sym;
+
+      if (type === 'stock') {
+        document.getElementById('holdingYieldField').classList.remove('hidden');
+        document.getElementById('holdingCurrencyField').classList.add('hidden');
+        document.getElementById('editHoldingYield').value = data.stockYields[sym] || 6;
+      } else {
+        document.getElementById('holdingYieldField').classList.add('hidden');
+        document.getElementById('holdingCurrencyField').classList.remove('hidden');
+        document.getElementById('editHoldingCurrency').value = data.fundCurrencies[sym] || 'USD';
+      }
+      openModal('holdingEditModal');
+    }
+
+    function saveHoldingEdit() {
+      const type = document.getElementById('editHoldingType').value;
+      const sym = document.getElementById('editHoldingSymbol').value;
+
+      if (type === 'stock') {
+        data.stockYields[sym] = parseFloat(document.getElementById('editHoldingYield').value) || 0;
+      } else {
+        const cur = document.getElementById('editHoldingCurrency').value;
+        data.fundCurrencies[sym] = cur;
+        if (cur === 'TWD') data.fundRates[sym] = 1;
+        else if (cur === 'USD') data.fundRates[sym] = data.usdRate || 32.0;
+        else if (cur === 'JPY') data.fundRates[sym] = data.jpyRate || 0.22;
+      }
+      saveData();
+      closeModal('holdingEditModal');
+      renderInvestments();
+      renderDashboard();
+    }
+
+    function deleteHolding(sym) {
+      if (!confirm(`確定將「${sym}」從投資清單移除？\n（此動作會將該標的隱藏；若交易流水帳中仍有其紀錄，建議至【交易】頁籤編輯或刪除。）`)) return;
+      if (!data.ignoredHoldings) data.ignoredHoldings = [];
+      data.ignoredHoldings.push(sym);
       saveData();
       renderInvestments();
       renderDashboard();
@@ -2424,7 +2523,7 @@
         const avgCost = s.shares > 0 ? (s.costTotal / s.shares) : 0;
         const mv = s.shares * price;
         const pl = mv - s.costTotal;
-        const yld = data.stockYields[s.symbol] || 6;
+        const yld = data.stockYields[s.symbol] !== undefined ? data.stockYields[s.symbol] : 6;
 
         stocksTotal += mv;
         if (!isClosed) estMonthly += mv * (yld / 100) / 12;
@@ -2439,10 +2538,16 @@
             </td>
             <td class="tabular heavy text-right">${formatMoney(mv)}</td>
             <td class="tabular heavy text-right ${pl >= 0 ? '' : 'text-red-500'}">${formatMoney(pl)}</td>
-            <td class="tabular text-right">${yld}%</td>
+            <td class="tabular text-right">
+              <input type="number" step="any" class="input py-1 px-2 text-xs w-16 text-right tabular" value="${yld}" onchange="updateStockLiveYield('${s.symbol}', this.value)" />%
+            </td>
+            <td class="text-center">
+              <button onclick="openHoldingEdit('stock', '${s.symbol}')" class="text-xs mr-1" style="color:var(--text-muted)">編</button>
+              <button onclick="deleteHolding('${s.symbol}')" class="text-xs" style="color:var(--text-muted)">刪</button>
+            </td>
           </tr>
         `;
-      }).join('') || '<tr><td colspan="7" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無股票交易資料</td></tr>';
+      }).join('') || '<tr><td colspan="8" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無股票交易資料</td></tr>';
       document.getElementById('stocksTotalValue').textContent = formatMoney(stocksTotal);
 
       // 基金推算渲染
@@ -2451,26 +2556,41 @@
       fundList.sort((a, b) => (b.units > 0 ? 1 : 0) - (a.units > 0 ? 1 : 0));
 
       document.getElementById('fundsTableBody').innerHTML = fundList.map(f => {
+        const cur = f.currency || 'USD';
         const price = data.fundPrices[f.name] !== undefined ? data.fundPrices[f.name] : 0;
-        const rate = data.fundRates[f.name] !== undefined ? data.fundRates[f.name] : (data.usdRate || 32.0);
+        let defaultRate = 1;
+        if (cur === 'USD') defaultRate = data.usdRate || 32.0;
+        else if (cur === 'JPY') defaultRate = data.jpyRate || 0.22;
+        const rate = data.fundRates[f.name] !== undefined ? data.fundRates[f.name] : defaultRate;
+
         const mv = f.units * price * rate;
         fundsTotal += mv;
 
         return `
           <tr class="whitespace-nowrap">
             <td class="semibold">${f.name}</td>
-            <td>${f.currency}</td>
+            <td>
+              <select class="input py-1 px-2 text-xs w-20 tabular" onchange="updateFundLiveCurrency('${f.name}', this.value)">
+                <option value="TWD" ${cur === 'TWD' ? 'selected' : ''}>TWD</option>
+                <option value="USD" ${cur === 'USD' ? 'selected' : ''}>USD</option>
+                <option value="JPY" ${cur === 'JPY' ? 'selected' : ''}>JPY</option>
+              </select>
+            </td>
             <td class="tabular text-right">${f.units}</td>
             <td class="tabular text-right">
               <input type="number" step="any" class="input py-1 px-2 text-xs w-20 text-right tabular" value="${price}" onchange="updateFundLivePrice('${f.name}', this.value)" />
             </td>
             <td class="tabular text-right">
-              <input type="number" step="any" class="input py-1 px-2 text-xs w-20 text-right tabular" value="${rate}" onchange="updateFundLiveRate('${f.name}', this.value)" />
+              <input type="number" step="any" class="input py-1 px-2 text-xs w-20 text-right tabular" value="${rate}" ${cur === 'TWD' ? 'disabled' : ''} onchange="updateFundLiveRate('${f.name}', this.value)" />
             </td>
             <td class="tabular heavy text-right">${formatMoney(mv)}</td>
+            <td class="text-center">
+              <button onclick="openHoldingEdit('fund', '${f.name}')" class="text-xs mr-1" style="color:var(--text-muted)">編</button>
+              <button onclick="deleteHolding('${f.name}')" class="text-xs" style="color:var(--text-muted)">刪</button>
+            </td>
           </tr>
         `;
-      }).join('') || '<tr><td colspan="6" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無基金交易資料</td></tr>';
+      }).join('') || '<tr><td colspan="7" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無基金交易資料</td></tr>';
       document.getElementById('fundsTotalValue').textContent = formatMoney(fundsTotal);
 
       if (data.showDividendGoal === false) {
@@ -2559,7 +2679,7 @@
 
       if (tx.type === '買入') {
         data.accounts[account] = (data.accounts[account] || 0) - (totalCost * mult);
-      } else if (tx.type === '賣出' || tx.type === '折讓') {
+      } else if (tx.type === '賣出') {
         data.accounts[account] = (data.accounts[account] || 0) + (totalCost * mult);
       } else if (tx.type === '配息') {
         data.accounts[account] = (data.accounts[account] || 0) + (totalCost * mult);
