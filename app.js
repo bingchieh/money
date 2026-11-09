@@ -103,7 +103,6 @@ function formatMoney(n) {
   return s + '$' + Math.abs(Math.round(n)).toLocaleString('zh-TW');
 }
 
-// 格式化損益：正負數保持 100% 相同字級，賺錢 Bold，賠錢 Heavy 且透明度微調
 function formatPLHtml(pl) {
   const rounded = Math.round(pl || 0);
   if (rounded > 0) {
@@ -642,10 +641,10 @@ function renderFxCenter() {
     return `
       <div class="pill p-2.5 flex justify-between items-center text-xs">
         <div>
-          <span class="semibold tabular">${x.date}</span>
+          <span class="bold tabular">${x.date}</span>
           <span class="tabular ml-1.5">${x.fromAcc} (${x.fromAmt.toLocaleString()} ${x.fromCur}) ➔ ${x.toAcc} (${x.toAmt.toLocaleString()} ${x.toCur})</span>
           <span class="ml-1" style="color:var(--text-muted)">· 匯率 ${(x.rate || 0).toFixed(decimals)}</span>
-          ${x.note ? `<div class="text-[11px] mt-0.5" style="color:var(--text-muted)">備註：${x.note}</div>` : ''}
+          ${x.note ? `<div class="text-[11px] font-semibold mt-0.5" style="color:var(--text-muted)">備註：${x.note}</div>` : ''}
         </div>
         <div class="flex gap-1.5 shrink-0 ml-2">
           <button onclick="openFxEdit('${x.id}')" class="btn text-xs px-2 py-0.5" style="color:var(--text-muted)">編</button>
@@ -653,7 +652,7 @@ function renderFxCenter() {
         </div>
       </div>
     `;
-  }).join('') || '<p class="text-center py-2" style="color:var(--text-muted)">尚無換匯紀錄</p>';
+  }).join('') || '<p class="text-center py-2 text-xs font-semibold" style="color:var(--text-muted)">尚無換匯紀錄</p>';
 }
 
 let draggedAccountItem = null;
@@ -680,7 +679,7 @@ function renderAccountEditList() {
     item.innerHTML = `
       <div class="drag-handle text-zinc-400 dark:text-zinc-600 px-1 py-2 text-base font-mono">⠿</div>
       <div class="flex-1">
-        <span class="text-xs font-semibold">${name}</span>
+        <span class="text-xs font-bold">${name}</span>
         <input type="number" data-account="${name}" class="input mt-1 account-edit-input tabular text-xs" value="${data.accounts[name] || 0}" step="any" />
       </div>
       <button onclick="removeAccount('${name}')" class="btn text-xs px-2.5 py-1" style="color:var(--text-muted)">移除</button>
@@ -780,7 +779,7 @@ async function updateFxRates() {
         if (json.rates[c]) data.fxRates[c] = usdToTwd / json.rates[c];
       });
       saveData();
-      status.textContent = `匯率更新成功：USD ${data.fxRates.USD.toFixed(2)} / JPY ${data.fxRates.JPY.toFixed(4)} / CNY ${data.fxRates.CNY.toFixed(2)}`;
+      status.textContent = `匯率更新成功：USD ${data.fxRates.USD.toFixed(2)} ｜ JPY ${data.fxRates.JPY.toFixed(4)} ｜ CNY ${data.fxRates.CNY.toFixed(2)} ｜ KRW ${data.fxRates.KRW.toFixed(4)} ｜ EUR ${data.fxRates.EUR.toFixed(2)} ｜ GBP ${data.fxRates.GBP.toFixed(2)}`;
       renderDashboard();
       renderInvestments();
       return;
@@ -1075,13 +1074,13 @@ function renderDashboard() {
     document.getElementById('tithePool').textContent = formatMoney(data.tithePool || 0);
   }
 
-  // 帳戶餘額卡片：外幣標題加上「≈X萬」，主金額位置、字級與台幣 100% 切齊
+  // 帳戶餘額卡片：名稱放大至 text-xs font-bold，外幣整合折合台幣
   const accDiv = document.getElementById('accountsOverview');
   const twdCards = (data.accountList || DEFAULT_ACCOUNTS).map(name => {
     const bal = data.accounts[name] || 0;
     return `
       <div class="pill p-3 flex flex-col justify-between h-20 text-center">
-        <p class="text-[11px] truncate" style="color:var(--text-muted)">${name}</p>
+        <p class="text-xs font-bold truncate" style="color:var(--text-muted)">${name}</p>
         <p class="heavy text-sm tabular">${formatMoney(bal)}</p>
       </div>`;
   }).join('');
@@ -1094,7 +1093,7 @@ function renderDashboard() {
 
     return `
       <div class="pill p-3 flex flex-col justify-between h-20 text-center">
-        <div class="flex items-center justify-center gap-1 text-[11px]" style="color:var(--text-muted)">
+        <div class="flex items-center justify-center gap-1 text-xs font-bold" style="color:var(--text-muted)">
           <span class="truncate">${FX_NAMES[c]}</span>
           <span class="tabular opacity-80 shrink-0">· ${twdDisplay}</span>
         </div>
@@ -1153,7 +1152,7 @@ function renderEnvelopes() {
   const cm = currentMonthStr();
   const list = document.getElementById('envelopesList');
   if (!data.envelopes.length) {
-    list.innerHTML = '<p class="text-xs text-center py-4" style="color:var(--text-muted)">尚未建立任何信封袋</p>';
+    list.innerHTML = '<p class="text-xs font-semibold text-center py-4" style="color:var(--text-muted)">尚未建立任何信封袋</p>';
     return;
   }
   list.innerHTML = data.envelopes.map(e => {
@@ -1166,18 +1165,18 @@ function renderEnvelopes() {
       <div class="pill p-4 space-y-2">
         <div class="flex justify-between items-center">
           <div>
-            <span class="semibold text-sm">${e.name}</span>
-            <span class="text-xs ml-1" style="color:var(--text-muted)">(${e.category || '未指定'})</span>
+            <span class="bold text-sm">${e.name}</span>
+            <span class="text-xs ml-1 font-semibold" style="color:var(--text-muted)">(${e.category || '未指定'})</span>
           </div>
           <div class="flex gap-2">
-            <button onclick="openEnvelopeModal('${e.id}')" class="text-xs" style="color:var(--text-muted)">編輯</button>
-            <button onclick="deleteEnvelope('${e.id}')" class="text-xs" style="color:var(--text-muted)">刪除</button>
+            <button onclick="openEnvelopeModal('${e.id}')" class="text-xs font-bold" style="color:var(--text-muted)">編輯</button>
+            <button onclick="deleteEnvelope('${e.id}')" class="text-xs font-bold" style="color:var(--text-muted)">刪除</button>
           </div>
         </div>
         <div class="progress-track">
           <div class="progress-fill" style="width:${pct}%"></div>
         </div>
-        <div class="flex justify-between text-xs tabular">
+        <div class="flex justify-between text-xs tabular font-bold">
           <span style="color:var(--text-muted)">已用 ${formatMoney(spent)} / 預算 ${formatMoney(e.budget)}</span>
           <span class="heavy">剩餘 ${formatMoney(remain)}</span>
         </div>
@@ -1371,42 +1370,42 @@ function renderTransactions() {
       const env = data.envelopes.find(e => e.id === t.envelopeId);
       const proj = data.projects.find(p => p.id === t.projectId);
       const tag = proj ? `[專] ${proj.name}` : (env ? env.name : '');
-      const receiptBtn = t.receipt ? `<button onclick="viewReceipt('${t.id}')" class="text-xs px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700">📸 查看</button>` : '';
+      const receiptBtn = t.receipt ? `<button onclick="viewReceipt('${t.id}')" class="text-xs px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700 font-bold">📸 查看</button>` : '';
       return `
         <div class="pill p-3 space-y-2 text-xs">
           <div class="flex justify-between items-center">
             <div>
-              <span class="tabular font-semibold" style="color:var(--text-muted)">${t.date}</span>
+              <span class="tabular font-bold" style="color:var(--text-muted)">${t.date}</span>
               <span class="badge ${t.necessary === 'necessary' ? 'badge-nec' : 'badge-non'} ml-1.5">${t.category}</span>
-              <strong class="text-sm ml-2">${t.name}</strong>
+              <strong class="text-sm bold ml-2">${t.name}</strong>
             </div>
             <div>
               <strong class="heavy text-sm tabular">${formatMoney(t.amount)}</strong>
             </div>
           </div>
-          <div class="flex justify-between items-center text-[11px]" style="color:var(--text-muted)">
+          <div class="flex justify-between items-center text-[11px] font-semibold" style="color:var(--text-muted)">
             <span>${t.account} · ${t.necessary === 'necessary' ? '必要' : '非必要'} ${tag ? `· ${tag}` : ''}</span>
             <div class="flex items-center gap-2">
               ${receiptBtn}
-              <button onclick="openTxEditModal('${t.id}')" class="text-xs ml-1" style="color:var(--text-muted)">編</button>
+              <button onclick="openTxEditModal('${t.id}')" class="text-xs font-bold ml-1" style="color:var(--text-muted)">編</button>
               <button onclick="deleteTransaction('${t.id}')" class="btn text-xs px-2 py-0.5">刪</button>
             </div>
           </div>
-          ${t.note ? `<div class="text-[11px] pt-0.5" style="color:var(--text-muted)">備註：${t.note}</div>` : ''}
+          ${t.note ? `<div class="text-[11px] font-semibold pt-0.5" style="color:var(--text-muted)">備註：${t.note}</div>` : ''}
         </div>
       `;
-    }).join('') || '<p class="text-center py-6 text-xs" style="color:var(--text-muted)">尚無明細紀錄</p>';
+    }).join('') || '<p class="text-center py-6 text-xs font-semibold" style="color:var(--text-muted)">尚無明細紀錄</p>';
   } else {
     const tbody = document.getElementById('txTableBody');
     tbody.innerHTML = list.map(t => {
       const env = data.envelopes.find(e => e.id === t.envelopeId);
       const proj = data.projects.find(p => p.id === t.projectId);
       const tag = proj ? `[專] ${proj.name}` : (env ? env.name : '');
-      const receiptBtn = t.receipt ? `<button onclick="viewReceipt('${t.id}')" class="text-xs px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700">📸 查看</button>` : '<span style="color:var(--text-muted)">-</span>';
+      const receiptBtn = t.receipt ? `<button onclick="viewReceipt('${t.id}')" class="text-xs px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700 font-bold">📸 查看</button>` : '<span style="color:var(--text-muted)">-</span>';
       return `
         <tr class="whitespace-nowrap">
-          <td class="tabular" style="color:var(--text-muted)">${t.date}</td>
-          <td class="semibold">${t.name}</td>
+          <td class="tabular font-bold" style="color:var(--text-muted)">${t.date}</td>
+          <td class="bold">${t.name}</td>
           <td class="tabular heavy text-right">${formatMoney(t.amount)}</td>
           <td>${t.category}</td>
           <td>${t.account}</td>
@@ -1415,11 +1414,11 @@ function renderTransactions() {
           <td class="text-center">${receiptBtn}</td>
           <td style="color:var(--text-muted)">${t.note || ''}</td>
           <td class="text-center">
-            <button onclick="openTxEditModal('${t.id}')" class="text-xs mr-1.5" style="color:var(--text-muted)">編</button>
+            <button onclick="openTxEditModal('${t.id}')" class="text-xs font-bold mr-1.5" style="color:var(--text-muted)">編</button>
             <button onclick="deleteTransaction('${t.id}')" class="btn text-xs px-2 py-0.5">刪</button>
           </td>
         </tr>`;
-    }).join('') || '<tr><td colspan="10" class="text-center py-6 text-xs" style="color:var(--text-muted)">尚無明細紀錄</td></tr>';
+    }).join('') || '<tr><td colspan="10" class="text-center py-6 text-xs font-semibold" style="color:var(--text-muted)">尚無明細紀錄</td></tr>';
   }
 }
 
@@ -1612,7 +1611,7 @@ function renderInvestments() {
 
     return `
       <tr class="whitespace-nowrap ${isClosed ? 'opacity-40' : ''}">
-        <td class="semibold">${s.symbol} ${isClosed ? '<span class="badge-closed ml-1.5">已結清</span>' : ''}</td>
+        <td class="bold">${s.symbol} ${isClosed ? '<span class="badge-closed ml-1.5">已結清</span>' : ''}</td>
         <td class="tabular text-right">${s.shares}</td>
         <td class="tabular text-right">${avgCost.toFixed(2)}</td>
         <td class="tabular text-right">
@@ -1629,12 +1628,12 @@ function renderInvestments() {
           </div>
         </td>
         <td class="text-center">
-          <button onclick="openHoldingEdit('stock', '${s.symbol}')" class="text-xs mr-1" style="color:var(--text-muted)">編</button>
-          <button onclick="deleteHolding('${s.symbol}')" class="text-xs" style="color:var(--text-muted)">刪</button>
+          <button onclick="openHoldingEdit('stock', '${s.symbol}')" class="text-xs font-bold mr-1" style="color:var(--text-muted)">編</button>
+          <button onclick="deleteHolding('${s.symbol}')" class="text-xs font-bold" style="color:var(--text-muted)">刪</button>
         </td>
       </tr>
     `;
-  }).join('') || '<tr><td colspan="8" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無股票交易資料</td></tr>';
+  }).join('') || '<tr><td colspan="8" class="text-center py-4 text-xs font-semibold" style="color:var(--text-muted)">尚無股票交易資料</td></tr>';
   document.getElementById('stocksTotalValue').textContent = formatMoney(stocksTotal);
 
   let fundsTotal = 0;
@@ -1663,7 +1662,7 @@ function renderInvestments() {
 
     return `
       <tr class="whitespace-nowrap ${isClosed ? 'opacity-40' : ''}">
-        <td class="semibold">${f.name} ${isClosed ? '<span class="badge-closed ml-1.5">已結清</span>' : ''}</td>
+        <td class="bold">${f.name} ${isClosed ? '<span class="badge-closed ml-1.5">已結清</span>' : ''}</td>
         <td>
           <select class="input py-1 px-2 text-xs w-20 tabular" onchange="updateFundLiveCurrency('${f.name}', this.value)">
             <option value="TWD" ${cur === 'TWD' ? 'selected' : ''}>TWD</option>
@@ -1690,12 +1689,12 @@ function renderInvestments() {
         <td class="tabular bold text-right">${formatMoney(mv)}</td>
         <td class="text-right">${formatPLHtml(pl)}</td>
         <td class="text-center">
-          <button onclick="openHoldingEdit('fund', '${f.name}')" class="text-xs mr-1" style="color:var(--text-muted)">編</button>
-          <button onclick="deleteHolding('${f.name}')" class="text-xs" style="color:var(--text-muted)">刪</button>
+          <button onclick="openHoldingEdit('fund', '${f.name}')" class="text-xs font-bold mr-1" style="color:var(--text-muted)">編</button>
+          <button onclick="deleteHolding('${f.name}')" class="text-xs font-bold" style="color:var(--text-muted)">刪</button>
         </td>
       </tr>
     `;
-  }).join('') || '<tr><td colspan="9" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無基金交易資料</td></tr>';
+  }).join('') || '<tr><td colspan="9" class="text-center py-4 text-xs font-semibold" style="color:var(--text-muted)">尚無基金交易資料</td></tr>';
   document.getElementById('fundsTotalValue').textContent = formatMoney(fundsTotal);
 
   if (data.showDividendGoal === false) {
@@ -1941,7 +1940,6 @@ function renderStockTransactions() {
   const divTotal = list.filter(t => t.type === '配息').reduce((s, t) => s + (t.totalCost !== undefined ? t.totalCost : t.total), 0);
   const plTotal = (sellTotal + divTotal) - buyTotal;
 
-  // 統計列：字級等大，賺錢 Bold，賠錢 Heavy 且透明度對比，不再有變小縮排錯覺
   const summaryDiv = document.getElementById('stxPeriodSummaryText');
   summaryDiv.innerHTML = `
     <span>總買入：<strong class="bold text-sm" style="color:var(--text)">${formatMoney(buyTotal)}</strong></span>
@@ -1963,30 +1961,30 @@ function renderStockTransactions() {
       <div class="pill p-3 space-y-1.5 text-xs">
         <div class="flex justify-between items-center">
           <div>
-            <span class="tabular font-semibold">${t.date}</span>
+            <span class="tabular font-bold">${t.date}</span>
             <span class="badge ${t.type === '買入' ? 'badge-nec' : 'badge-non'} ml-1">${t.type}</span>
-            <strong class="text-sm ml-1.5">${t.symbol}</strong>
-            <span class="text-[11px]" style="color:var(--text-muted)">(${t.account})</span>
+            <strong class="text-sm bold ml-1.5">${t.symbol}</strong>
+            <span class="text-[11px] font-semibold" style="color:var(--text-muted)">(${t.account})</span>
           </div>
           <div class="flex gap-2">
-            <button onclick="openStockTxEditModal('${t.id}')" style="color:var(--text-muted)">編</button>
-            <button onclick="deleteStockTransaction('${t.id}')" style="color:var(--text-muted)">刪</button>
+            <button onclick="openStockTxEditModal('${t.id}')" class="font-bold" style="color:var(--text-muted)">編</button>
+            <button onclick="deleteStockTransaction('${t.id}')" class="font-bold" style="color:var(--text-muted)">刪</button>
           </div>
         </div>
-        <div class="flex justify-between tabular" style="color:var(--text-muted)">
+        <div class="flex justify-between tabular font-semibold" style="color:var(--text-muted)">
           <span>${t.shares} 股/單位 × $${t.price} ｜ 費 $${t.fee} · 稅 $${t.tax}</span>
           <strong class="bold text-sm" style="color:var(--text)">${formatMoney(t.totalCost !== undefined ? t.totalCost : t.total)}</strong>
         </div>
-        ${t.note ? `<div class="text-[11px]" style="color:var(--text-muted)">備註：${t.note}</div>` : ''}
+        ${t.note ? `<div class="text-[11px] font-semibold" style="color:var(--text-muted)">備註：${t.note}</div>` : ''}
       </div>
-    `).join('') || '<p class="text-center py-6 text-xs" style="color:var(--text-muted)">尚無交易紀錄</p>';
+    `).join('') || '<p class="text-center py-6 text-xs font-semibold" style="color:var(--text-muted)">尚無交易紀錄</p>';
   } else {
     document.getElementById('stockTxTableBody').innerHTML = list.map(t => `
       <tr class="whitespace-nowrap">
-        <td class="px-3 tabular sticky-col" style="color:var(--text-muted)">${t.date}</td>
-        <td class="px-3">${t.account}</td>
+        <td class="px-3 tabular bold sticky-col" style="color:var(--text-muted)">${t.date}</td>
+        <td class="px-3 font-semibold">${t.account}</td>
         <td class="px-2"><span class="badge ${t.type === '買入' ? 'badge-nec' : 'badge-non'}">${t.type}</span></td>
-        <td class="px-3 semibold">${t.symbol}</td>
+        <td class="px-3 bold">${t.symbol}</td>
         <td class="px-3 tabular text-right">${t.shares || 0}</td>
         <td class="px-3 tabular text-right">${t.price || 0}</td>
         <td class="px-3 tabular text-right">${formatMoney(t.total)}</td>
@@ -1994,11 +1992,11 @@ function renderStockTransactions() {
         <td class="px-3 tabular text-right">${formatMoney(t.tax)}</td>
         <td class="px-3 tabular bold text-right" style="color:var(--text)">${formatMoney(t.totalCost !== undefined ? t.totalCost : t.total)}</td>
         <td class="px-3 text-center">
-          <button onclick="openStockTxEditModal('${t.id}')" class="text-xs mr-1.5" style="color:var(--text-muted)">編</button>
+          <button onclick="openStockTxEditModal('${t.id}')" class="text-xs font-bold mr-1.5" style="color:var(--text-muted)">編</button>
           <button onclick="deleteStockTransaction('${t.id}')" class="btn text-xs px-2 py-0.5">刪</button>
         </td>
       </tr>
-    `).join('') || '<tr><td colspan="11" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚無交易紀錄</td></tr>';
+    `).join('') || '<tr><td colspan="11" class="text-center py-4 text-xs font-semibold" style="color:var(--text-muted)">尚無交易紀錄</td></tr>';
   }
 }
 
@@ -2225,17 +2223,17 @@ function renderFixedSection() {
     document.getElementById('fixedList').innerHTML = data.fixedItems.map(f => `
       <div class="pill p-3 flex justify-between items-center text-xs">
         <div>
-          <span class="semibold">${f.name}</span>
+          <span class="bold">${f.name}</span>
           <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
-          <span class="ml-2" style="color:var(--text-muted)">${f.account} · ${f.category}</span>
+          <span class="ml-2 font-semibold" style="color:var(--text-muted)">${f.account} · ${f.category}</span>
         </div>
         <div class="flex gap-2">
-          <button onclick="applyFixed('${f.id}')" class="semibold text-xs">計入本月</button>
-          <button onclick="openFixedModal('${f.id}')" style="color:var(--text-muted)">編</button>
-          <button onclick="deleteFixed('${f.id}')" style="color:var(--text-muted)">刪</button>
+          <button onclick="applyFixed('${f.id}')" class="bold text-xs">計入本月</button>
+          <button onclick="openFixedModal('${f.id}')" class="font-bold" style="color:var(--text-muted)">編</button>
+          <button onclick="deleteFixed('${f.id}')" class="font-bold" style="color:var(--text-muted)">刪</button>
         </div>
       </div>
-    `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未設定固定收支</p>';
+    `).join('') || '<p class="text-xs font-semibold text-center py-2" style="color:var(--text-muted)">尚未設定固定收支</p>';
   }
 
   const projOpen = data.sectionsOpen.project !== false;
@@ -2253,18 +2251,18 @@ function renderFixedSection() {
         const remain = p.budget - spent;
         return `
           <tr class="whitespace-nowrap">
-            <td class="semibold">${p.name}</td>
+            <td class="bold">${p.name}</td>
             <td><span class="badge ${p.status === 'archived' ? 'badge-non' : 'badge-nec'}">${p.status === 'archived' ? '已封存' : '進行中'}</span></td>
             <td class="tabular text-right">${formatMoney(p.budget)}</td>
             <td class="tabular text-right">${formatMoney(spent)}</td>
             <td class="tabular heavy text-right">${formatMoney(remain)}</td>
             <td class="text-center">
-              <button onclick="openProjectModal('${p.id}')" class="text-xs mr-1.5" style="color:var(--text-muted)">編</button>
+              <button onclick="openProjectModal('${p.id}')" class="text-xs font-bold mr-1.5" style="color:var(--text-muted)">編</button>
               <button onclick="deleteProject('${p.id}')" class="btn text-xs px-2 py-0.5">刪</button>
             </td>
           </tr>
         `;
-      }).join('') || '<tr><td colspan="6" class="text-center py-4 text-xs" style="color:var(--text-muted)">尚未建立專案</td></tr>';
+      }).join('') || '<tr><td colspan="6" class="text-center py-4 text-xs font-semibold" style="color:var(--text-muted)">尚未建立專案</td></tr>';
     } else {
       document.getElementById('projectsCardView').innerHTML = data.projects.map(p => {
         const spent = data.transactions.filter(t => t.projectId === p.id && t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
@@ -2273,20 +2271,20 @@ function renderFixedSection() {
           <div class="pill p-4 space-y-2 text-xs">
             <div class="flex justify-between items-center">
               <div>
-                <span class="semibold text-sm">${p.name}</span>
+                <span class="bold text-sm">${p.name}</span>
                 <span class="badge ${p.status === 'archived' ? 'badge-non' : 'badge-nec'} ml-2">${p.status === 'archived' ? '已封存' : '進行中'}</span>
               </div>
               <div class="flex gap-2">
-                <button onclick="openProjectModal('${p.id}')" style="color:var(--text-muted)">編</button>
-                <button onclick="deleteProject('${p.id}')" style="color:var(--text-muted)">刪</button>
+                <button onclick="openProjectModal('${p.id}')" class="font-bold" style="color:var(--text-muted)">編</button>
+                <button onclick="deleteProject('${p.id}')" class="font-bold" style="color:var(--text-muted)">刪</button>
               </div>
             </div>
-            <div class="flex justify-between tabular" style="color:var(--text-muted)">
+            <div class="flex justify-between tabular font-semibold" style="color:var(--text-muted)">
               <span>預算 ${formatMoney(p.budget)} · 已花 ${formatMoney(spent)}</span>
               <span class="heavy">剩餘 ${formatMoney(remain)}</span>
             </div>
           </div>`;
-      }).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚未建立專案</p>';
+      }).join('') || '<p class="text-xs font-semibold text-center py-2" style="color:var(--text-muted)">尚未建立專案</p>';
     }
   }
 
@@ -2297,19 +2295,19 @@ function renderFixedSection() {
     document.getElementById('freelanceList').innerHTML = data.freelances.map(f => `
       <div class="pill p-3 flex justify-between items-center text-xs">
         <div>
-          <span class="semibold">${f.name}</span>
+          <span class="bold">${f.name}</span>
           <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
           <span class="badge badge-nec ml-2">${f.status}</span>
-          <div class="text-[11px] mt-0.5 tabular" style="color:var(--text-muted)">
+          <div class="text-[11px] mt-0.5 tabular font-semibold" style="color:var(--text-muted)">
             執行: ${f.execDate || '--'} · 收款: ${f.payDate || f.execDate || '--'}
           </div>
         </div>
         <div class="flex gap-2">
-          <button onclick="openFreelanceModal('${f.id}')" style="color:var(--text-muted)">編</button>
-          <button onclick="deleteFreelance('${f.id}')" style="color:var(--text-muted)">刪</button>
+          <button onclick="openFreelanceModal('${f.id}')" class="font-bold" style="color:var(--text-muted)">編</button>
+          <button onclick="deleteFreelance('${f.id}')" class="font-bold" style="color:var(--text-muted)">刪</button>
         </div>
       </div>
-    `).join('') || '<p class="text-xs text-center py-2" style="color:var(--text-muted)">尚無接案紀錄</p>';
+    `).join('') || '<p class="text-xs font-semibold text-center py-2" style="color:var(--text-muted)">尚無接案紀錄</p>';
   }
 }
 
@@ -2319,7 +2317,6 @@ const STATIC_PALETTES = {
   p3: ['#4B6587', '#F0E5CF', '#C8C6C6', '#F7F6F2', '#738BA8', '#D1C2A5', '#8C8A8A', '#2F435E']
 };
 
-// 灰階「面積自適應明度排序」：深色大片暗、小片極亮，且相鄰極大跳色
 function generateAdaptiveGrayPalette(count, isDark) {
   if (count <= 1) return isDark ? ['#4E4E58'] : ['#E0E0E6'];
 
@@ -2456,7 +2453,7 @@ function renderCharts() {
       }]
     },
     options: {
-      plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11 } } } },
+      plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, weight: 'bold' } } } },
       cutout: '65%'
     }
   });
@@ -2473,7 +2470,7 @@ function renderCharts() {
       }]
     },
     options: {
-      plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11 } } } },
+      plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, weight: 'bold' } } } },
       cutout: '60%'
     }
   });
@@ -2494,7 +2491,7 @@ function renderCharts() {
       }]
     },
     options: {
-      plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11 } } } }
+      plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, weight: 'bold' } } } }
     }
   });
 }
@@ -2507,6 +2504,7 @@ function exportData() {
   a.click();
 }
 
+// 完整修復匯入：無論是智慧合併還是完全覆蓋，接案、餘額、外幣、換匯不再遺漏
 function importData(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -2536,13 +2534,14 @@ function importData(event) {
 
       const choice = confirm(
         "【匯入模式確認】\n\n" +
-        "• 點「確定」：【智慧合併】（自動保留兩台裝置的日常記帳與股票，依 ID 比對不覆蓋）\n" +
-        "• 點「取消」：【完全覆蓋】（以匯入檔案為準，清除本機原有相異紀錄）"
+        "• 點「確定」：【智慧合併】（自動補齊兩台裝置相異的記帳、接案、股票，並更新餘額與匯率）\n" +
+        "• 點「取消」：【完全覆蓋】（以匯入檔案為準，清除本機相異紀錄並完整還原所有帳戶與接案）"
       );
 
       if (choice) {
         let txAdded = 0;
         let stxAdded = 0;
+        let freeAdded = 0;
 
         const existingTxIds = new Set((data.transactions || []).map(t => t.id));
         (incoming.transactions || []).forEach(tx => {
@@ -2560,14 +2559,34 @@ function importData(event) {
           }
         });
 
-        if (incoming.fxRates) data.fxRates = Object.assign({}, data.fxRates, incoming.fxRates);
+        const existingFreeIds = new Set((data.freelances || []).map(f => f.id));
+        (incoming.freelances || []).forEach(f => {
+          if (!existingFreeIds.has(f.id)) {
+            data.freelances.push(f);
+            freeAdded++;
+          }
+        });
+
+        // 完整合併帳戶餘額與外幣資產
+        if (incoming.accounts) {
+          Object.keys(incoming.accounts).forEach(acc => {
+            data.accounts[acc] = incoming.accounts[acc];
+          });
+        }
+        if (incoming.accountList) data.accountList = incoming.accountList;
         if (incoming.fxCash) data.fxCash = Object.assign({}, data.fxCash, incoming.fxCash);
+        if (incoming.fxRates) data.fxRates = Object.assign({}, data.fxRates, incoming.fxRates);
+        if (incoming.fxExchanges) data.fxExchanges = incoming.fxExchanges;
+        if (incoming.projects) data.projects = incoming.projects;
+        if (incoming.fixedItems) data.fixedItems = incoming.fixedItems;
+        if (incoming.monthlyBudget !== undefined) data.monthlyBudget = incoming.monthlyBudget;
+        if (incoming.dividendGoal !== undefined) data.dividendGoal = incoming.dividendGoal;
 
         saveData();
         populateAllAccountSelects();
         populateProjectSelect();
         switchTab('dashboard');
-        alert(`🎉 智慧合併完成！\n新增 ${txAdded} 筆日常帳務、${stxAdded} 筆股票交易，手機與電腦資料已融合！`);
+        alert(`🎉 智慧合併完成！\n新增 ${txAdded} 筆帳務、${stxAdded} 筆股票、${freeAdded} 筆接案，帳戶餘額與換匯資產已全數同步！`);
       } else {
         data = Object.assign({}, DEFAULT_DATA, incoming);
         saveData();
@@ -2575,7 +2594,7 @@ function importData(event) {
         populateAllAccountSelects();
         populateProjectSelect();
         switchTab('dashboard');
-        alert('已依照匯入檔案完全覆蓋更新！');
+        alert('已依照匯入檔案完全覆蓋更新！所有接案與帳戶餘額已完整還原！');
       }
     } catch (err) {
       alert('解析失敗：' + err.message);
