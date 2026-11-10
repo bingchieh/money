@@ -28,7 +28,7 @@
   --card: #ffffff;
   --card-dark: #1c1c1e;
   --text: #1c1c1e;
-  --text-muted: #5c5c62;
+  --text-muted: #6e6e76;
   --border: rgba(0, 0, 0, 0.08);
   --shadow: 0 8px 30px rgba(0, 0, 0, 0.06);
   --shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.04);
@@ -52,6 +52,7 @@
   font-style: normal;
 }
 
+/* 全站字重門檻：預設基底為 600 SemiBold */
 body {
   margin: 0;
   background: var(--bg);
@@ -179,6 +180,15 @@ body {
   color: #ffffff;
 }
 
+/* 旋轉動畫，點擊更新時觸發 */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.spinning {
+  animation: spin 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 input[type="number"]::-webkit-inner-spin-button, 
 input[type="number"]::-webkit-outer-spin-button { 
   -webkit-appearance: none; 
@@ -258,15 +268,15 @@ select.input {
   z-index: 100;
   display: flex;
   justify-content: space-around;
-  padding: 8px 12px calc(8px + env(safe-area-inset-bottom));
-  background: rgba(255, 255, 255, 0.85);
+  padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  background: rgba(255, 255, 255, 0.88);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-top: 1px solid var(--border);
 }
 
 .dark .bottom-bar {
-  background: rgba(20, 20, 22, 0.88);
+  background: rgba(20, 20, 22, 0.9);
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
@@ -276,7 +286,7 @@ select.input {
   align-items: center;
   justify-content: center;
   flex: 1;
-  padding: 6px 4px;
+  padding: 6px 2px;
   border-radius: 12px;
   font-size: 11px;
   color: var(--text-muted);

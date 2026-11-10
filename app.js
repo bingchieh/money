@@ -84,7 +84,7 @@ const DEFAULT_DATA = {
   fundCurrencies: {},
   fundCustomOverrides: {},
   ignoredHoldings: [],
-  sectionsOpen: { fixed: true, project: true, freelance: true },
+  sectionsOpen: { fixed: true, envelopes: true, project: true, freelance: true },
   tithePool: 0,
   titheDonatedThisMonth: 0,
   lastTitheMonth: '',
@@ -210,7 +210,7 @@ function loadData() {
       if (data.dividendGoal === undefined) data.dividendGoal = 10000;
       if (data.showDividendGoal === undefined) data.showDividendGoal = true;
       if (data.showTithe === undefined) data.showTithe = true;
-      if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, project: true, freelance: true };
+      if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, envelopes: true, project: true, freelance: true };
       if (data.chartsIncludeInvest === undefined) data.chartsIncludeInvest = false;
       if (!data.chartTimeRange) data.chartTimeRange = 'month';
       if (!data.chartPalette) data.chartPalette = 'gray';
@@ -246,7 +246,6 @@ function loadData() {
         if (st.tax !== undefined) st.tax = Math.abs(st.tax);
       });
 
-      // 補齊歷史資料遺漏的 createdAt，防止排序 NaN 崩潰
       let fixedTimestamps = false;
       (data.fixedItems || []).forEach((f, idx) => {
         if (!f.createdAt) { f.createdAt = Date.now() - (idx * 1000); fixedTimestamps = true; }
@@ -326,7 +325,6 @@ function switchTab(tab) {
   populateAllAccountSelects();
   populateProjectSelect();
   if (tab === 'dashboard') renderDashboard();
-  if (tab === 'envelopes') renderEnvelopes();
   if (tab === 'transactions') {
     populateEnvelopeSelect();
     const tday = todayStr();
@@ -347,7 +345,11 @@ function switchTab(tab) {
     }
     renderStockTransactions();
   }
-  if (tab === 'fixed') renderFixedSection();
+  if (tab === 'fx') renderFxPage();
+  if (tab === 'fixed') {
+    renderEnvelopes();
+    renderFixedSection();
+  }
   if (tab === 'charts') renderCharts();
 }
 
@@ -498,15 +500,6 @@ function importInvoiceCSV(event) {
   event.target.value = '';
 }
 
-function openFxCenterModal() {
-  cancelFxEdit();
-  document.getElementById('fxDate').value = todayStr();
-  populateAllAccountSelects();
-  calcFxRatePreview();
-  renderFxCenter();
-  openModal('fxCenterModal');
-}
-
 function calcFxRatePreview() {
   const fromAmt = parseFloat(document.getElementById('fxFromAmount').value) || 0;
   const toAmt = parseFloat(document.getElementById('fxToAmount').value) || 0;
@@ -542,7 +535,7 @@ function openFxEdit(id) {
   const fx = data.fxExchanges.find(x => x.id === id);
   if (!fx) return;
   document.getElementById('fxEditId').value = fx.id;
-  document.getElementById('fxModalTitle').textContent = '編輯換匯紀錄';
+  document.getElementById('fxFormTitle').textContent = '編輯換匯紀錄';
   document.getElementById('fxSubmitBtn').textContent = '儲存修改';
   document.getElementById('fxCancelEditBtn').classList.remove('hidden');
 
@@ -559,7 +552,7 @@ function openFxEdit(id) {
 
 function cancelFxEdit() {
   document.getElementById('fxEditId').value = '';
-  document.getElementById('fxModalTitle').textContent = '全外幣換匯中心';
+  document.getElementById('fxFormTitle').textContent = '新增換匯';
   document.getElementById('fxSubmitBtn').textContent = '儲存換匯';
   document.getElementById('fxCancelEditBtn').classList.add('hidden');
   document.getElementById('fxFromAmount').value = '';
@@ -636,7 +629,7 @@ function saveFxExchange() {
   }
 
   saveData();
-  renderFxCenter();
+  renderFxPage();
   renderDashboard();
   renderTransactions();
 }
@@ -653,12 +646,23 @@ function deleteFxExchange(id) {
   data.fxExchanges = data.fxExchanges.filter(x => x.id !== id);
   if (document.getElementById('fxEditId').value === id) cancelFxEdit();
   saveData();
-  renderFxCenter();
+  renderFxPage();
   renderDashboard();
   renderTransactions();
 }
 
-function renderFxCenter() {
+function renderFxPage() {
+  // 6 大幣值即時參考匯率（3 欄對齊）
+  if (data.fxRates) {
+    document.getElementById('fx_usd_display').textContent = `USD ${(data.fxRates.USD || 32.85).toFixed(2)}`;
+    document.getElementById('fx_eur_display').textContent = `EUR ${(data.fxRates.EUR || 35.42).toFixed(2)}`;
+    document.getElementById('fx_gbp_display').textContent = `GBP ${(data.fxRates.GBP || 42.15).toFixed(2)}`;
+    document.getElementById('fx_cny_display').textContent = `CNY ${(data.fxRates.CNY || 4.91).toFixed(2)}`;
+    document.getElementById('fx_jpy_display').textContent = `JPY ${(data.fxRates.JPY || 0.2075).toFixed(4)}`;
+    document.getElementById('fx_krw_display').textContent = `KRW ${(data.fxRates.KRW || 0.0238).toFixed(4)}`;
+  }
+
+  // 均價計算
   FX_CURRENCIES.forEach(cur => {
     const el = document.getElementById('avgCost_' + cur);
     if (!el) return;
@@ -668,24 +672,34 @@ function renderFxCenter() {
     el.textContent = curGot > 0 ? (twdSpent / curGot).toFixed(decimals) : '--';
   });
 
+  if (!document.getElementById('fxDate').value) {
+    document.getElementById('fxDate').value = todayStr();
+  }
+
+  // 歷史換匯紀錄（方法 2：兩行結構化展示，無折行破版）
   const sortedFx = [...data.fxExchanges].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   document.getElementById('fxHistoryList').innerHTML = sortedFx.map(x => {
     const decimals = (x.toCur === 'JPY' || x.toCur === 'KRW') ? 4 : 2;
     return `
-      <div class="pill p-2.5 flex justify-between items-center text-xs">
-        <div>
-          <span class="bold tabular">${x.date}</span>
-          <span class="tabular ml-1.5">${x.fromAcc} (${x.fromAmt.toLocaleString()} ${x.fromCur}) ➔ ${x.toAcc} (${x.toAmt.toLocaleString()} ${x.toCur})</span>
-          <span class="ml-1" style="color:var(--text-muted)">· 匯率 ${(x.rate || 0).toFixed(decimals)}</span>
-          ${x.note ? `<div class="text-[11px] font-semibold mt-0.5" style="color:var(--text-muted)">備註：${x.note}</div>` : ''}
+      <div class="pill p-3 flex justify-between items-center text-xs">
+        <div class="space-y-0.5">
+          <div>
+            <span class="bold tabular">${x.date}</span>
+            <span class="font-bold ml-2">${x.fromAcc} ➔ ${x.toAcc}</span>
+          </div>
+          <div class="tabular font-semibold" style="color:var(--text-muted)">
+            <span>${x.fromAmt.toLocaleString()} ${x.fromCur} ➔ ${x.toAmt.toLocaleString()} ${x.toCur}</span>
+            <span class="ml-1.5">· 匯率 ${(x.rate || 0).toFixed(decimals)}</span>
+          </div>
+          ${x.note ? `<div class="text-[11px] font-semibold pt-0.5" style="color:var(--text-muted)">備註：${x.note}</div>` : ''}
         </div>
-        <div class="flex gap-1.5 shrink-0 ml-2">
-          <button onclick="openFxEdit('${x.id}')" class="btn text-xs px-2 py-0.5" style="color:var(--text-muted)">編</button>
-          <button onclick="deleteFxExchange('${x.id}')" class="btn text-xs px-2 py-0.5" style="color:var(--text-muted)">刪</button>
+        <div class="flex gap-1.5 shrink-0 ml-3">
+          <button onclick="openFxEdit('${x.id}')" class="btn text-xs px-2.5 py-1">編</button>
+          <button onclick="deleteFxExchange('${x.id}')" class="btn text-xs px-2.5 py-1">刪</button>
         </div>
       </div>
     `;
-  }).join('') || '<p class="text-center py-2 text-xs font-semibold" style="color:var(--text-muted)">尚無換匯紀錄</p>';
+  }).join('') || '<p class="text-center py-4 text-xs font-semibold" style="color:var(--text-muted)">尚無換匯紀錄</p>';
 }
 
 let draggedAccountItem = null;
@@ -798,18 +812,7 @@ function saveAccounts() {
   renderDashboard();
 }
 
-function updateFxDisplay() {
-  const r1 = document.getElementById('fxRow1');
-  const r2 = document.getElementById('fxRow2');
-  if (r1 && r2 && data.fxRates) {
-    r1.textContent = `USD ${(data.fxRates.USD || 32.85).toFixed(2)} ｜ EUR ${(data.fxRates.EUR || 35.42).toFixed(2)} ｜ GBP ${(data.fxRates.GBP || 42.15).toFixed(2)}`;
-    r2.textContent = `CNY ${(data.fxRates.CNY || 4.91).toFixed(2)}   ｜ JPY ${(data.fxRates.JPY || 0.2075).toFixed(4)} ｜ KRW ${(data.fxRates.KRW || 0.0238).toFixed(4)}`;
-  }
-}
-
 async function updateFxRates() {
-  const r1 = document.getElementById('fxRow1');
-  if (r1) r1.textContent = '更新外幣匯率中…';
   try {
     const res = await fetch('https://open.er-api.com/v6/latest/USD');
     const json = await res.json();
@@ -821,21 +824,20 @@ async function updateFxRates() {
         if (json.rates[c]) data.fxRates[c] = usdToTwd / json.rates[c];
       });
       saveData();
-      updateFxDisplay();
+      renderFxPage();
       renderDashboard();
       renderInvestments();
-      return;
+      return true;
     }
   } catch (e) {}
-  if (r1) r1.textContent = '外匯更新失敗';
+  return false;
 }
 
 async function updateStockPrices() {
   const computed = computePortfolioFromTransactions();
   const symbols = Object.keys(computed.stocks);
-  if (!symbols.length) return alert('尚無股票可更新');
+  if (!symbols.length) return true;
 
-  let updatedCount = 0;
   for (let sym of symbols) {
     try {
       const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}.TW`;
@@ -843,18 +845,25 @@ async function updateStockPrices() {
       const res = await fetch(proxyUrl);
       const json = await res.json();
       const curPrice = json?.chart?.result?.[0]?.meta?.regularMarketPrice;
-      if (curPrice) { data.stockPrices[sym] = curPrice; updatedCount++; }
+      if (curPrice) { data.stockPrices[sym] = curPrice; }
     } catch (err) {}
   }
   saveData();
   renderInvestments();
   renderDashboard();
-  alert(`已更新報價（${updatedCount}/${symbols.length} 檔）`);
+  return true;
 }
 
+// 最頂部即時現價更新：觸發旋轉動畫
 async function refreshAllAssets() {
+  const svg = document.getElementById('refreshAssetSvg');
+  if (svg) svg.classList.add('spinning');
   await updateFxRates();
   await updateStockPrices();
+  setTimeout(() => {
+    if (svg) svg.classList.remove('spinning');
+    alert('🎉 已完成最新股票報價與 6 大外幣匯率同步！');
+  }, 750);
 }
 
 function promptDividendGoal() {
@@ -883,10 +892,11 @@ function toggleTitheDisplay() {
 }
 
 function toggleSection(sec) {
-  if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, project: true, freelance: true };
+  if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, envelopes: true, project: true, freelance: true };
   data.sectionsOpen[sec] = !data.sectionsOpen[sec];
   saveData();
-  renderFixedSection();
+  if (sec === 'envelopes') renderEnvelopes();
+  else renderFixedSection();
 }
 
 function toggleBudgetMode() {
@@ -1060,7 +1070,6 @@ function getCurrencyRate(cur, customRate) {
 }
 
 function renderDashboard() {
-  updateFxDisplay();
   const twdCash = (data.accountList || DEFAULT_ACCOUNTS).reduce((s, a) => s + (parseFloat(data.accounts[a]) || 0), 0);
   let fxTotalTwd = 0;
   FX_CURRENCIES.forEach(c => {
@@ -1195,6 +1204,7 @@ function deleteEnvelope(id) {
 function renderEnvelopes() {
   const cm = currentMonthStr();
   const list = document.getElementById('envelopesList');
+  if (!list) return;
   if (!data.envelopes.length) {
     list.innerHTML = '<p class="text-xs font-semibold text-center py-4" style="color:var(--text-muted)">尚未建立任何信封袋</p>';
     return;
@@ -1206,7 +1216,7 @@ function renderEnvelopes() {
     const remain = e.budget - spent;
     const pct = e.budget > 0 ? Math.min(100, (spent / e.budget) * 100) : 0;
     return `
-      <div class="pill p-4 space-y-2">
+      <div class="pill p-3 space-y-1.5">
         <div class="flex justify-between items-center">
           <div>
             <span class="bold text-sm">${e.name}</span>
@@ -1360,6 +1370,22 @@ function deleteTransaction(id) {
   renderFixedSection();
 }
 
+function setTxFilterRange(range) {
+  const btnMonth = document.getElementById('txRange_month');
+  const btnAll = document.getElementById('txRange_all');
+  if (range === 'month') {
+    btnMonth.classList.add('active');
+    btnAll.classList.remove('active');
+    resetTxMonthFilter();
+  } else {
+    btnAll.classList.add('active');
+    btnMonth.classList.remove('active');
+    document.getElementById('filterDateFrom').value = '';
+    document.getElementById('filterDateTo').value = '';
+    renderTransactions();
+  }
+}
+
 function resetTxMonthFilter() {
   const cm = currentMonthStr();
   const d = new Date();
@@ -1369,18 +1395,10 @@ function resetTxMonthFilter() {
   renderTransactions();
 }
 
-function clearTxFilters() {
-  document.getElementById('filterDateFrom').value = '';
-  document.getElementById('filterDateTo').value = '';
-  document.getElementById('filterCategory').value = '';
-  document.getElementById('filterAccount').value = '';
-  document.getElementById('filterNecessary').value = '';
-  document.getElementById('filterKeyword').value = '';
-  renderTransactions();
-}
-
-function toggleTxViewMode() {
-  data.txViewMode = data.txViewMode === 'card' ? 'table' : 'card';
+function setTxViewMode(mode) {
+  data.txViewMode = mode;
+  document.getElementById('txView_card').classList.toggle('active', mode === 'card');
+  document.getElementById('txView_table').classList.toggle('active', mode === 'table');
   saveData();
   renderTransactions();
 }
@@ -1420,7 +1438,6 @@ function renderTransactions() {
   document.getElementById('txSubtotal').textContent = formatMoney(subtotal);
 
   const isCard = data.txViewMode === 'card';
-  document.getElementById('txViewModeBtn').textContent = isCard ? '切換為表格模式' : '切換為卡片模式';
   document.getElementById('txTableView').classList.toggle('hidden', isCard);
   document.getElementById('txCardView').classList.toggle('hidden', !isCard);
 
@@ -2013,8 +2030,10 @@ function deleteStockTransaction(id) {
   renderDashboard();
 }
 
-function toggleStxViewMode() {
-  data.stxViewMode = data.stxViewMode === 'card' ? 'table' : 'card';
+function setStxViewMode(mode) {
+  data.stxViewMode = mode;
+  document.getElementById('stxView_card').classList.toggle('active', mode === 'card');
+  document.getElementById('stxView_table').classList.toggle('active', mode === 'table');
   saveData();
   renderStockTransactions();
 }
@@ -2056,7 +2075,6 @@ function renderStockTransactions() {
   const divTotal = list.filter(t => t.type === '配息').reduce((s, t) => s + (t.totalCost !== undefined ? t.totalCost : t.total), 0);
   const plTotal = (sellTotal + divTotal) - buyTotal;
 
-  // 2x2 對稱統計卡片排版
   const summaryDiv = document.getElementById('stxPeriodSummaryText');
   summaryDiv.innerHTML = `
     <div class="pill p-2"><span style="color:var(--text-muted)">總買入</span> <strong class="block bold text-sm mt-0.5" style="color:var(--text)">${formatMoney(buyTotal)}</strong></div>
@@ -2066,12 +2084,10 @@ function renderStockTransactions() {
   `;
 
   const isCard = data.stxViewMode === 'card';
-  document.getElementById('stxViewModeBtn').textContent = isCard ? '切換為表格模式' : '切換為卡片模式';
   document.getElementById('stxTableView').classList.toggle('hidden', isCard);
   document.getElementById('stxCardView').classList.toggle('hidden', !isCard);
 
   if (isCard) {
-    // 卡片模式：標的與帳戶分離，解決文字截斷破版問題
     document.getElementById('stxCardView').innerHTML = list.map(t => `
       <div class="pill p-3 space-y-1.5 text-xs">
         <div class="flex justify-between items-center">
@@ -2086,7 +2102,7 @@ function renderStockTransactions() {
           </div>
         </div>
         <div class="flex justify-between items-center tabular font-semibold" style="color:var(--text-muted)">
-          <span>${t.shares} 股/單位 × $${t.price} ｜ 費 $${t.fee} · 稅 $${t.tax} ｜ <strong style="color:var(--text)">${t.account}</strong></span>
+          <span>${t.shares} 股/單位 × $${t.price} ｜ 費 $${t.fee} · 稅 $${t.tax} ｜ <span style="color:var(--text-muted); font-weight:500">${t.account}</span></span>
           <strong class="bold text-sm" style="color:var(--text)">${formatMoney(t.totalCost !== undefined ? t.totalCost : t.total)}</strong>
         </div>
         ${t.note ? `<div class="text-[11px] font-semibold" style="color:var(--text-muted)">備註：${t.note}</div>` : ''}
@@ -2354,9 +2370,9 @@ function sortListByCriteria(list, criteria, nameField) {
 }
 
 function renderFixedSection() {
-  if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, project: true, freelance: true };
+  if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, envelopes: true, project: true, freelance: true };
 
-  // 固定收支
+  // 1. 固定收支
   const fixOpen = data.sectionsOpen.fixed !== false;
   document.getElementById('fixedArrow').textContent = fixOpen ? '▼' : '▶';
   document.getElementById('fixedBody').style.display = fixOpen ? 'block' : 'none';
@@ -2386,7 +2402,12 @@ function renderFixedSection() {
     `).join('') || '<p class="text-xs font-semibold text-center py-2" style="color:var(--text-muted)">尚無固定收支項目</p>';
   }
 
-  // 特殊專案
+  // 2. 數位信封預算折疊
+  const envOpen = data.sectionsOpen.envelopes !== false;
+  document.getElementById('envelopesArrow').textContent = envOpen ? '▼' : '▶';
+  document.getElementById('envelopesBody').style.display = envOpen ? 'block' : 'none';
+
+  // 3. 特殊專案
   const projOpen = data.sectionsOpen.project !== false;
   document.getElementById('projectArrow').textContent = projOpen ? '▼' : '▶';
   document.getElementById('projectBody').style.display = projOpen ? 'block' : 'none';
@@ -2453,7 +2474,7 @@ function renderFixedSection() {
     }
   }
 
-  // 接案追蹤
+  // 4. 接案追蹤
   const freeOpen = data.sectionsOpen.freelance !== false;
   document.getElementById('freelanceArrow').textContent = freeOpen ? '▼' : '▶';
   document.getElementById('freelanceBody').style.display = freeOpen ? 'block' : 'none';
@@ -2803,6 +2824,7 @@ function importData(event) {
         if (incoming.fxExchanges) data.fxExchanges = incoming.fxExchanges;
         if (incoming.projects) data.projects = incoming.projects;
         if (incoming.fixedItems) data.fixedItems = incoming.fixedItems;
+        if (incoming.envelopes) data.envelopes = incoming.envelopes;
         if (incoming.monthlyBudget !== undefined) data.monthlyBudget = incoming.monthlyBudget;
         if (incoming.dividendGoal !== undefined) data.dividendGoal = incoming.dividendGoal;
 

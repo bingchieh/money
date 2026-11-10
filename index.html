@@ -22,12 +22,21 @@
         <img src="icon.png" alt="logo" class="w-11 h-11 rounded-2xl object-cover" onerror="this.style.display='none'" />
         <div>
           <h1 class="text-xl heavy tracking-tight">⛁我的錢錢⛃</h1>
-          <p class="text-xs font-semibold" style="color:var(--text-muted)" id="storageStatus">儲存狀態檢查中…</p>
+          <p class="text-xs font-semibold" style="color:var(--text-muted)" id="storageStatus">LocalStorage 自動儲存中</p>
         </div>
       </div>
+      <!-- 最頂部 Header 右側：刷新圖示按鈕 ＋ 深淺色切換按鈕 -->
       <div class="flex items-center gap-2">
+        <button id="refreshAssetBtn" onclick="refreshAllAssets()" title="即時現價更新" class="btn w-9 h-9 rounded-full p-0 flex items-center justify-center">
+          <svg id="refreshAssetSvg" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+            <path d="M3 3v5h5"/>
+            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
+            <path d="M16 21h5v-5"/>
+          </svg>
+        </button>
         <button id="themeBtn" onclick="toggleTheme()" class="btn w-9 h-9 rounded-full p-0 flex items-center justify-center">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2v2"/>
             <path d="M14.837 16.385a6 6 0 1 1-7.223-7.222c.624-.147.97.66.715 1.248a4 4 0 0 0 5.26 5.259c.589-.255 1.396.09 1.248.715"/>
             <path d="M16 12a4 4 0 0 0-4-4"/>
@@ -40,20 +49,6 @@
 
     <!-- 看板 -->
     <section id="tab-dashboard" class="tab-content active space-y-4">
-      <!-- 頂部 4 個操作按鈕：2x2 矩陣網格 + 匯率兩行靠左對齊 -->
-      <div class="card p-4 space-y-3">
-        <div class="grid grid-cols-2 gap-2">
-          <button onclick="refreshAllAssets()" class="btn-primary btn text-xs py-2.5">一鍵全資產即時刷新</button>
-          <button onclick="updateStockPrices()" class="btn text-xs py-2.5">更新股票 / ETF</button>
-          <button onclick="updateFxRates()" class="btn text-xs py-2.5">更新外匯</button>
-          <button onclick="openFxCenterModal()" class="btn text-xs py-2.5">換匯中心</button>
-        </div>
-        <div id="apiStatus" class="text-xs font-bold space-y-1 text-left tabular" style="color:var(--text-muted)">
-          <div id="fxRow1">USD 32.85 ｜ EUR 35.42 ｜ GBP 42.15</div>
-          <div id="fxRow2">CNY 4.91   ｜ JPY 0.2075 ｜ KRW 0.0238</div>
-        </div>
-      </div>
-
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         <div class="card-dark p-5 flex flex-col justify-between h-28">
           <p class="text-sm font-bold opacity-75">淨資產總額</p>
@@ -158,28 +153,14 @@
       </div>
     </section>
 
-    <!-- 信封 -->
-    <section id="tab-envelopes" class="tab-content space-y-4">
-      <div class="card p-5">
-        <div class="flex items-center justify-between mb-4">
-          <h2 class="bold text-base">數位信封袋預算</h2>
-          <button onclick="openEnvelopeModal()" class="btn-primary btn text-xs">新增信封</button>
-        </div>
-        <p class="text-xs font-semibold mb-3" style="color:var(--text-muted)">記帳時選擇分類會自動扣除對應信封</p>
-        <div id="envelopesList" class="space-y-3"></div>
-      </div>
-    </section>
-
-    <!-- 記帳 -->
+    <!-- 記帳（順序第 2 位） -->
     <section id="tab-transactions" class="tab-content space-y-4">
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3">
           <h2 class="bold text-base">新增帳務</h2>
-          <div class="flex gap-2">
-            <button onclick="openScanModal()" class="btn text-xs px-3 py-1.5 flex items-center gap-1">
-              <span>📷</span> 鏡頭掃碼
-            </button>
-          </div>
+          <button onclick="openScanModal()" class="btn text-xs px-3 py-1.5 flex items-center gap-1">
+            <span>📷</span> 鏡頭掃碼
+          </button>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
           <div>
@@ -257,11 +238,20 @@
         <button onclick="addTransaction()" class="btn-primary btn w-full mt-4 py-3">新增帳務</button>
       </div>
 
-      <!-- 帳務明細：右上角只留單一卡片模式切換鈕，不再破版掉落 -->
+      <!-- 帳務明細：頂部整齊合流「[ 本月 ｜ 歷史 ]」與「[ 卡片 ｜ 表格 ]」 -->
       <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h2 class="bold text-base">帳務明細</h2>
-          <button id="txViewModeBtn" onclick="toggleTxViewMode()" class="btn text-xs px-3 py-1">切換為卡片模式</button>
+          <div class="flex items-center gap-2">
+            <div class="btn-capsule-group">
+              <button id="txRange_month" onclick="setTxFilterRange('month')" class="btn-capsule-item active">本月</button>
+              <button id="txRange_all" onclick="setTxFilterRange('all')" class="btn-capsule-item">歷史</button>
+            </div>
+            <div class="btn-capsule-group">
+              <button id="txView_card" onclick="setTxViewMode('card')" class="btn-capsule-item active">卡片</button>
+              <button id="txView_table" onclick="setTxViewMode('table')" class="btn-capsule-item">表格</button>
+            </div>
+          </div>
         </div>
 
         <div class="space-y-2 mb-3">
@@ -290,18 +280,15 @@
             <input type="text" id="filterKeyword" class="input text-xs" placeholder="搜尋明細..." oninput="renderTransactions()" />
           </div>
         </div>
-        <div class="flex gap-2 mb-3">
-          <button onclick="resetTxMonthFilter()" class="btn text-xs px-4">只看本月</button>
-          <button onclick="clearTxFilters()" class="btn text-xs px-4">查看全部歷史</button>
-        </div>
+        
         <div class="text-xs bold mb-3">小計：<span id="txSubtotal" class="tabular heavy text-sm">$0</span></div>
 
-        <div id="txTableView" class="overflow-x-auto">
+        <div id="txTableView" class="hidden overflow-x-auto">
           <table class="w-full">
             <thead>
               <tr class="whitespace-nowrap">
-                <th class="w-20 cursor-pointer hover:opacity-80" onclick="toggleTxDateSort()" title="點擊切換日期升降序">
-                  日期 <span id="txSortArrow" class="text-sm">▼</span>
+                <th class="w-20 cursor-pointer hover:opacity-80" onclick="toggleTxDateSort()" title="點擊切換升降序">
+                  <span id="txSortArrow" class="text-sm">▼</span> 日期
                 </th>
                 <th class="min-w-[140px]">項目名稱</th>
                 <th class="w-24 text-right">金額</th>
@@ -318,7 +305,7 @@
           </table>
         </div>
 
-        <div id="txCardView" class="hidden space-y-2.5 max-h-[600px] overflow-y-auto"></div>
+        <div id="txCardView" class="space-y-2.5 max-h-[600px] overflow-y-auto"></div>
       </div>
     </section>
 
@@ -343,24 +330,22 @@
         </div>
       </div>
 
-      <!-- 股票區塊：徹底刪除表頭多餘的 ≡，欄位 100% 垂直對齊 -->
+      <!-- 股票區塊：同一行排版，移除彩色圖示 -->
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <div class="flex items-center gap-3">
-            <h2 class="bold text-base">ETF / 股票</h2>
-            <select id="stocksSortOrder" class="input text-xs py-1 px-2.5 w-auto" onchange="onStockSortChange(this.value)">
-              <option value="custom">🔀 預設排序</option>
-              <option value="name_asc">🔤 名稱 (A ➔ Z)</option>
-              <option value="name_desc">🔤 名稱 (Z ➔ A)</option>
-              <option value="mv_desc">💰 市值 (高 ➔ 低)</option>
-              <option value="shares_desc">📊 股數 (多 ➔ 少)</option>
-              <option value="recent_tx">🕒 最近交易 (新 ➔ 舊)</option>
-            </select>
-          </div>
+          <h2 class="bold text-base">ETF / 股票</h2>
           <div class="flex items-center gap-3">
             <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer select-none" style="color:var(--text-muted)">
-              <input type="checkbox" id="showClosedStocksCheck" onchange="toggleShowClosedStocks(this.checked)" /> 顯示已結清標的
+              <input type="checkbox" id="showClosedStocksCheck" onchange="toggleShowClosedStocks(this.checked)" /> 顯示已結清
             </label>
+            <select id="stocksSortOrder" class="input text-xs py-1 px-2.5 w-auto" onchange="onStockSortChange(this.value)">
+              <option value="custom">預設排序</option>
+              <option value="name_asc">名稱 (A ➔ Z)</option>
+              <option value="name_desc">名稱 (Z ➔ A)</option>
+              <option value="mv_desc">市值 (高 ➔ 低)</option>
+              <option value="shares_desc">股數 (多 ➔ 少)</option>
+              <option value="recent_tx">最近交易 (新 ➔ 舊)</option>
+            </select>
           </div>
         </div>
         <div class="overflow-x-auto">
@@ -386,21 +371,19 @@
       <!-- 基金區塊 -->
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <div class="flex items-center gap-3">
-            <h2 class="bold text-base">基金</h2>
-            <select id="fundsSortOrder" class="input text-xs py-1 px-2.5 w-auto" onchange="onFundSortChange(this.value)">
-              <option value="custom">🔀 預設排序</option>
-              <option value="name_asc">🔤 名稱 (A ➔ Z)</option>
-              <option value="name_desc">🔤 名稱 (Z ➔ A)</option>
-              <option value="mv_desc">💰 市值 (高 ➔ 低)</option>
-              <option value="units_desc">📊 單位數 (多 ➔ 少)</option>
-              <option value="recent_tx">🕒 最近交易 (新 ➔ 舊)</option>
-            </select>
-          </div>
+          <h2 class="bold text-base">基金</h2>
           <div class="flex items-center gap-3">
             <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer select-none" style="color:var(--text-muted)">
-              <input type="checkbox" id="showClosedFundsCheck" onchange="toggleShowClosedFunds(this.checked)" /> 顯示已結清標的
+              <input type="checkbox" id="showClosedFundsCheck" onchange="toggleShowClosedFunds(this.checked)" /> 顯示已結清
             </label>
+            <select id="fundsSortOrder" class="input text-xs py-1 px-2.5 w-auto" onchange="onFundSortChange(this.value)">
+              <option value="custom">預設排序</option>
+              <option value="name_asc">名稱 (A ➔ Z)</option>
+              <option value="name_desc">名稱 (Z ➔ A)</option>
+              <option value="mv_desc">市值 (高 ➔ 低)</option>
+              <option value="units_desc">單位數 (多 ➔ 少)</option>
+              <option value="recent_tx">最近交易 (新 ➔ 舊)</option>
+            </select>
           </div>
         </div>
         <div class="overflow-x-auto">
@@ -489,11 +472,13 @@
         <button onclick="addStockTransaction()" class="btn-primary btn w-full mt-4 py-3">新增交易</button>
       </div>
 
-      <!-- 交易流水帳：結算列改為 2x2 對稱排版，解決手機孤兒行斷裂 -->
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3">
           <h2 class="bold text-base">交易流水帳</h2>
-          <button id="stxViewModeBtn" onclick="toggleStxViewMode()" class="btn text-xs px-3 py-1">切換為卡片模式</button>
+          <div class="btn-capsule-group">
+            <button id="stxView_card" onclick="setStxViewMode('card')" class="btn-capsule-item">卡片</button>
+            <button id="stxView_table" onclick="setStxViewMode('table')" class="btn-capsule-item active">表格</button>
+          </div>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
@@ -524,8 +509,8 @@
           <table class="w-full">
             <thead class="sticky-header">
               <tr class="whitespace-nowrap">
-                <th class="px-3 sticky-col cursor-pointer hover:opacity-80" onclick="toggleStxDateSort()" title="點擊切換日期升降序">
-                  日期 <span id="stxSortArrow" class="text-sm">▼</span>
+                <th class="px-3 sticky-col cursor-pointer hover:opacity-80" onclick="toggleStxDateSort()" title="點擊切換升降序">
+                  <span id="stxSortArrow" class="text-sm">▼</span> 日期
                 </th>
                 <th class="px-3">帳戶</th>
                 <th class="px-2">類別</th>
@@ -547,8 +532,130 @@
       </div>
     </section>
 
-    <!-- 專案（徹底解決手機版按鈕擠壓與折行問題） -->
+    <!-- 換匯（獨立一級主頁面） -->
+    <section id="tab-fx" class="tab-content space-y-4">
+      <div class="card p-5 space-y-2">
+        <div class="flex items-center justify-between">
+          <h2 class="bold text-base">即時參考匯率</h2>
+          <button onclick="updateFxRates()" class="btn text-xs px-3 py-1">重新整理匯率</button>
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-xs font-bold tabular pt-1 border-t border-zinc-200 dark:border-zinc-800" style="color:var(--text-muted)">
+          <div id="fx_usd_display">USD 32.85</div>
+          <div id="fx_eur_display">EUR 35.42</div>
+          <div id="fx_gbp_display">GBP 42.15</div>
+          <div id="fx_cny_display">CNY 4.91</div>
+          <div id="fx_jpy_display">JPY 0.2075</div>
+          <div id="fx_krw_display">KRW 0.0238</div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <h2 class="bold text-base mb-3">外幣持有成本均價</h2>
+        <div class="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          <div class="pill p-2 text-center">
+            <p class="text-[10px] font-bold" style="color:var(--text-muted)">USD 均價</p>
+            <p class="bold text-xs tabular mt-0.5" id="avgCost_USD">--</p>
+          </div>
+          <div class="pill p-2 text-center">
+            <p class="text-[10px] font-bold" style="color:var(--text-muted)">JPY 均價</p>
+            <p class="bold text-xs tabular mt-0.5" id="avgCost_JPY">--</p>
+          </div>
+          <div class="pill p-2 text-center">
+            <p class="text-[10px] font-bold" style="color:var(--text-muted)">CNY 均價</p>
+            <p class="bold text-xs tabular mt-0.5" id="avgCost_CNY">--</p>
+          </div>
+          <div class="pill p-2 text-center">
+            <p class="text-[10px] font-bold" style="color:var(--text-muted)">KRW 均價</p>
+            <p class="bold text-xs tabular mt-0.5" id="avgCost_KRW">--</p>
+          </div>
+          <div class="pill p-2 text-center">
+            <p class="text-[10px] font-bold" style="color:var(--text-muted)">EUR 均價</p>
+            <p class="bold text-xs tabular mt-0.5" id="avgCost_EUR">--</p>
+          </div>
+          <div class="pill p-2 text-center">
+            <p class="text-[10px] font-bold" style="color:var(--text-muted)">GBP 均價</p>
+            <p class="bold text-xs tabular mt-0.5" id="avgCost_GBP">--</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="bold text-base" id="fxFormTitle">新增換匯</h2>
+          <button id="fxCancelEditBtn" onclick="cancelFxEdit()" class="btn text-xs px-2.5 py-1 hidden">取消編輯</button>
+        </div>
+        <input type="hidden" id="fxEditId" />
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+          <div>
+            <label class="font-bold" style="color:var(--text-muted)">日期</label>
+            <input type="date" id="fxDate" class="input mt-1 text-xs" />
+          </div>
+          <div>
+            <label class="font-bold" style="color:var(--text-muted)">支出幣別</label>
+            <select id="fxFromCurrency" class="input mt-1 text-xs" onchange="calcFxRatePreview()">
+              <option value="TWD">TWD (台幣)</option>
+              <option value="USD">USD (美元)</option>
+              <option value="JPY">JPY (日幣)</option>
+              <option value="KRW">KRW (韓元)</option>
+              <option value="CNY">CNY (人民幣)</option>
+              <option value="EUR">EUR (歐元)</option>
+              <option value="GBP">GBP (英鎊)</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold" style="color:var(--text-muted)">扣款帳戶</label>
+            <select id="fxFromAccount" class="input mt-1 text-xs"></select>
+          </div>
+          <div>
+            <label class="font-bold" style="color:var(--text-muted)">支出金額</label>
+            <input type="number" id="fxFromAmount" class="input mt-1 tabular text-xs" step="any" oninput="calcFxRatePreview()" />
+          </div>
+
+          <div>
+            <label class="font-bold" style="color:var(--text-muted)">換得幣別</label>
+            <select id="fxToCurrency" class="input mt-1 text-xs" onchange="calcFxRatePreview()">
+              <option value="JPY">JPY (日幣)</option>
+              <option value="USD">USD (美元)</option>
+              <option value="KRW">KRW (韓元)</option>
+              <option value="CNY">CNY (人民幣)</option>
+              <option value="EUR">EUR (歐元)</option>
+              <option value="GBP">GBP (英鎊)</option>
+              <option value="TWD">TWD (台幣)</option>
+            </select>
+          </div>
+          <div>
+            <label class="font-bold" style="color:var(--text-muted)">入帳帳戶（可同銀行）</label>
+            <select id="fxToAccount" class="input mt-1 text-xs"></select>
+          </div>
+          <div>
+            <label class="font-bold" style="color:var(--text-muted)">換得金額</label>
+            <input type="number" id="fxToAmount" class="input mt-1 tabular text-xs" step="any" oninput="calcFxRatePreview()" />
+          </div>
+          <div>
+            <label class="font-bold" style="color:var(--text-muted)">成交試算匯率</label>
+            <div class="input mt-1 text-xs tabular font-bold text-center" style="background:var(--bg)" id="fxCalculatedRate">--</div>
+          </div>
+
+          <div class="sm:col-span-2 md:col-span-4">
+            <label class="font-bold" style="color:var(--text-muted)">備註</label>
+            <input type="text" id="fxNote" class="input mt-1 text-xs" />
+          </div>
+        </div>
+
+        <button id="fxSubmitBtn" onclick="saveFxExchange()" class="btn-primary btn w-full mt-2 py-3">儲存換匯</button>
+      </div>
+
+      <!-- 歷史換匯紀錄（方法 2：兩行結構化展示） -->
+      <div class="card p-5">
+        <h2 class="bold text-base mb-3">歷史換匯紀錄</h2>
+        <div id="fxHistoryList" class="space-y-2"></div>
+      </div>
+    </section>
+
+    <!-- 專案（收納信封袋） -->
     <section id="tab-fixed" class="tab-content space-y-4">
+      <!-- 1. 固定收支 -->
       <div class="card p-5 space-y-3">
         <div class="flex items-center justify-between">
           <button onclick="toggleSection('fixed')" class="flex items-center gap-1.5 bold text-base text-left">
@@ -557,19 +664,34 @@
           <button onclick="openFixedModal()" class="btn-primary btn text-xs">新增</button>
         </div>
         <div id="fixedBody" class="space-y-2">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <input type="text" id="filterFixedKeyword" class="input text-xs" placeholder="搜尋固定收支名稱..." oninput="renderFixedSection()" />
-            <select id="fixedSortOrder" class="input text-xs" onchange="renderFixedSection()">
-              <option value="date_desc">🕒 時間 (新 ➔ 舊)</option>
-              <option value="date_asc">🕒 時間 (舊 ➔ 新)</option>
-              <option value="name_asc">🔤 名稱 (A ➔ Z)</option>
-              <option value="name_desc">🔤 名稱 (Z ➔ A)</option>
+          <div class="flex items-center justify-between flex-wrap gap-2 text-xs">
+            <input type="text" id="filterFixedKeyword" class="input text-xs flex-1" placeholder="搜尋固定收支名稱..." oninput="renderFixedSection()" />
+            <select id="fixedSortOrder" class="input text-xs w-auto py-1" onchange="renderFixedSection()">
+              <option value="date_desc">時間 (新 ➔ 舊)</option>
+              <option value="date_asc">時間 (舊 ➔ 新)</option>
+              <option value="name_asc">名稱 (A ➔ Z)</option>
+              <option value="name_desc">名稱 (Z ➔ A)</option>
             </select>
           </div>
           <div id="fixedList" class="space-y-2 pt-1"></div>
         </div>
       </div>
 
+      <!-- 2. 數位信封預算 -->
+      <div class="card p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <button onclick="toggleSection('envelopes')" class="flex items-center gap-1.5 bold text-base text-left">
+            <span id="envelopesArrow">▼</span> 數位信封預算
+          </button>
+          <button onclick="openEnvelopeModal()" class="btn-primary btn text-xs">新增信封</button>
+        </div>
+        <div id="envelopesBody" class="space-y-2">
+          <p class="text-xs font-semibold" style="color:var(--text-muted)">指定分類時將自動扣抵信封額度</p>
+          <div id="envelopesList" class="space-y-2 pt-1"></div>
+        </div>
+      </div>
+
+      <!-- 3. 特殊專案 -->
       <div class="card p-5 space-y-3">
         <div class="flex items-center justify-between">
           <button onclick="toggleSection('project')" class="flex items-center gap-1.5 bold text-base text-left">
@@ -586,10 +708,10 @@
               <input type="checkbox" id="showArchivedProjectsCheck" onchange="toggleShowArchivedProjects(this.checked)" /> 顯示已結束專案
             </label>
             <select id="projectsSortOrder" class="input text-xs w-auto py-1" onchange="renderFixedSection()">
-              <option value="date_desc">🕒 時間 (新 ➔ 舊)</option>
-              <option value="date_asc">🕒 時間 (舊 ➔ 新)</option>
-              <option value="name_asc">🔤 名稱 (A ➔ Z)</option>
-              <option value="name_desc">🔤 名稱 (Z ➔ A)</option>
+              <option value="date_desc">時間 (新 ➔ 舊)</option>
+              <option value="date_asc">時間 (舊 ➔ 新)</option>
+              <option value="name_asc">名稱 (A ➔ Z)</option>
+              <option value="name_desc">名稱 (Z ➔ A)</option>
             </select>
           </div>
           <input type="text" id="filterProjectsKeyword" class="input text-xs" placeholder="搜尋專案名稱..." oninput="renderFixedSection()" />
@@ -612,7 +734,7 @@
         </div>
       </div>
 
-      <!-- 接案追蹤：方案 B 純文字膠囊列（全部 ｜ 待收款 ｜ 已收款） -->
+      <!-- 4. 接案追蹤 -->
       <div class="card p-5 space-y-3">
         <div class="flex items-center justify-between">
           <button onclick="toggleSection('freelance')" class="flex items-center gap-1.5 bold text-base text-left">
@@ -628,8 +750,8 @@
               <button id="flFilter_paid" onclick="setFreelanceFilter('paid')" class="btn-capsule-item">已收款</button>
             </div>
             <select id="freelanceSortOrder" class="input text-xs w-auto py-1" onchange="renderFixedSection()">
-              <option value="date_desc">🕒 日期 (新 ➔ 舊)</option>
-              <option value="date_asc">🕒 日期 (舊 ➔ 新)</option>
+              <option value="date_desc">日期 (新 ➔ 舊)</option>
+              <option value="date_asc">日期 (舊 ➔ 新)</option>
             </select>
           </div>
           <div id="freelanceUnpaidSummary" class="hidden pill p-2.5 text-xs font-bold flex justify-between items-center bg-zinc-100 dark:bg-zinc-800">
@@ -642,7 +764,7 @@
       </div>
     </section>
 
-    <!-- 報表 -->
+    <!-- 報表（標題全數極簡化） -->
     <section id="tab-charts" class="tab-content space-y-4">
       <div class="card p-5 space-y-6">
         <div class="flex items-center justify-between flex-wrap gap-2">
@@ -661,7 +783,7 @@
         <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
           <span class="text-xs font-bold" style="color:var(--text-muted)">圓餅圖色調</span>
           <div class="btn-capsule-group">
-            <button id="paletteBtn_gray" onclick="setChartPalette('gray')" class="btn-capsule-item active">跳色灰階</button>
+            <button id="paletteBtn_gray" onclick="setChartPalette('gray')" class="btn-capsule-item active">灰階</button>
             <button id="paletteBtn_p1" onclick="setChartPalette('p1')" class="btn-capsule-item">組合 1</button>
             <button id="paletteBtn_p2" onclick="setChartPalette('p2')" class="btn-capsule-item">組合 2</button>
             <button id="paletteBtn_p3" onclick="setChartPalette('p3')" class="btn-capsule-item">組合 3</button>
@@ -669,7 +791,7 @@
         </div>
 
         <div>
-          <h2 class="bold text-base mb-3">費用分類圓餅圖</h2>
+          <h2 class="bold text-base mb-3">分類</h2>
           <div class="max-w-md mx-auto">
             <canvas id="categoryPieChart" height="240"></canvas>
           </div>
@@ -678,7 +800,7 @@
         <div class="border-t border-zinc-200 dark:border-zinc-800"></div>
 
         <div>
-          <h2 class="bold text-base mb-3">帳戶 / 卡片支出佔比</h2>
+          <h2 class="bold text-base mb-3">帳戶</h2>
           <div class="max-w-md mx-auto">
             <canvas id="accountPieChart" height="240"></canvas>
           </div>
@@ -687,7 +809,7 @@
         <div class="border-t border-zinc-200 dark:border-zinc-800"></div>
 
         <div>
-          <h2 class="bold text-base mb-3">必要 vs 非必要支出佔比</h2>
+          <h2 class="bold text-base mb-3">必要 vs 非必要</h2>
           <div class="max-w-md mx-auto">
             <canvas id="necessaryPieChart" height="220"></canvas>
           </div>
@@ -711,15 +833,11 @@
     </section>
   </div>
 
-  <!-- 貼底導覽列 -->
+  <!-- 貼底導覽列：全新順序（看板 ｜ 記帳 ｜ 投資 ｜ 交易 ｜ 換匯 ｜ 專案 ｜ 報表） -->
   <nav class="bottom-bar">
     <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
       看板
-    </button>
-    <button class="nav-item" data-tab="envelopes" onclick="switchTab('envelopes')">
-      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-      信封
     </button>
     <button class="nav-item" data-tab="transactions" onclick="switchTab('transactions')">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
@@ -732,6 +850,10 @@
     <button class="nav-item" data-tab="stockTx" onclick="switchTab('stockTx')">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
       交易
+    </button>
+    <button class="nav-item" data-tab="fx" onclick="switchTab('fx')">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      換匯
     </button>
     <button class="nav-item" data-tab="fixed" onclick="switchTab('fixed')">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
@@ -923,114 +1045,6 @@
         <button onclick="saveTxEdit()" class="btn-primary btn flex-1 py-2.5">儲存修改</button>
         <button onclick="closeModal('txEditModal')" class="btn flex-1 py-2.5">取消</button>
       </div>
-    </div>
-  </div>
-
-  <div id="fxCenterModal" class="modal-overlay hidden">
-    <div class="modal">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-base bold" id="fxModalTitle">全外幣換匯中心</h3>
-        <button id="fxCancelEditBtn" onclick="cancelFxEdit()" class="btn text-xs px-2.5 py-1 hidden">取消編輯</button>
-      </div>
-      <input type="hidden" id="fxEditId" />
-
-      <div class="grid grid-cols-3 gap-2 mb-4">
-        <div class="pill p-2 text-center">
-          <p class="text-[10px] font-bold" style="color:var(--text-muted)">USD 均價</p>
-          <p class="bold text-xs tabular mt-0.5" id="avgCost_USD">--</p>
-        </div>
-        <div class="pill p-2 text-center">
-          <p class="text-[10px] font-bold" style="color:var(--text-muted)">JPY 均價</p>
-          <p class="bold text-xs tabular mt-0.5" id="avgCost_JPY">--</p>
-        </div>
-        <div class="pill p-2 text-center">
-          <p class="text-[10px] font-bold" style="color:var(--text-muted)">CNY 均價</p>
-          <p class="bold text-xs tabular mt-0.5" id="avgCost_CNY">--</p>
-        </div>
-        <div class="pill p-2 text-center">
-          <p class="text-[10px] font-bold" style="color:var(--text-muted)">KRW 均價</p>
-          <p class="bold text-xs tabular mt-0.5" id="avgCost_KRW">--</p>
-        </div>
-        <div class="pill p-2 text-center">
-          <p class="text-[10px] font-bold" style="color:var(--text-muted)">EUR 均價</p>
-          <p class="bold text-xs tabular mt-0.5" id="avgCost_EUR">--</p>
-        </div>
-        <div class="pill p-2 text-center">
-          <p class="text-[10px] font-bold" style="color:var(--text-muted)">GBP 均價</p>
-          <p class="bold text-xs tabular mt-0.5" id="avgCost_GBP">--</p>
-        </div>
-      </div>
-
-      <div class="space-y-2 text-xs">
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">日期</label>
-          <input type="date" id="fxDate" class="input mt-1 text-xs" />
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="font-bold" style="color:var(--text-muted)">支出幣別</label>
-            <select id="fxFromCurrency" class="input mt-1 text-xs" onchange="calcFxRatePreview()">
-              <option value="TWD">TWD (台幣)</option>
-              <option value="USD">USD (美元)</option>
-              <option value="JPY">JPY (日幣)</option>
-              <option value="KRW">KRW (韓元)</option>
-              <option value="CNY">CNY (人民幣)</option>
-              <option value="EUR">EUR (歐元)</option>
-              <option value="GBP">GBP (英鎊)</option>
-            </select>
-          </div>
-          <div>
-            <label class="font-bold" style="color:var(--text-muted)">扣款帳戶</label>
-            <select id="fxFromAccount" class="input mt-1 text-xs"></select>
-          </div>
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">支出金額</label>
-          <input type="number" id="fxFromAmount" class="input mt-1 tabular text-xs" step="any" oninput="calcFxRatePreview()" />
-        </div>
-
-        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-zinc-200 dark:border-zinc-800">
-          <div>
-            <label class="font-bold" style="color:var(--text-muted)">換得幣別</label>
-            <select id="fxToCurrency" class="input mt-1 text-xs" onchange="calcFxRatePreview()">
-              <option value="JPY">JPY (日幣)</option>
-              <option value="USD">USD (美元)</option>
-              <option value="KRW">KRW (韓元)</option>
-              <option value="CNY">CNY (人民幣)</option>
-              <option value="EUR">EUR (歐元)</option>
-              <option value="GBP">GBP (英鎊)</option>
-              <option value="TWD">TWD (台幣)</option>
-            </select>
-          </div>
-          <div>
-            <label class="font-bold" style="color:var(--text-muted)">入帳帳戶（可與扣款同銀行）</label>
-            <select id="fxToAccount" class="input mt-1 text-xs"></select>
-          </div>
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">換得金額</label>
-          <input type="number" id="fxToAmount" class="input mt-1 tabular text-xs" step="any" oninput="calcFxRatePreview()" />
-        </div>
-
-        <div class="p-2.5 rounded-xl border border-zinc-200 dark:border-zinc-800 text-center" style="background:var(--bg)">
-          <span class="text-xs font-bold" style="color:var(--text-muted)">即時試算成交匯率：</span>
-          <span id="fxCalculatedRate" class="heavy text-xs ml-1">--</span>
-        </div>
-
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">備註</label>
-          <input type="text" id="fxNote" class="input mt-1 text-xs" />
-        </div>
-
-        <button id="fxSubmitBtn" onclick="saveFxExchange()" class="btn-primary btn w-full mt-2">儲存換匯</button>
-      </div>
-
-      <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800">
-        <p class="text-xs bold mb-2">歷史換匯紀錄</p>
-        <div id="fxHistoryList" class="max-h-44 overflow-y-auto space-y-1.5 text-xs"></div>
-      </div>
-
-      <button onclick="closeModal('fxCenterModal')" class="btn btn-secondary w-full mt-4">關閉</button>
     </div>
   </div>
 
