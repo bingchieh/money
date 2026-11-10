@@ -52,7 +52,6 @@
   font-style: normal;
 }
 
-/* 全站字重提升一級：不再使用 400/500，預設基底為 600 SemiBold */
 body {
   margin: 0;
   background: var(--bg);
@@ -455,6 +454,16 @@ td {
   cursor: grab;
   user-select: none;
   touch-action: none;
+}
+
+.sortable-th {
+  cursor: pointer;
+  user-select: none;
+  transition: opacity 0.15s;
+}
+
+.sortable-th:hover {
+  opacity: 0.7;
 }
 
 .sticky-col {

@@ -65,8 +65,16 @@ const DEFAULT_DATA = {
   txViewMode: 'card',
   stxViewMode: 'table',
   projectViewMode: 'card',
+  txDateSortAsc: false,
+  stxDateSortAsc: false,
+  stocksSortOrder: 'custom',
+  fundsSortOrder: 'custom',
+  fixedSortOrder: 'date_desc',
+  projectsSortOrder: 'date_desc',
+  freelanceFilter: 'all',
   showClosedStocks: false,
   showClosedFunds: false,
+  showArchivedProjects: false,
   stockPrices: {},
   stockYields: {},
   stockCustomOverrides: {},
@@ -103,12 +111,13 @@ function formatMoney(n) {
   return s + '$' + Math.abs(Math.round(n)).toLocaleString('zh-TW');
 }
 
+// 損益格式化（選項 B）：賺錢純亮白 Bold，賠錢霧面冷銀灰 (#9E9EA8) Heavy 特粗
 function formatPLHtml(pl) {
   const rounded = Math.round(pl || 0);
   if (rounded > 0) {
     return `<span class="bold tabular text-sm" style="color:var(--text)">+${formatMoney(rounded)}</span>`;
   } else if (rounded < 0) {
-    return `<span class="heavy tabular text-sm opacity-80" style="color:var(--text)">${formatMoney(rounded)}</span>`;
+    return `<span class="heavy tabular text-sm" style="color:#9E9EA8">${formatMoney(rounded)}</span>`;
   } else {
     return `<span class="tabular text-sm opacity-60" style="color:var(--text)">$0</span>`;
   }
@@ -207,8 +216,16 @@ function loadData() {
       if (!data.txViewMode) data.txViewMode = window.innerWidth > 768 ? 'table' : 'card';
       if (!data.stxViewMode) data.stxViewMode = 'table';
       if (!data.projectViewMode) data.projectViewMode = 'card';
+      if (data.txDateSortAsc === undefined) data.txDateSortAsc = false;
+      if (data.stxDateSortAsc === undefined) data.stxDateSortAsc = false;
+      if (!data.stocksSortOrder) data.stocksSortOrder = 'custom';
+      if (!data.fundsSortOrder) data.fundsSortOrder = 'custom';
+      if (!data.fixedSortOrder) data.fixedSortOrder = 'date_desc';
+      if (!data.projectsSortOrder) data.projectsSortOrder = 'date_desc';
+      if (!data.freelanceFilter) data.freelanceFilter = 'all';
       if (data.showClosedStocks === undefined) data.showClosedStocks = false;
       if (data.showClosedFunds === undefined) data.showClosedFunds = false;
+      if (data.showArchivedProjects === undefined) data.showArchivedProjects = false;
       if (!data.stockPrices) data.stockPrices = {};
       if (!data.stockYields) data.stockYields = {};
       if (!data.stockCustomOverrides) data.stockCustomOverrides = {};
@@ -225,6 +242,11 @@ function loadData() {
         if (st.totalCost !== undefined) st.totalCost = Math.abs(st.totalCost);
         if (st.fee !== undefined) st.fee = Math.abs(st.fee);
         if (st.tax !== undefined) st.tax = Math.abs(st.tax);
+      });
+
+      // 歷史接案狀態正規化：若原本是「進行中」，自動轉換為「待收款」
+      (data.freelances || []).forEach(f => {
+        if (f.status === '進行中') f.status = '待收款';
       });
 
       let freelanceFixed = false;
@@ -932,9 +954,11 @@ function computePortfolioFromTransactions() {
       if (!funds[sym]) {
         funds[sym] = {
           name: sym, currency: cur, units: 0, costTotal: 0,
-          totalBoughtCost: 0, totalSoldIncome: 0, totalDividend: 0, latestPrice: t.price || 0
+          totalBoughtCost: 0, totalSoldIncome: 0, totalDividend: 0, latestPrice: t.price || 0,
+          lastTxDate: t.date || ''
         };
       }
+      funds[sym].lastTxDate = t.date || '';
       if (t.type === '買入') {
         if (funds[sym].units === 0) funds[sym].costTotal = 0;
         funds[sym].units += shares;
@@ -955,9 +979,10 @@ function computePortfolioFromTransactions() {
         stocks[sym] = {
           symbol: sym, shares: 0, costTotal: 0, latestPrice: t.price || 0,
           totalBoughtCost: 0, totalSoldIncome: 0, totalDividend: 0,
-          recentOneYearDividend: 0
+          recentOneYearDividend: 0, lastTxDate: t.date || ''
         };
       }
+      stocks[sym].lastTxDate = t.date || '';
       if (t.type === '買入') {
         if (stocks[sym].shares === 0) stocks[sym].costTotal = 0;
         stocks[sym].shares += shares;
@@ -985,7 +1010,7 @@ function computePortfolioFromTransactions() {
     if (!stocks[sym]) {
       stocks[sym] = {
         symbol: sym, shares: 0, costTotal: 0, latestPrice: 0,
-        totalBoughtCost: 0, totalSoldIncome: 0, totalDividend: 0, recentOneYearDividend: 0
+        totalBoughtCost: 0, totalSoldIncome: 0, totalDividend: 0, recentOneYearDividend: 0, lastTxDate: ''
       };
     }
     if (o.shares !== undefined) stocks[sym].shares = o.shares;
@@ -999,7 +1024,7 @@ function computePortfolioFromTransactions() {
     if (!funds[name]) {
       funds[name] = {
         name: name, currency: data.fundCurrencies[name] || 'USD', units: 0, costTotal: 0,
-        totalBoughtCost: 0, totalSoldIncome: 0, totalDividend: 0, latestPrice: 0
+        totalBoughtCost: 0, totalSoldIncome: 0, totalDividend: 0, latestPrice: 0, lastTxDate: ''
       };
     }
     if (o.units !== undefined) funds[name].units = o.units;
@@ -1074,7 +1099,6 @@ function renderDashboard() {
     document.getElementById('tithePool').textContent = formatMoney(data.tithePool || 0);
   }
 
-  // 帳戶餘額卡片：名稱放大至 text-xs font-bold，外幣整合折合台幣
   const accDiv = document.getElementById('accountsOverview');
   const twdCards = (data.accountList || DEFAULT_ACCOUNTS).map(name => {
     const bal = data.accounts[name] || 0;
@@ -1341,6 +1365,12 @@ function toggleTxViewMode() {
   renderTransactions();
 }
 
+function toggleTxDateSort() {
+  data.txDateSortAsc = !data.txDateSortAsc;
+  saveData();
+  renderTransactions();
+}
+
 function renderTransactions() {
   const from = document.getElementById('filterDateFrom').value;
   const to = document.getElementById('filterDateTo').value;
@@ -1349,13 +1379,26 @@ function renderTransactions() {
   const nec = document.getElementById('filterNecessary').value;
   const kw = document.getElementById('filterKeyword').value.trim().toLowerCase();
 
-  let list = [...data.transactions].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  let list = [...data.transactions];
   if (from) list = list.filter(t => t.date >= from);
   if (to) list = list.filter(t => t.date <= to);
   if (cat) list = list.filter(t => t.category === cat);
   if (acc) list = list.filter(t => t.account === acc);
   if (nec) list = list.filter(t => t.necessary === nec);
   if (kw) list = list.filter(t => (t.name || '').toLowerCase().includes(kw) || (t.note || '').toLowerCase().includes(kw));
+
+  // 雙向排序支援（預設由新到舊）
+  list.sort((a, b) => {
+    return data.txDateSortAsc
+      ? (a.date || '').localeCompare(b.date || '')
+      : (b.date || '').localeCompare(a.date || '');
+  });
+
+  const arrow = data.txDateSortAsc ? '▲' : '▼';
+  const arrowEl = document.getElementById('txSortArrow');
+  if (arrowEl) arrowEl.textContent = arrow;
+  const sortBtn = document.getElementById('txSortToggleBtn');
+  if (sortBtn) sortBtn.textContent = `日期排序：${data.txDateSortAsc ? '舊 ➔ 新' : '新 ➔ 舊'}`;
 
   const subtotal = list.reduce((s, t) => s + t.amount, 0);
   document.getElementById('txSubtotal').textContent = formatMoney(subtotal);
@@ -1510,7 +1553,7 @@ function openHoldingEdit(type, sym) {
     const curPrice = data.fundPrices[sym] !== undefined ? data.fundPrices[sym] : (f.latestPrice || 0);
     const curRate = getCurrencyRate(cur, data.fundRates[sym]);
 
-    document.getElementById('editHoldingSharesLabel').textContent = '持有股數 (單位數)';
+    document.getElementById('editHoldingSharesLabel').textContent = '持有單位 (股數)';
     document.getElementById('editHoldingCostLabel').textContent = '均價成本 (原幣)';
     document.getElementById('editHoldingPriceLabel').textContent = '現價 (原幣淨值)';
 
@@ -1569,6 +1612,30 @@ function deleteHolding(sym) {
   renderDashboard();
 }
 
+function sortHoldingsList(list, sortOrder, type) {
+  const sorted = [...list];
+  if (sortOrder === 'name_asc') {
+    sorted.sort((a, b) => (type === 'stock' ? a.symbol : a.name).localeCompare(type === 'stock' ? b.symbol : b.name));
+  } else if (sortOrder === 'name_desc') {
+    sorted.sort((a, b) => (type === 'stock' ? b.symbol : b.name).localeCompare(type === 'stock' ? a.symbol : a.name));
+  } else if (sortOrder === 'mv_desc') {
+    sorted.sort((a, b) => {
+      const mvA = type === 'stock'
+        ? a.shares * (data.stockPrices[a.symbol] || a.latestPrice || 0)
+        : a.units * (data.fundPrices[a.name] || a.latestPrice || 0) * getCurrencyRate(a.currency, data.fundRates[a.name]);
+      const mvB = type === 'stock'
+        ? b.shares * (data.stockPrices[b.symbol] || b.latestPrice || 0)
+        : b.units * (data.fundPrices[b.name] || b.latestPrice || 0) * getCurrencyRate(b.currency, data.fundRates[b.name]);
+      return mvB - mvA;
+    });
+  } else if (sortOrder === 'shares_desc' || sortOrder === 'units_desc') {
+    sorted.sort((a, b) => (type === 'stock' ? b.shares - a.shares : b.units - a.units));
+  } else if (sortOrder === 'recent_tx') {
+    sorted.sort((a, b) => (b.lastTxDate || '').localeCompare(a.lastTxDate || ''));
+  }
+  return sorted;
+}
+
 function renderInvestments() {
   const computed = computePortfolioFromTransactions();
 
@@ -1581,7 +1648,10 @@ function renderInvestments() {
 
   let stockList = Object.values(computed.stocks);
   if (!data.showClosedStocks) stockList = stockList.filter(s => s.shares > 0);
-  stockList.sort((a, b) => (b.shares > 0 ? 1 : 0) - (a.shares > 0 ? 1 : 0));
+
+  const stockSort = document.getElementById('stocksSortOrder') ? document.getElementById('stocksSortOrder').value : (data.stocksSortOrder || 'custom');
+  data.stocksSortOrder = stockSort;
+  stockList = sortHoldingsList(stockList, stockSort, 'stock');
 
   document.getElementById('showClosedStocksCheck').checked = !!data.showClosedStocks;
 
@@ -1639,7 +1709,10 @@ function renderInvestments() {
   let fundsTotal = 0;
   let fundList = Object.values(computed.funds);
   if (!data.showClosedFunds) fundList = fundList.filter(f => f.units > 0);
-  fundList.sort((a, b) => (b.units > 0 ? 1 : 0) - (a.units > 0 ? 1 : 0));
+
+  const fundSort = document.getElementById('fundsSortOrder') ? document.getElementById('fundsSortOrder').value : (data.fundsSortOrder || 'custom');
+  data.fundsSortOrder = fundSort;
+  fundList = sortHoldingsList(fundList, fundSort, 'fund');
 
   document.getElementById('showClosedFundsCheck').checked = !!data.showClosedFunds;
 
@@ -1918,6 +1991,12 @@ function toggleStxViewMode() {
   renderStockTransactions();
 }
 
+function toggleStxDateSort() {
+  data.stxDateSortAsc = !data.stxDateSortAsc;
+  saveData();
+  renderStockTransactions();
+}
+
 function clearStxFilters() {
   document.getElementById('filterStxMonth').value = '';
   document.getElementById('filterStxType').value = '';
@@ -1930,10 +2009,23 @@ function renderStockTransactions() {
   const type = document.getElementById('filterStxType').value;
   const kw = document.getElementById('filterStxKeyword').value.trim().toLowerCase();
 
-  let list = [...data.stockTransactions].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  let list = [...data.stockTransactions];
   if (month) list = list.filter(t => t.date && t.date.startsWith(month));
   if (type) list = list.filter(t => t.type === type);
   if (kw) list = list.filter(t => (t.symbol || '').toLowerCase().includes(kw) || (t.account || '').toLowerCase().includes(kw) || (t.note || '').toLowerCase().includes(kw) || t.type.includes(kw));
+
+  // 雙向排序支援（預設由新到舊）
+  list.sort((a, b) => {
+    return data.stxDateSortAsc
+      ? (a.date || '').localeCompare(b.date || '')
+      : (b.date || '').localeCompare(a.date || '');
+  });
+
+  const arrow = data.stxDateSortAsc ? '▲' : '▼';
+  const arrowEl = document.getElementById('stxSortArrow');
+  if (arrowEl) arrowEl.textContent = arrow;
+  const sortBtn = document.getElementById('stxSortToggleBtn');
+  if (sortBtn) sortBtn.textContent = `日期排序：${data.stxDateSortAsc ? '舊 ➔ 新' : '新 ➔ 舊'}`;
 
   const buyTotal = list.filter(t => t.type === '買入').reduce((s, t) => s + (t.totalCost !== undefined ? t.totalCost : t.total), 0);
   const sellTotal = list.filter(t => t.type === '賣出').reduce((s, t) => s + (t.totalCost !== undefined ? t.totalCost : t.total), 0);
@@ -2031,7 +2123,7 @@ function saveProject() {
     const p = data.projects.find(x => x.id === id);
     if (p) { p.name = name; p.budget = budget; p.status = status; p.note = note; }
   } else {
-    data.projects.push({ id: uid(), name, budget, status, note });
+    data.projects.push({ id: uid(), name, budget, status, note, createdAt: Date.now() });
   }
   saveData();
   closeModal('projectModal');
@@ -2053,6 +2145,22 @@ function toggleProjectViewMode() {
   renderFixedSection();
 }
 
+function toggleShowArchivedProjects(checked) {
+  data.showArchivedProjects = checked;
+  saveData();
+  renderFixedSection();
+}
+
+function setFreelanceFilter(filter) {
+  data.freelanceFilter = filter;
+  ['all', 'unpaid', 'paid'].forEach(k => {
+    const btn = document.getElementById('flFilter_' + k);
+    if (btn) btn.classList.toggle('active', k === filter);
+  });
+  saveData();
+  renderFixedSection();
+}
+
 function openFreelanceModal(id = null) {
   document.getElementById('freelanceEditId').value = id || '';
   document.getElementById('freelanceModalTitle').textContent = id ? '編輯接案' : '新增接案';
@@ -2063,7 +2171,7 @@ function openFreelanceModal(id = null) {
       document.getElementById('freelanceExecDate').value = f.execDate || '';
       document.getElementById('freelancePayDate').value = f.payDate || '';
       document.getElementById('freelanceAmount').value = f.amount;
-      document.getElementById('freelanceStatus').value = f.status;
+      document.getElementById('freelanceStatus').value = f.status === '進行中' ? '待收款' : f.status;
       document.getElementById('freelanceAccount').value = f.account;
       document.getElementById('freelanceNote').value = f.note || '';
     }
@@ -2072,7 +2180,7 @@ function openFreelanceModal(id = null) {
     document.getElementById('freelanceExecDate').value = todayStr();
     document.getElementById('freelancePayDate').value = '';
     document.getElementById('freelanceAmount').value = '';
-    document.getElementById('freelanceStatus').value = '進行中';
+    document.getElementById('freelanceStatus').value = '待收款';
     document.getElementById('freelanceNote').value = '';
   }
   openModal('freelanceModal');
@@ -2130,7 +2238,7 @@ function saveFreelance() {
     }
   } else {
     const newTxId = status === '已收款' ? uid() : '';
-    data.freelances.push({ id: uid(), name, execDate, payDate, amount, status, account, note, linkedTxId: newTxId });
+    data.freelances.push({ id: uid(), name, execDate, payDate, amount, status, account, note, linkedTxId: newTxId, createdAt: Date.now() });
     if (status === '已收款') {
       data.accounts[account] = (data.accounts[account] || 0) + amount;
       if (effectiveDate.startsWith(currentMonthStr())) {
@@ -2190,7 +2298,7 @@ function saveFixed() {
     const f = data.fixedItems.find(x => x.id === id);
     if (f) { f.name = name; f.amount = amount; f.account = account; f.category = category; f.note = note; }
   } else {
-    data.fixedItems.push({ id: uid(), name, amount, account, category, note });
+    data.fixedItems.push({ id: uid(), name, amount, account, category, note, createdAt: Date.now() });
   }
   saveData();
   closeModal('fixedModal');
@@ -2213,14 +2321,38 @@ function applyFixed(id) {
   alert('已計入本月帳務');
 }
 
+function sortListByCriteria(list, criteria, nameField) {
+  const res = [...list];
+  if (criteria === 'name_asc') {
+    res.sort((a, b) => (a[nameField] || '').localeCompare(b[nameField] || ''));
+  } else if (criteria === 'name_desc') {
+    res.sort((a, b) => (b[nameField] || '').localeCompare(a[nameField] || ''));
+  } else if (criteria === 'date_asc') {
+    res.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  } else {
+    res.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  }
+  return res;
+}
+
 function renderFixedSection() {
   if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, project: true, freelance: true };
 
+  // 固定收支
   const fixOpen = data.sectionsOpen.fixed !== false;
   document.getElementById('fixedArrow').textContent = fixOpen ? '▼' : '▶';
   document.getElementById('fixedBody').style.display = fixOpen ? 'block' : 'none';
   if (fixOpen) {
-    document.getElementById('fixedList').innerHTML = data.fixedItems.map(f => `
+    const fixKw = (document.getElementById('filterFixedKeyword')?.value || '').trim().toLowerCase();
+    const fixSort = document.getElementById('fixedSortOrder') ? document.getElementById('fixedSortOrder').value : (data.fixedSortOrder || 'date_desc');
+    data.fixedSortOrder = fixSort;
+
+    let fixList = sortListByCriteria(data.fixedItems, fixSort, 'name');
+    if (fixKw) {
+      fixList = fixList.filter(f => (f.name || '').toLowerCase().includes(fixKw) || (f.account || '').toLowerCase().includes(fixKw) || (f.category || '').toLowerCase().includes(fixKw));
+    }
+
+    document.getElementById('fixedList').innerHTML = fixList.map(f => `
       <div class="pill p-3 flex justify-between items-center text-xs">
         <div>
           <span class="bold">${f.name}</span>
@@ -2233,9 +2365,10 @@ function renderFixedSection() {
           <button onclick="deleteFixed('${f.id}')" class="font-bold" style="color:var(--text-muted)">刪</button>
         </div>
       </div>
-    `).join('') || '<p class="text-xs font-semibold text-center py-2" style="color:var(--text-muted)">尚未設定固定收支</p>';
+    `).join('') || '<p class="text-xs font-semibold text-center py-2" style="color:var(--text-muted)">無相符固定收支</p>';
   }
 
+  // 特殊專案
   const projOpen = data.sectionsOpen.project !== false;
   document.getElementById('projectArrow').textContent = projOpen ? '▼' : '▶';
   document.getElementById('projectBody').style.display = projOpen ? 'block' : 'none';
@@ -2245,14 +2378,28 @@ function renderFixedSection() {
     document.getElementById('projectsTableView').classList.toggle('hidden', !isTable);
     document.getElementById('projectsCardView').classList.toggle('hidden', isTable);
 
+    const projKw = (document.getElementById('filterProjectsKeyword')?.value || '').trim().toLowerCase();
+    const projSort = document.getElementById('projectsSortOrder') ? document.getElementById('projectsSortOrder').value : (data.projectsSortOrder || 'date_desc');
+    data.projectsSortOrder = projSort;
+
+    document.getElementById('showArchivedProjectsCheck').checked = !!data.showArchivedProjects;
+
+    let projList = sortListByCriteria(data.projects, projSort, 'name');
+    if (!data.showArchivedProjects) {
+      projList = projList.filter(p => p.status !== 'archived');
+    }
+    if (projKw) {
+      projList = projList.filter(p => (p.name || '').toLowerCase().includes(projKw) || (p.note || '').toLowerCase().includes(projKw));
+    }
+
     if (isTable) {
-      document.getElementById('projectsTableBody').innerHTML = data.projects.map(p => {
+      document.getElementById('projectsTableBody').innerHTML = projList.map(p => {
         const spent = data.transactions.filter(t => t.projectId === p.id && t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
         const remain = p.budget - spent;
         return `
-          <tr class="whitespace-nowrap">
+          <tr class="whitespace-nowrap ${p.status === 'archived' ? 'opacity-40' : ''}">
             <td class="bold">${p.name}</td>
-            <td><span class="badge ${p.status === 'archived' ? 'badge-non' : 'badge-nec'}">${p.status === 'archived' ? '已封存' : '進行中'}</span></td>
+            <td><span class="badge ${p.status === 'archived' ? 'badge-non' : 'badge-nec'}">${p.status === 'archived' ? '已結束' : '進行中'}</span></td>
             <td class="tabular text-right">${formatMoney(p.budget)}</td>
             <td class="tabular text-right">${formatMoney(spent)}</td>
             <td class="tabular heavy text-right">${formatMoney(remain)}</td>
@@ -2262,17 +2409,17 @@ function renderFixedSection() {
             </td>
           </tr>
         `;
-      }).join('') || '<tr><td colspan="6" class="text-center py-4 text-xs font-semibold" style="color:var(--text-muted)">尚未建立專案</td></tr>';
+      }).join('') || '<tr><td colspan="6" class="text-center py-4 text-xs font-semibold" style="color:var(--text-muted)">無相符專案</td></tr>';
     } else {
-      document.getElementById('projectsCardView').innerHTML = data.projects.map(p => {
+      document.getElementById('projectsCardView').innerHTML = projList.map(p => {
         const spent = data.transactions.filter(t => t.projectId === p.id && t.amount < 0).reduce((s, t) => s + Math.abs(t.amount), 0);
         const remain = p.budget - spent;
         return `
-          <div class="pill p-4 space-y-2 text-xs">
+          <div class="pill p-4 space-y-2 text-xs ${p.status === 'archived' ? 'opacity-40' : ''}">
             <div class="flex justify-between items-center">
               <div>
                 <span class="bold text-sm">${p.name}</span>
-                <span class="badge ${p.status === 'archived' ? 'badge-non' : 'badge-nec'} ml-2">${p.status === 'archived' ? '已封存' : '進行中'}</span>
+                <span class="badge ${p.status === 'archived' ? 'badge-non' : 'badge-nec'} ml-2">${p.status === 'archived' ? '已結束' : '進行中'}</span>
               </div>
               <div class="flex gap-2">
                 <button onclick="openProjectModal('${p.id}')" class="font-bold" style="color:var(--text-muted)">編</button>
@@ -2284,30 +2431,70 @@ function renderFixedSection() {
               <span class="heavy">剩餘 ${formatMoney(remain)}</span>
             </div>
           </div>`;
-      }).join('') || '<p class="text-xs font-semibold text-center py-2" style="color:var(--text-muted)">尚未建立專案</p>';
+      }).join('') || '<p class="text-xs font-semibold text-center py-2" style="color:var(--text-muted)">無相符專案</p>';
     }
   }
 
+  // 接案追蹤
   const freeOpen = data.sectionsOpen.freelance !== false;
   document.getElementById('freelanceArrow').textContent = freeOpen ? '▼' : '▶';
   document.getElementById('freelanceBody').style.display = freeOpen ? 'block' : 'none';
   if (freeOpen) {
-    document.getElementById('freelanceList').innerHTML = data.freelances.map(f => `
-      <div class="pill p-3 flex justify-between items-center text-xs">
-        <div>
-          <span class="bold">${f.name}</span>
-          <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
-          <span class="badge badge-nec ml-2">${f.status}</span>
-          <div class="text-[11px] mt-0.5 tabular font-semibold" style="color:var(--text-muted)">
-            執行: ${f.execDate || '--'} · 收款: ${f.payDate || f.execDate || '--'}
+    const freeKw = (document.getElementById('filterFreelanceKeyword')?.value || '').trim().toLowerCase();
+    const filter = data.freelanceFilter || 'all';
+
+    ['all', 'unpaid', 'paid'].forEach(k => {
+      const btn = document.getElementById('flFilter_' + k);
+      if (btn) btn.classList.toggle('active', k === filter);
+    });
+
+    let freeList = [...data.freelances].sort((a, b) => {
+      const dateA = a.payDate || a.execDate || '';
+      const dateB = b.payDate || b.execDate || '';
+      return dateB.localeCompare(dateA);
+    });
+
+    const unpaidItems = freeList.filter(f => f.status !== '已收款');
+    const unpaidTotal = unpaidItems.reduce((s, f) => s + f.amount, 0);
+
+    const summaryBox = document.getElementById('freelanceUnpaidSummary');
+    if (filter === 'unpaid') {
+      summaryBox.classList.remove('hidden');
+      document.getElementById('flUnpaidCount').textContent = unpaidItems.length;
+      document.getElementById('flUnpaidTotal').textContent = formatMoney(unpaidTotal);
+    } else {
+      summaryBox.classList.add('hidden');
+    }
+
+    if (filter === 'unpaid') {
+      freeList = freeList.filter(f => f.status !== '已收款');
+    } else if (filter === 'paid') {
+      freeList = freeList.filter(f => f.status === '已收款');
+    }
+
+    if (freeKw) {
+      freeList = freeList.filter(f => (f.name || '').toLowerCase().includes(freeKw) || (f.account || '').toLowerCase().includes(freeKw) || (f.note || '').toLowerCase().includes(freeKw));
+    }
+
+    document.getElementById('freelanceList').innerHTML = freeList.map(f => {
+      const isUnpaid = f.status !== '已收款';
+      return `
+        <div class="pill p-3 flex justify-between items-center text-xs">
+          <div>
+            <span class="bold">${f.name}</span>
+            <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
+            <span class="badge ${isUnpaid ? 'badge-nec' : 'badge-non'} ml-2">${f.status}</span>
+            <div class="text-[11px] mt-0.5 tabular font-semibold" style="color:var(--text-muted)">
+              執行: ${f.execDate || '--'} · 收款: ${f.payDate || f.execDate || '--'} ${f.account ? `(${f.account})` : ''}
+            </div>
+          </div>
+          <div class="flex gap-2">
+            <button onclick="openFreelanceModal('${f.id}')" class="font-bold" style="color:var(--text-muted)">編</button>
+            <button onclick="deleteFreelance('${f.id}')" class="font-bold" style="color:var(--text-muted)">刪</button>
           </div>
         </div>
-        <div class="flex gap-2">
-          <button onclick="openFreelanceModal('${f.id}')" class="font-bold" style="color:var(--text-muted)">編</button>
-          <button onclick="deleteFreelance('${f.id}')" class="font-bold" style="color:var(--text-muted)">刪</button>
-        </div>
-      </div>
-    `).join('') || '<p class="text-xs font-semibold text-center py-2" style="color:var(--text-muted)">尚無接案紀錄</p>';
+      `;
+    }).join('') || '<p class="text-xs font-semibold text-center py-2" style="color:var(--text-muted)">尚無相符接案紀錄</p>';
   }
 }
 
@@ -2372,11 +2559,7 @@ function renderCharts() {
   ['gray', 'p1', 'p2', 'p3'].forEach(k => {
     const btn = document.getElementById('paletteBtn_' + k);
     if (!btn) return;
-    if (k === pKey) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
+    btn.classList.toggle('active', k === pKey);
   });
 
   document.getElementById('chartsIncludeInvestToggle').classList.toggle('on', !!data.chartsIncludeInvest);
@@ -2426,10 +2609,12 @@ function renderCharts() {
   const sortedCatEntries = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
   const catLabels = sortedCatEntries.map(e => e[0]);
   const catValues = sortedCatEntries.map(e => e[1]);
+  const catTotal = catValues.reduce((s, v) => s + v, 0) || 1;
 
   const sortedAccEntries = Object.entries(accMap).sort((a, b) => b[1] - a[1]);
   const accLabels = sortedAccEntries.map(e => e[0]);
   const accValues = sortedAccEntries.map(e => e[1]);
+  const accTotal = accValues.reduce((s, v) => s + v, 0) || 1;
 
   let catColors, accColors;
   if (pKey === 'gray') {
@@ -2440,6 +2625,16 @@ function renderCharts() {
     catColors = catValues.map((_, i) => palette[i % palette.length]);
     accColors = accValues.map((_, i) => palette[i % palette.length]);
   }
+
+  // 圓餅圖 Tooltip：順序格式改為「類別：42.3% ($8,500)」
+  const tooltipCallback = (total) => ({
+    label: function(context) {
+      const label = context.label || '';
+      const val = context.raw || 0;
+      const pct = ((val / total) * 100).toFixed(1);
+      return `${label}：${pct}% ($${Math.round(val).toLocaleString('zh-TW')})`;
+    }
+  });
 
   categoryChart = new Chart(document.getElementById('categoryPieChart').getContext('2d'), {
     type: 'doughnut',
@@ -2453,7 +2648,10 @@ function renderCharts() {
       }]
     },
     options: {
-      plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, weight: 'bold' } } } },
+      plugins: {
+        legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, weight: 'bold' } } },
+        tooltip: { callbacks: tooltipCallback(catTotal) }
+      },
       cutout: '65%'
     }
   });
@@ -2470,11 +2668,15 @@ function renderCharts() {
       }]
     },
     options: {
-      plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, weight: 'bold' } } } },
+      plugins: {
+        legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, weight: 'bold' } } },
+        tooltip: { callbacks: tooltipCallback(accTotal) }
+      },
       cutout: '60%'
     }
   });
 
+  const necTotal = (nec + non) || 1;
   const necPalette = pKey === 'gray'
     ? (isDark ? ['#4E4E58', '#C0C0CB'] : ['#DFDFE8', '#4E4E58'])
     : (STATIC_PALETTES[pKey] ? [STATIC_PALETTES[pKey][0], STATIC_PALETTES[pKey][1]] : ['#B5C0D0', '#EED3D9']);
@@ -2491,7 +2693,10 @@ function renderCharts() {
       }]
     },
     options: {
-      plugins: { legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, weight: 'bold' } } } }
+      plugins: {
+        legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, weight: 'bold' } } },
+        tooltip: { callbacks: tooltipCallback(necTotal) }
+      }
     }
   });
 }
@@ -2504,7 +2709,6 @@ function exportData() {
   a.click();
 }
 
-// 完整修復匯入：無論是智慧合併還是完全覆蓋，接案、餘額、外幣、換匯不再遺漏
 function importData(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -2562,12 +2766,12 @@ function importData(event) {
         const existingFreeIds = new Set((data.freelances || []).map(f => f.id));
         (incoming.freelances || []).forEach(f => {
           if (!existingFreeIds.has(f.id)) {
+            if (f.status === '進行中') f.status = '待收款';
             data.freelances.push(f);
             freeAdded++;
           }
         });
 
-        // 完整合併帳戶餘額與外幣資產
         if (incoming.accounts) {
           Object.keys(incoming.accounts).forEach(acc => {
             data.accounts[acc] = incoming.accounts[acc];
