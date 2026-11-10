@@ -40,12 +40,18 @@
 
     <!-- 看板 -->
     <section id="tab-dashboard" class="tab-content active space-y-4">
-      <div class="card p-4 flex flex-wrap gap-2 items-center">
-        <button onclick="refreshAllAssets()" class="btn-primary btn text-xs">一鍵全資產即時刷新</button>
-        <button onclick="updateStockPrices()" class="btn text-xs">更新股票/ETF</button>
-        <button onclick="updateFxRates()" class="btn text-xs">更新外匯</button>
-        <button onclick="openFxCenterModal()" class="btn text-xs">換匯中心</button>
-        <span id="apiStatus" class="text-xs font-bold" style="color:var(--text-muted)"></span>
+      <!-- 頂部 4 個操作按鈕：2x2 矩陣網格 + 匯率兩行靠左對齊 -->
+      <div class="card p-4 space-y-3">
+        <div class="grid grid-cols-2 gap-2">
+          <button onclick="refreshAllAssets()" class="btn-primary btn text-xs py-2.5">一鍵全資產即時刷新</button>
+          <button onclick="updateStockPrices()" class="btn text-xs py-2.5">更新股票 / ETF</button>
+          <button onclick="updateFxRates()" class="btn text-xs py-2.5">更新外匯</button>
+          <button onclick="openFxCenterModal()" class="btn text-xs py-2.5">換匯中心</button>
+        </div>
+        <div id="apiStatus" class="text-xs font-bold space-y-1 text-left tabular" style="color:var(--text-muted)">
+          <div id="fxRow1">USD 32.85 ｜ EUR 35.42 ｜ GBP 42.15</div>
+          <div id="fxRow2">CNY 4.91   ｜ JPY 0.2075 ｜ KRW 0.0238</div>
+        </div>
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -184,8 +190,8 @@
               <div class="absolute right-3 pointer-events-none flex items-center justify-center" style="color:var(--text-muted)">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
-                  <line x1="16" x2="16" y1="2" y2="6"/>
-                  <line x1="8" x2="8" y1="2" y2="6"/>
+                  <line x1="16" x2="16" y1="2" x2="6"/>
+                  <line x1="8" x2="8" y1="2" x2="6"/>
                   <line x1="3" x2="21" y1="10" y2="10"/>
                 </svg>
               </div>
@@ -251,14 +257,11 @@
         <button onclick="addTransaction()" class="btn-primary btn w-full mt-4 py-3">新增帳務</button>
       </div>
 
-      <!-- 帳務明細與篩選 -->
+      <!-- 帳務明細：右上角只留單一卡片模式切換鈕，不再破版掉落 -->
       <div class="card p-5">
-        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <div class="flex items-center justify-between mb-3">
           <h2 class="bold text-base">帳務明細</h2>
-          <div class="flex items-center gap-2">
-            <button id="txOrderToggleBtn" onclick="toggleTxDateOrder()" class="btn text-xs px-3 py-1">排序：新➔舊</button>
-            <button id="txViewModeBtn" onclick="toggleTxViewMode()" class="btn text-xs px-3 py-1">切換為卡片模式</button>
-          </div>
+          <button id="txViewModeBtn" onclick="toggleTxViewMode()" class="btn text-xs px-3 py-1">切換為卡片模式</button>
         </div>
 
         <div class="space-y-2 mb-3">
@@ -297,7 +300,9 @@
           <table class="w-full">
             <thead>
               <tr class="whitespace-nowrap">
-                <th class="w-16 sortable-th" onclick="toggleTxDateOrder()" id="txDateTh">日期 ▼</th>
+                <th class="w-20 cursor-pointer hover:opacity-80" onclick="toggleTxDateSort()" title="點擊切換日期升降序">
+                  日期 <span id="txSortArrow" class="text-sm">▼</span>
+                </th>
                 <th class="min-w-[140px]">項目名稱</th>
                 <th class="w-24 text-right">金額</th>
                 <th class="w-16">分類</th>
@@ -338,17 +343,18 @@
         </div>
       </div>
 
+      <!-- 股票區塊：徹底刪除表頭多餘的 ≡，欄位 100% 垂直對齊 -->
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
             <h2 class="bold text-base">ETF / 股票</h2>
-            <select id="stockSortSelect" class="input py-1 px-2 text-xs w-36 font-bold" onchange="setStockSortMode(this.value)">
-              <option value="custom">自訂拖曳排序</option>
-              <option value="az">名稱 (A ➔ Z)</option>
-              <option value="za">名稱 (Z ➔ A)</option>
-              <option value="valDesc">市值 (高 ➔ 低)</option>
-              <option value="sharesDesc">股數 (多 ➔ 少)</option>
-              <option value="recent">最新交易 (新➔舊)</option>
+            <select id="stocksSortOrder" class="input text-xs py-1 px-2.5 w-auto" onchange="onStockSortChange(this.value)">
+              <option value="custom">🔀 預設排序</option>
+              <option value="name_asc">🔤 名稱 (A ➔ Z)</option>
+              <option value="name_desc">🔤 名稱 (Z ➔ A)</option>
+              <option value="mv_desc">💰 市值 (高 ➔ 低)</option>
+              <option value="shares_desc">📊 股數 (多 ➔ 少)</option>
+              <option value="recent_tx">🕒 最近交易 (新 ➔ 舊)</option>
             </select>
           </div>
           <div class="flex items-center gap-3">
@@ -361,7 +367,6 @@
           <table class="w-full">
             <thead>
               <tr class="whitespace-nowrap">
-                <th class="w-8 text-center" id="stockDragTh">⠿</th>
                 <th>標的</th>
                 <th class="text-right">持有股數</th>
                 <th class="text-right">均價成本</th>
@@ -378,17 +383,18 @@
         <p class="text-xs bold mt-3">總市值 <span id="stocksTotalValue" class="tabular heavy">$0</span></p>
       </div>
 
+      <!-- 基金區塊 -->
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-3">
             <h2 class="bold text-base">基金</h2>
-            <select id="fundSortSelect" class="input py-1 px-2 text-xs w-36 font-bold" onchange="setFundSortMode(this.value)">
-              <option value="custom">自訂拖曳排序</option>
-              <option value="az">名稱 (A ➔ Z)</option>
-              <option value="za">名稱 (Z ➔ A)</option>
-              <option value="valDesc">市值 (高 ➔ 低)</option>
-              <option value="unitsDesc">單位數 (多 ➔ 少)</option>
-              <option value="recent">最新交易 (新➔舊)</option>
+            <select id="fundsSortOrder" class="input text-xs py-1 px-2.5 w-auto" onchange="onFundSortChange(this.value)">
+              <option value="custom">🔀 預設排序</option>
+              <option value="name_asc">🔤 名稱 (A ➔ Z)</option>
+              <option value="name_desc">🔤 名稱 (Z ➔ A)</option>
+              <option value="mv_desc">💰 市值 (高 ➔ 低)</option>
+              <option value="units_desc">📊 單位數 (多 ➔ 少)</option>
+              <option value="recent_tx">🕒 最近交易 (新 ➔ 舊)</option>
             </select>
           </div>
           <div class="flex items-center gap-3">
@@ -401,10 +407,9 @@
           <table class="w-full">
             <thead>
               <tr class="whitespace-nowrap">
-                <th class="w-8 text-center" id="fundDragTh">⠿</th>
                 <th>標的</th>
                 <th>幣別</th>
-                <th class="text-right">持有股數</th>
+                <th class="text-right">持有單位</th>
                 <th class="text-right">均價成本</th>
                 <th class="text-right">現價</th>
                 <th class="text-right">匯率</th>
@@ -484,14 +489,11 @@
         <button onclick="addStockTransaction()" class="btn-primary btn w-full mt-4 py-3">新增交易</button>
       </div>
 
-      <!-- 交易流水帳 -->
+      <!-- 交易流水帳：結算列改為 2x2 對稱排版，解決手機孤兒行斷裂 -->
       <div class="card p-5">
-        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+        <div class="flex items-center justify-between mb-3">
           <h2 class="bold text-base">交易流水帳</h2>
-          <div class="flex items-center gap-2">
-            <button id="stxOrderToggleBtn" onclick="toggleStxDateOrder()" class="btn text-xs px-3 py-1">排序：新➔舊</button>
-            <button id="stxViewModeBtn" onclick="toggleStxViewMode()" class="btn text-xs px-3 py-1">切換為卡片模式</button>
-          </div>
+          <button id="stxViewModeBtn" onclick="toggleStxViewMode()" class="btn text-xs px-3 py-1">切換為卡片模式</button>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
@@ -511,16 +513,20 @@
           </div>
         </div>
 
-        <div class="text-xs bold mb-3 flex justify-between items-center flex-wrap gap-2">
-          <div id="stxPeriodSummaryText" class="tabular">篩選區間總結算中…</div>
-          <button onclick="clearStxFilters()" class="text-xs font-bold" style="color:var(--text-muted)">清除篩選 (查看全部)</button>
+        <div class="text-xs bold mb-3 space-y-2">
+          <div id="stxPeriodSummaryText" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center"></div>
+          <div class="text-right">
+            <button onclick="clearStxFilters()" class="text-xs font-bold" style="color:var(--text-muted)">清除篩選 (查看全部)</button>
+          </div>
         </div>
 
         <div id="stxTableView" class="overflow-x-auto max-h-[500px]">
           <table class="w-full">
             <thead class="sticky-header">
               <tr class="whitespace-nowrap">
-                <th class="px-3 sticky-col sortable-th" onclick="toggleStxDateOrder()" id="stxDateTh">日期 ▼</th>
+                <th class="px-3 sticky-col cursor-pointer hover:opacity-80" onclick="toggleStxDateSort()" title="點擊切換日期升降序">
+                  日期 <span id="stxSortArrow" class="text-sm">▼</span>
+                </th>
                 <th class="px-3">帳戶</th>
                 <th class="px-2">類別</th>
                 <th class="px-3">標的</th>
@@ -541,52 +547,52 @@
       </div>
     </section>
 
-    <!-- 專案（支援搜尋、排序與隱藏已結束專案） -->
+    <!-- 專案（徹底解決手機版按鈕擠壓與折行問題） -->
     <section id="tab-fixed" class="tab-content space-y-4">
       <div class="card p-5 space-y-3">
-        <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center justify-between">
           <button onclick="toggleSection('fixed')" class="flex items-center gap-1.5 bold text-base text-left">
             <span id="fixedArrow">▼</span> 固定收支
           </button>
-          <div class="flex items-center gap-2">
-            <input type="text" id="fixedSearchInput" class="input py-1 px-2.5 text-xs w-32" placeholder="搜尋固定..." oninput="renderFixedSection()" />
-            <select id="fixedSortSelect" class="input py-1 px-2 text-xs w-32 font-bold" onchange="renderFixedSection()">
-              <option value="recent">建立時間 (新➔舊)</option>
-              <option value="old">建立時間 (舊➔新)</option>
-              <option value="az">名稱 (A ➔ Z)</option>
-              <option value="za">名稱 (Z ➔ A)</option>
-            </select>
-            <button onclick="openFixedModal()" class="btn-primary btn text-xs">新增</button>
-          </div>
+          <button onclick="openFixedModal()" class="btn-primary btn text-xs">新增</button>
         </div>
-        <div id="fixedBody">
+        <div id="fixedBody" class="space-y-2">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <input type="text" id="filterFixedKeyword" class="input text-xs" placeholder="搜尋固定收支名稱..." oninput="renderFixedSection()" />
+            <select id="fixedSortOrder" class="input text-xs" onchange="renderFixedSection()">
+              <option value="date_desc">🕒 時間 (新 ➔ 舊)</option>
+              <option value="date_asc">🕒 時間 (舊 ➔ 新)</option>
+              <option value="name_asc">🔤 名稱 (A ➔ Z)</option>
+              <option value="name_desc">🔤 名稱 (Z ➔ A)</option>
+            </select>
+          </div>
           <div id="fixedList" class="space-y-2 pt-1"></div>
         </div>
       </div>
 
       <div class="card p-5 space-y-3">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <div class="flex items-center gap-3">
-            <button onclick="toggleSection('project')" class="flex items-center gap-1.5 bold text-base text-left">
-              <span id="projectArrow">▼</span> 特殊專案
-            </button>
-            <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer select-none" style="color:var(--text-muted)">
-              <input type="checkbox" id="showArchivedProjectsCheck" onchange="toggleShowArchivedProjects(this.checked)" /> 顯示已結束專案
-            </label>
-          </div>
-          <div class="flex items-center gap-2 flex-wrap">
-            <input type="text" id="projectSearchInput" class="input py-1 px-2.5 text-xs w-32" placeholder="搜尋專案..." oninput="renderFixedSection()" />
-            <select id="projectSortSelect" class="input py-1 px-2 text-xs w-32 font-bold" onchange="renderFixedSection()">
-              <option value="recent">建立時間 (新➔舊)</option>
-              <option value="old">建立時間 (舊➔新)</option>
-              <option value="az">名稱 (A ➔ Z)</option>
-              <option value="za">名稱 (Z ➔ A)</option>
-            </select>
-            <button id="projViewModeBtn" onclick="toggleProjectViewMode()" class="btn text-xs px-2.5 py-1">切換為表格模式</button>
+        <div class="flex items-center justify-between">
+          <button onclick="toggleSection('project')" class="flex items-center gap-1.5 bold text-base text-left">
+            <span id="projectArrow">▼</span> 特殊專案
+          </button>
+          <div class="flex items-center gap-2">
+            <button id="projViewModeBtn" onclick="toggleProjectViewMode()" class="btn text-xs px-2.5 py-1">切換表格</button>
             <button onclick="openProjectModal()" class="btn-primary btn text-xs">新增專案</button>
           </div>
         </div>
-        <div id="projectBody">
+        <div id="projectBody" class="space-y-2">
+          <div class="flex items-center justify-between flex-wrap gap-2 text-xs">
+            <label class="flex items-center gap-1.5 font-bold cursor-pointer select-none" style="color:var(--text-muted)">
+              <input type="checkbox" id="showArchivedProjectsCheck" onchange="toggleShowArchivedProjects(this.checked)" /> 顯示已結束專案
+            </label>
+            <select id="projectsSortOrder" class="input text-xs w-auto py-1" onchange="renderFixedSection()">
+              <option value="date_desc">🕒 時間 (新 ➔ 舊)</option>
+              <option value="date_asc">🕒 時間 (舊 ➔ 新)</option>
+              <option value="name_asc">🔤 名稱 (A ➔ Z)</option>
+              <option value="name_desc">🔤 名稱 (Z ➔ A)</option>
+            </select>
+          </div>
+          <input type="text" id="filterProjectsKeyword" class="input text-xs" placeholder="搜尋專案名稱..." oninput="renderFixedSection()" />
           <div id="projectsCardView" class="space-y-3 pt-1"></div>
           <div id="projectsTableView" class="hidden overflow-x-auto pt-1">
             <table class="w-full">
@@ -606,34 +612,31 @@
         </div>
       </div>
 
-      <!-- 接案追蹤：催款篩選、簡化金流狀態與搜尋排序 -->
+      <!-- 接案追蹤：方案 B 純文字膠囊列（全部 ｜ 待收款 ｜ 已收款） -->
       <div class="card p-5 space-y-3">
-        <div class="flex items-center justify-between flex-wrap gap-2">
-          <div class="flex items-center gap-2">
-            <button onclick="toggleSection('freelance')" class="flex items-center gap-1.5 bold text-base text-left">
-              <span id="freelanceArrow">▼</span> 接案追蹤
-            </button>
-            <div class="btn-capsule-group ml-1">
-              <button id="flFilterAll" onclick="setFreelanceFilter('all')" class="btn-capsule-item active">全部</button>
-              <button id="flFilterPending" onclick="setFreelanceFilter('pending')" class="btn-capsule-item">🔥 待催款</button>
-              <button id="flFilterPaid" onclick="setFreelanceFilter('paid')" class="btn-capsule-item">已結清</button>
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <input type="text" id="freelanceSearchInput" class="input py-1 px-2.5 text-xs w-32" placeholder="搜尋案件..." oninput="renderFixedSection()" />
-            <select id="freelanceSortSelect" class="input py-1 px-2 text-xs w-32 font-bold" onchange="renderFixedSection()">
-              <option value="recent">日期 (新 ➔ 舊)</option>
-              <option value="old">日期 (舊 ➔ 新)</option>
-              <option value="amountDesc">金額 (高 ➔ 低)</option>
-            </select>
-            <button onclick="openFreelanceModal()" class="btn-primary btn text-xs">新增接案</button>
-          </div>
+        <div class="flex items-center justify-between">
+          <button onclick="toggleSection('freelance')" class="flex items-center gap-1.5 bold text-base text-left">
+            <span id="freelanceArrow">▼</span> 接案追蹤
+          </button>
+          <button onclick="openFreelanceModal()" class="btn-primary btn text-xs">新增接案</button>
         </div>
-        <div id="freelanceBody">
-          <div id="freelancePendingSummary" class="hidden pill p-3 text-xs flex justify-between items-center mb-2 font-bold">
-            <span style="color:var(--text-muted)">未收待催款項目小計</span>
-            <span class="heavy text-sm tabular" id="freelancePendingTotal">$0</span>
+        <div id="freelanceBody" class="space-y-2">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="btn-capsule-group">
+              <button id="flFilter_all" onclick="setFreelanceFilter('all')" class="btn-capsule-item active">全部</button>
+              <button id="flFilter_unpaid" onclick="setFreelanceFilter('unpaid')" class="btn-capsule-item">待收款</button>
+              <button id="flFilter_paid" onclick="setFreelanceFilter('paid')" class="btn-capsule-item">已收款</button>
+            </div>
+            <select id="freelanceSortOrder" class="input text-xs w-auto py-1" onchange="renderFixedSection()">
+              <option value="date_desc">🕒 日期 (新 ➔ 舊)</option>
+              <option value="date_asc">🕒 日期 (舊 ➔ 新)</option>
+            </select>
           </div>
+          <div id="freelanceUnpaidSummary" class="hidden pill p-2.5 text-xs font-bold flex justify-between items-center bg-zinc-100 dark:bg-zinc-800">
+            <span>待收款件數：<span id="flUnpaidCount">0</span> 筆</span>
+            <span>待收總額：<strong class="tabular heavy text-sm" id="flUnpaidTotal">$0</strong></span>
+          </div>
+          <input type="text" id="filterFreelanceKeyword" class="input text-xs" placeholder="搜尋案件名稱、帳戶或備註..." oninput="renderFixedSection()" />
           <div id="freelanceList" class="space-y-2 pt-1"></div>
         </div>
       </div>
