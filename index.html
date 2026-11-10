@@ -25,15 +25,10 @@
           <p class="text-xs font-semibold" style="color:var(--text-muted)" id="storageStatus">LocalStorage 自動儲存中</p>
         </div>
       </div>
-      <!-- 最頂部 Header 右側：刷新圖示按鈕 ＋ 深淺色切換按鈕 -->
+      <!-- 最頂部 Header 右側：單環 [ ↻ ] 旋轉刷新按鈕 ＋ 深淺色切換按鈕 -->
       <div class="flex items-center gap-2">
         <button id="refreshAssetBtn" onclick="refreshAllAssets()" title="即時現價更新" class="btn w-9 h-9 rounded-full p-0 flex items-center justify-center">
-          <svg id="refreshAssetSvg" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-            <path d="M3 3v5h5"/>
-            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"/>
-            <path d="M16 21h5v-5"/>
-          </svg>
+          <span id="refreshAssetIcon" class="text-base font-black inline-block leading-none">↻</span>
         </button>
         <button id="themeBtn" onclick="toggleTheme()" class="btn w-9 h-9 rounded-full p-0 flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -49,22 +44,23 @@
 
     <!-- 看板 -->
     <section id="tab-dashboard" class="tab-content active space-y-4">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="card-dark p-5 flex flex-col justify-between h-28">
-          <p class="text-sm font-bold opacity-75">淨資產總額</p>
-          <p class="text-2xl heavy tabular text-right" id="netWorth">$0</p>
+      <!-- 2x2 四大總額大卡片（字級加大、深色模式提高對比） -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="card-dark p-4 sm:p-5 flex flex-col justify-between h-28">
+          <p class="text-sm sm:text-base font-bold opacity-85">淨資產總額</p>
+          <p class="text-xl sm:text-2xl heavy tabular text-right" id="netWorth">$0</p>
         </div>
-        <div class="card p-5 flex flex-col justify-between h-28">
-          <p class="text-sm font-bold" style="color:var(--text-muted)">台幣現金總額</p>
-          <p class="text-2xl heavy tabular text-right" id="totalTwdCash">$0</p>
+        <div class="card p-4 sm:p-5 flex flex-col justify-between h-28">
+          <p class="text-sm sm:text-base font-bold" style="color:var(--text-muted)">台幣現金總額</p>
+          <p class="text-xl sm:text-2xl heavy tabular text-right" id="totalTwdCash">$0</p>
         </div>
-        <div class="card p-5 flex flex-col justify-between h-28">
-          <p class="text-sm font-bold" style="color:var(--text-muted)">現金總額（含外幣現值）</p>
-          <p class="text-2xl heavy tabular text-right" id="totalCash">$0</p>
+        <div class="card p-4 sm:p-5 flex flex-col justify-between h-28">
+          <p class="text-sm sm:text-base font-bold" style="color:var(--text-muted)">現金總額（含外幣現值）</p>
+          <p class="text-xl sm:text-2xl heavy tabular text-right" id="totalCash">$0</p>
         </div>
-        <div class="card p-5 flex flex-col justify-between h-28">
-          <p class="text-sm font-bold" style="color:var(--text-muted)">投資總額</p>
-          <p class="text-2xl heavy tabular text-right" id="totalInvest">$0</p>
+        <div class="card p-4 sm:p-5 flex flex-col justify-between h-28">
+          <p class="text-sm sm:text-base font-bold" style="color:var(--text-muted)">投資總額</p>
+          <p class="text-xl sm:text-2xl heavy tabular text-right" id="totalInvest">$0</p>
         </div>
       </div>
 
@@ -153,7 +149,7 @@
       </div>
     </section>
 
-    <!-- 記帳（順序第 2 位） -->
+    <!-- 記帳 -->
     <section id="tab-transactions" class="tab-content space-y-4">
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3">
@@ -225,7 +221,7 @@
               <span id="txReceiptFileName" class="text-xs font-semibold truncate max-w-[180px]" style="color:var(--text-muted)">未選擇任何檔案</span>
               <label class="btn text-xs px-3 py-1 cursor-pointer shrink-0 ml-2">
                 選擇檔案
-                <input type="file" id="txReceiptInput" accept="image/*" class="hidden" onchange="handleReceiptFileSelect(this)" />
+                <input type="file" id="txReceiptInput" accept="image/*" class="hidden" onchange="handleReceiptFileSelect(this, 'txReceiptFileName')" />
               </label>
             </div>
           </div>
@@ -238,7 +234,7 @@
         <button onclick="addTransaction()" class="btn-primary btn w-full mt-4 py-3">新增帳務</button>
       </div>
 
-      <!-- 帳務明細：頂部整齊合流「[ 本月 ｜ 歷史 ]」與「[ 卡片 ｜ 表格 ]」 -->
+      <!-- 帳務明細 -->
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h2 class="bold text-base">帳務明細</h2>
@@ -330,7 +326,7 @@
         </div>
       </div>
 
-      <!-- 股票區塊：同一行排版，移除彩色圖示 -->
+      <!-- 股票區塊 -->
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h2 class="bold text-base">ETF / 股票</h2>
@@ -473,36 +469,39 @@
       </div>
 
       <div class="card p-5">
-        <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h2 class="bold text-base">交易流水帳</h2>
-          <div class="btn-capsule-group">
-            <button id="stxView_card" onclick="setStxViewMode('card')" class="btn-capsule-item">卡片</button>
-            <button id="stxView_table" onclick="setStxViewMode('table')" class="btn-capsule-item active">表格</button>
+          <div class="flex items-center gap-2">
+            <div class="btn-capsule-group">
+              <button id="stxRange_month" onclick="setStxFilterRange('month')" class="btn-capsule-item active">本月</button>
+              <button id="stxRange_all" onclick="setStxFilterRange('all')" class="btn-capsule-item">全部</button>
+            </div>
+            <div class="btn-capsule-group">
+              <button id="stxView_card" onclick="setStxViewMode('card')" class="btn-capsule-item">卡片</button>
+              <button id="stxView_table" onclick="setStxViewMode('table')" class="btn-capsule-item active">表格</button>
+            </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3">
-          <div>
-            <input type="month" id="filterStxMonth" class="input text-xs" onchange="renderStockTransactions()" />
+        <div class="space-y-2 mb-3">
+          <div class="flex items-center gap-2">
+            <input type="date" id="filterStxDateFrom" class="input text-xs flex-1" onchange="renderStockTransactions()" />
+            <span class="text-xs font-bold" style="color:var(--text-muted)">至</span>
+            <input type="date" id="filterStxDateTo" class="input text-xs flex-1" onchange="renderStockTransactions()" />
           </div>
-          <div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <select id="filterStxType" class="input text-xs" onchange="renderStockTransactions()">
               <option value="">全部交易類別</option>
               <option value="買入">買入</option>
               <option value="賣出">賣出</option>
               <option value="配息">配息</option>
             </select>
-          </div>
-          <div>
             <input type="text" id="filterStxKeyword" class="input text-xs" placeholder="搜尋標的、帳戶或備註..." oninput="renderStockTransactions()" />
           </div>
         </div>
 
         <div class="text-xs bold mb-3 space-y-2">
           <div id="stxPeriodSummaryText" class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center"></div>
-          <div class="text-right">
-            <button onclick="clearStxFilters()" class="text-xs font-bold" style="color:var(--text-muted)">清除篩選 (查看全部)</button>
-          </div>
         </div>
 
         <div id="stxTableView" class="overflow-x-auto max-h-[500px]">
@@ -625,7 +624,7 @@
             </select>
           </div>
           <div>
-            <label class="font-bold" style="color:var(--text-muted)">入帳帳戶（可同銀行）</label>
+            <label class="font-bold" style="color:var(--text-muted)">入帳帳戶</label>
             <select id="fxToAccount" class="input mt-1 text-xs"></select>
           </div>
           <div>
@@ -646,16 +645,93 @@
         <button id="fxSubmitBtn" onclick="saveFxExchange()" class="btn-primary btn w-full mt-2 py-3">儲存換匯</button>
       </div>
 
-      <!-- 歷史換匯紀錄（方法 2：兩行結構化展示） -->
+      <!-- 歷史換匯紀錄（支援 [ 卡片 ｜ 表格 ]） -->
       <div class="card p-5">
-        <h2 class="bold text-base mb-3">歷史換匯紀錄</h2>
-        <div id="fxHistoryList" class="space-y-2"></div>
+        <div class="flex items-center justify-between mb-3">
+          <h2 class="bold text-base">歷史換匯紀錄</h2>
+          <div class="btn-capsule-group">
+            <button id="fxView_card" onclick="setFxViewMode('card')" class="btn-capsule-item active">卡片</button>
+            <button id="fxView_table" onclick="setFxViewMode('table')" class="btn-capsule-item">表格</button>
+          </div>
+        </div>
+        <div id="fxHistoryCardView" class="space-y-2"></div>
+        <div id="fxHistoryTableView" class="hidden overflow-x-auto">
+          <table class="w-full">
+            <thead>
+              <tr class="whitespace-nowrap">
+                <th>日期</th>
+                <th class="text-right">賣出金額</th>
+                <th class="text-right">買入金額</th>
+                <th>成交匯率</th>
+                <th class="text-right">台幣成本</th>
+                <th>帳戶金流</th>
+                <th>備註 / 目的</th>
+                <th class="text-center">操作</th>
+              </tr>
+            </thead>
+            <tbody id="fxHistoryTableBody"></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
-    <!-- 專案（收納信封袋） -->
+    <!-- 專案（全新順序：接案追蹤 ➔ 固定收支 ➔ 特殊專案 ➔ 數位信封） -->
     <section id="tab-fixed" class="tab-content space-y-4">
-      <!-- 1. 固定收支 -->
+      <!-- 1. 接案追蹤 -->
+      <div class="card p-5 space-y-3">
+        <div class="flex items-center justify-between">
+          <button onclick="toggleSection('freelance')" class="flex items-center gap-1.5 bold text-base text-left">
+            <span id="freelanceArrow">▼</span> 接案追蹤
+          </button>
+          <div class="flex items-center gap-2">
+            <div class="btn-capsule-group">
+              <button id="flView_card" onclick="setFreelanceViewMode('card')" class="btn-capsule-item active">卡片</button>
+              <button id="flView_table" onclick="setFreelanceViewMode('table')" class="btn-capsule-item">表格</button>
+            </div>
+            <button onclick="openFreelanceModal()" class="btn-primary btn text-xs">新增接案</button>
+          </div>
+        </div>
+        <div id="freelanceBody" class="space-y-2">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <div class="btn-capsule-group">
+              <button id="flFilter_all" onclick="setFreelanceFilter('all')" class="btn-capsule-item active">全部</button>
+              <button id="flFilter_unpaid" onclick="setFreelanceFilter('unpaid')" class="btn-capsule-item">待收款</button>
+              <button id="flFilter_paid" onclick="setFreelanceFilter('paid')" class="btn-capsule-item">已收款</button>
+            </div>
+            <select id="freelanceSortOrder" class="input text-xs w-auto py-1" onchange="onFreelanceSortChange(this.value)">
+              <option value="date_desc">日期 (新 ➔ 舊)</option>
+              <option value="date_asc">日期 (舊 ➔ 新)</option>
+            </select>
+          </div>
+          <div id="freelanceUnpaidSummary" class="hidden pill p-2.5 text-xs font-bold flex justify-between items-center bg-zinc-100 dark:bg-zinc-800">
+            <span>待收款件數：<span id="flUnpaidCount">0</span> 筆</span>
+            <span>待收總額：<strong class="tabular heavy text-sm" id="flUnpaidTotal">$0</strong></span>
+          </div>
+          <input type="text" id="filterFreelanceKeyword" class="input text-xs" placeholder="搜尋案件名稱、類別或帳戶..." oninput="renderFixedSection()" />
+          
+          <div id="freelanceCardView" class="space-y-2 pt-1"></div>
+          <div id="freelanceTableView" class="hidden overflow-x-auto pt-1">
+            <table class="w-full">
+              <thead>
+                <tr class="whitespace-nowrap">
+                  <th>狀態</th>
+                  <th>案件名稱</th>
+                  <th>類別</th>
+                  <th class="text-right">金額</th>
+                  <th>執行日期</th>
+                  <th>收款日期</th>
+                  <th>入帳帳戶</th>
+                  <th class="text-center">憑證</th>
+                  <th class="text-center">操作</th>
+                </tr>
+              </thead>
+              <tbody id="freelanceTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. 固定收支 -->
       <div class="card p-5 space-y-3">
         <div class="flex items-center justify-between">
           <button onclick="toggleSection('fixed')" class="flex items-center gap-1.5 bold text-base text-left">
@@ -666,7 +742,7 @@
         <div id="fixedBody" class="space-y-2">
           <div class="flex items-center justify-between flex-wrap gap-2 text-xs">
             <input type="text" id="filterFixedKeyword" class="input text-xs flex-1" placeholder="搜尋固定收支名稱..." oninput="renderFixedSection()" />
-            <select id="fixedSortOrder" class="input text-xs w-auto py-1" onchange="renderFixedSection()">
+            <select id="fixedSortOrder" class="input text-xs w-auto py-1" onchange="onFixedSortChange(this.value)">
               <option value="date_desc">時間 (新 ➔ 舊)</option>
               <option value="date_asc">時間 (舊 ➔ 新)</option>
               <option value="name_asc">名稱 (A ➔ Z)</option>
@@ -677,20 +753,6 @@
         </div>
       </div>
 
-      <!-- 2. 數位信封預算 -->
-      <div class="card p-5 space-y-3">
-        <div class="flex items-center justify-between">
-          <button onclick="toggleSection('envelopes')" class="flex items-center gap-1.5 bold text-base text-left">
-            <span id="envelopesArrow">▼</span> 數位信封預算
-          </button>
-          <button onclick="openEnvelopeModal()" class="btn-primary btn text-xs">新增信封</button>
-        </div>
-        <div id="envelopesBody" class="space-y-2">
-          <p class="text-xs font-semibold" style="color:var(--text-muted)">指定分類時將自動扣抵信封額度</p>
-          <div id="envelopesList" class="space-y-2 pt-1"></div>
-        </div>
-      </div>
-
       <!-- 3. 特殊專案 -->
       <div class="card p-5 space-y-3">
         <div class="flex items-center justify-between">
@@ -698,7 +760,10 @@
             <span id="projectArrow">▼</span> 特殊專案
           </button>
           <div class="flex items-center gap-2">
-            <button id="projViewModeBtn" onclick="toggleProjectViewMode()" class="btn text-xs px-2.5 py-1">切換表格</button>
+            <div class="btn-capsule-group">
+              <button id="projView_card" onclick="setProjectViewMode('card')" class="btn-capsule-item active">卡片</button>
+              <button id="projView_table" onclick="setProjectViewMode('table')" class="btn-capsule-item">表格</button>
+            </div>
             <button onclick="openProjectModal()" class="btn-primary btn text-xs">新增專案</button>
           </div>
         </div>
@@ -707,7 +772,7 @@
             <label class="flex items-center gap-1.5 font-bold cursor-pointer select-none" style="color:var(--text-muted)">
               <input type="checkbox" id="showArchivedProjectsCheck" onchange="toggleShowArchivedProjects(this.checked)" /> 顯示已結束專案
             </label>
-            <select id="projectsSortOrder" class="input text-xs w-auto py-1" onchange="renderFixedSection()">
+            <select id="projectsSortOrder" class="input text-xs w-auto py-1" onchange="onProjectSortChange(this.value)">
               <option value="date_desc">時間 (新 ➔ 舊)</option>
               <option value="date_asc">時間 (舊 ➔ 新)</option>
               <option value="name_asc">名稱 (A ➔ Z)</option>
@@ -715,6 +780,7 @@
             </select>
           </div>
           <input type="text" id="filterProjectsKeyword" class="input text-xs" placeholder="搜尋專案名稱..." oninput="renderFixedSection()" />
+          
           <div id="projectsCardView" class="space-y-3 pt-1"></div>
           <div id="projectsTableView" class="hidden overflow-x-auto pt-1">
             <table class="w-full">
@@ -734,44 +800,29 @@
         </div>
       </div>
 
-      <!-- 4. 接案追蹤 -->
+      <!-- 4. 數位信封預算（正常折疊收闔） -->
       <div class="card p-5 space-y-3">
         <div class="flex items-center justify-between">
-          <button onclick="toggleSection('freelance')" class="flex items-center gap-1.5 bold text-base text-left">
-            <span id="freelanceArrow">▼</span> 接案追蹤
+          <button onclick="toggleSection('envelopes')" class="flex items-center gap-1.5 bold text-base text-left">
+            <span id="envelopesArrow">▼</span> 數位信封預算
           </button>
-          <button onclick="openFreelanceModal()" class="btn-primary btn text-xs">新增接案</button>
+          <button onclick="openEnvelopeModal()" class="btn-primary btn text-xs">新增信封</button>
         </div>
-        <div id="freelanceBody" class="space-y-2">
-          <div class="flex items-center justify-between flex-wrap gap-2">
-            <div class="btn-capsule-group">
-              <button id="flFilter_all" onclick="setFreelanceFilter('all')" class="btn-capsule-item active">全部</button>
-              <button id="flFilter_unpaid" onclick="setFreelanceFilter('unpaid')" class="btn-capsule-item">待收款</button>
-              <button id="flFilter_paid" onclick="setFreelanceFilter('paid')" class="btn-capsule-item">已收款</button>
-            </div>
-            <select id="freelanceSortOrder" class="input text-xs w-auto py-1" onchange="renderFixedSection()">
-              <option value="date_desc">日期 (新 ➔ 舊)</option>
-              <option value="date_asc">日期 (舊 ➔ 新)</option>
-            </select>
-          </div>
-          <div id="freelanceUnpaidSummary" class="hidden pill p-2.5 text-xs font-bold flex justify-between items-center bg-zinc-100 dark:bg-zinc-800">
-            <span>待收款件數：<span id="flUnpaidCount">0</span> 筆</span>
-            <span>待收總額：<strong class="tabular heavy text-sm" id="flUnpaidTotal">$0</strong></span>
-          </div>
-          <input type="text" id="filterFreelanceKeyword" class="input text-xs" placeholder="搜尋案件名稱、帳戶或備註..." oninput="renderFixedSection()" />
-          <div id="freelanceList" class="space-y-2 pt-1"></div>
+        <div id="envelopesBody" class="space-y-2">
+          <p class="text-xs font-semibold" style="color:var(--text-muted)">指定分類時將自動扣抵信封額度</p>
+          <div id="envelopesList" class="space-y-2 pt-1"></div>
         </div>
       </div>
     </section>
 
-    <!-- 報表（標題全數極簡化） -->
-    <section id="tab-charts" class="tab-content space-y-4">
+    <!-- 報表 -->
+    <section id="tab-charts" class="tab-content space-y-6">
       <div class="card p-5 space-y-6">
         <div class="flex items-center justify-between flex-wrap gap-2">
           <div class="btn-capsule-group">
             <button id="chartRangeMonth" onclick="setChartTimeRange('month')" class="btn-capsule-item active">本月</button>
             <button id="chartRangeYear" onclick="setChartTimeRange('year')" class="btn-capsule-item">今年</button>
-            <button id="chartRangeAll" onclick="setChartTimeRange('all')" class="btn-capsule-item">全部歷史</button>
+            <button id="chartRangeAll" onclick="setChartTimeRange('all')" class="btn-capsule-item">全部</button>
           </div>
           <div class="flex items-center gap-2 text-xs font-bold">
             <span style="color:var(--text-muted)">純日常</span>
@@ -780,13 +831,23 @@
           </div>
         </div>
 
-        <div class="flex items-center justify-between flex-wrap gap-2 pt-1">
-          <span class="text-xs font-bold" style="color:var(--text-muted)">圓餅圖色調</span>
-          <div class="btn-capsule-group">
-            <button id="paletteBtn_gray" onclick="setChartPalette('gray')" class="btn-capsule-item active">灰階</button>
-            <button id="paletteBtn_p1" onclick="setChartPalette('p1')" class="btn-capsule-item">組合 1</button>
-            <button id="paletteBtn_p2" onclick="setChartPalette('p2')" class="btn-capsule-item">組合 2</button>
-            <button id="paletteBtn_p3" onclick="setChartPalette('p3')" class="btn-capsule-item">組合 3</button>
+        <div class="space-y-2 pt-1">
+          <div class="flex items-center justify-between flex-wrap gap-2">
+            <span class="text-xs font-bold" style="color:var(--text-muted)">圓餅圖色調</span>
+            <div class="btn-capsule-group">
+              <button id="paletteBtn_gray" onclick="setChartPalette('gray')" class="btn-capsule-item active">灰階</button>
+              <button id="paletteBtn_morandi" onclick="setChartPalette('morandi')" class="btn-capsule-item">莫蘭迪</button>
+              <button id="paletteBtn_custom1" onclick="setChartPalette('custom1')" class="btn-capsule-item">自訂 1</button>
+              <button id="paletteBtn_custom2" onclick="setChartPalette('custom2')" class="btn-capsule-item">自訂 2</button>
+            </div>
+          </div>
+          <!-- 自訂調色盤展開條 -->
+          <div id="customPaletteBar" class="hidden pill p-3 flex items-center justify-between gap-2 flex-wrap">
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold" id="customPaletteLabel">自訂 1 調色：</span>
+              <div id="colorDotsContainer" class="flex items-center gap-1.5"></div>
+            </div>
+            <button onclick="resetCurrentCustomPalette()" class="text-xs font-bold" style="color:var(--text-muted)">重設色彩</button>
           </div>
         </div>
 
@@ -816,24 +877,29 @@
         </div>
       </div>
 
+      <!-- 匯入 / 匯出 4 顆等寬等高 2x2 對齊按鈕 -->
       <div class="card p-5">
-        <div class="flex items-center justify-center gap-3 flex-wrap">
-          <label class="btn btn-secondary text-xs px-4 py-2 cursor-pointer">
+        <div class="grid grid-cols-2 gap-3 max-w-md mx-auto">
+          <label class="btn btn-secondary text-xs h-11 w-full cursor-pointer flex items-center justify-center m-0">
             匯入發票 (CSV)
             <input type="file" accept=".csv" class="hidden" onchange="importInvoiceCSV(event)" />
           </label>
-          <label class="btn btn-secondary text-xs px-4 py-2 cursor-pointer">
+          <label class="btn btn-secondary text-xs h-11 w-full cursor-pointer flex items-center justify-center m-0">
             匯入資料 (JSON)
             <input type="file" accept=".json" onchange="importData(event)" class="hidden" />
           </label>
-          <button onclick="exportData()" class="btn btn-secondary text-xs px-4 py-2">匯出資料 (JSON)</button>
-          <button onclick="resetAllData()" class="btn text-xs px-4 py-2" style="color:var(--text-muted); border:1px solid var(--border)">清除全部資料</button>
+          <button onclick="exportData()" class="btn btn-secondary text-xs h-11 w-full flex items-center justify-center m-0">
+            匯出資料 (JSON)
+          </button>
+          <button onclick="resetAllData()" class="btn text-xs h-11 w-full flex items-center justify-center m-0" style="color:var(--text-muted); border:1px solid var(--border)">
+            清除全部資料
+          </button>
         </div>
       </div>
     </section>
   </div>
 
-  <!-- 貼底導覽列：全新順序（看板 ｜ 記帳 ｜ 投資 ｜ 交易 ｜ 換匯 ｜ 專案 ｜ 報表） -->
+  <!-- 貼底導覽列 -->
   <nav class="bottom-bar">
     <button class="nav-item active" data-tab="dashboard" onclick="switchTab('dashboard')">
       <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1h-2z"/></svg>
@@ -866,6 +932,371 @@
   </nav>
 
   <!-- ==================== 彈窗 MODALS ==================== -->
+  <!-- 查看單據照片（附下載按鈕） -->
+  <div id="receiptModal" class="modal-overlay hidden">
+    <div class="modal text-center">
+      <h3 class="text-base bold mb-3">單據 / 收據照片</h3>
+      <div class="flex justify-center my-2">
+        <img id="receiptImagePreview" src="" alt="單據照片" class="max-h-[60vh] max-w-full rounded-xl object-contain shadow-sm" />
+      </div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="downloadReceiptImage()" class="btn btn-secondary flex-1">儲存 / 下載圖片</button>
+        <button onclick="closeModal('receiptModal')" class="btn btn-primary flex-1">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 鏡頭掃描 QR Code -->
+  <div id="scanModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-2">相機掃描發票 / QR Code</h3>
+      <div id="reader" class="w-full rounded-xl overflow-hidden bg-black min-h-[240px]"></div>
+      <div class="flex gap-2 mt-4">
+        <button onclick="stopScanner()" class="btn btn-primary flex-1">關閉相機</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 編輯帳務明細（支援重新上傳/替換單據照片） -->
+  <div id="txEditModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4">編輯帳務明細</h3>
+      <input type="hidden" id="editTxId" />
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">日期</label>
+          <input type="date" id="editTxDate" class="input mt-1" />
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">項目名稱</label>
+          <input type="text" id="editTxName" class="input mt-1" />
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">金額（支出為負，如 -150）</label>
+          <input type="text" id="editTxAmount" class="input mt-1 tabular" />
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">分類</label>
+          <select id="editTxCategory" class="input mt-1">
+            <option value="食">食</option><option value="衣">衣</option><option value="住">住</option>
+            <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
+            <option value="醫">醫</option><option value="美">美</option><option value="稅">稅</option>
+            <option value="保">保</option><option value="禮">禮</option><option value="雜">雜</option>
+            <option value="轉帳/換匯">轉帳/換匯</option>
+            <option value="投">投</option><option value="息">息</option><option value="折">折</option>
+            <option value="收">收</option><option value="什一">什一</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">帳戶</label>
+          <select id="editTxAccount" class="input mt-1"></select>
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">標籤</label>
+          <select id="editTxNecessary" class="input mt-1">
+            <option value="necessary">必要</option>
+            <option value="non">非必要</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">📸 單據照片（可替換或補傳）</label>
+          <div class="flex items-center justify-between border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 mt-1 bg-[var(--bg)]">
+            <span id="editTxReceiptFileName" class="text-xs font-semibold truncate max-w-[180px]" style="color:var(--text-muted)">未變更原照片</span>
+            <label class="btn text-xs px-3 py-1 cursor-pointer shrink-0 ml-2">
+              選擇檔案
+              <input type="file" id="editTxReceiptInput" accept="image/*" class="hidden" onchange="handleReceiptFileSelect(this, 'editTxReceiptFileName')" />
+            </label>
+          </div>
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">備註</label>
+          <input type="text" id="editTxNote" class="input mt-1" />
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveTxEdit()" class="btn-primary btn flex-1 py-2.5">儲存修改</button>
+        <button onclick="closeModal('txEditModal')" class="btn flex-1 py-2.5">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增/編輯接案（支援工作類別與勞報單拍照） -->
+  <div id="freelanceModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4" id="freelanceModalTitle">新增接案</h3>
+      <input type="hidden" id="freelanceEditId" />
+      <div class="space-y-2 text-xs">
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">案件名稱</label>
+          <input type="text" id="freelanceName" class="input mt-1" />
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">工作類別（可選或自訂填寫）</label>
+          <div class="flex gap-2 mt-1">
+            <input type="text" id="freelanceCategory" class="input" placeholder="如：平面攝影、視訊執行..." list="freelanceCatSuggestions" />
+            <datalist id="freelanceCatSuggestions">
+              <option value="演唱會攝影"></option>
+              <option value="平面攝影"></option>
+              <option value="動態錄影"></option>
+              <option value="視訊執行"></option>
+              <option value="剪輯後製"></option>
+              <option value="社群"></option>
+              <option value="其他"></option>
+            </datalist>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="font-bold" style="color:var(--text-muted)">執行日期</label>
+            <input type="date" id="freelanceExecDate" class="input mt-1" />
+          </div>
+          <div>
+            <label class="font-bold" style="color:var(--text-muted)">收款日期</label>
+            <input type="date" id="freelancePayDate" class="input mt-1" placeholder="未填則帶入執行日" />
+          </div>
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">金額</label>
+          <input type="number" id="freelanceAmount" class="input mt-1 tabular" />
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">狀態</label>
+          <select id="freelanceStatus" class="input mt-1">
+            <option value="待收款" selected>待收款</option>
+            <option value="已收訂金">已收訂金</option>
+            <option value="已收款">已收款</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">入帳帳戶</label>
+          <select id="freelanceAccount" class="input mt-1"></select>
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">📸 勞報單 / 發票 / 合約拍照</label>
+          <div class="flex items-center justify-between border border-zinc-200 dark:border-zinc-800 rounded-xl px-3 py-2 mt-1 bg-[var(--bg)]">
+            <span id="flReceiptFileName" class="text-xs font-semibold truncate max-w-[180px]" style="color:var(--text-muted)">未選擇任何檔案</span>
+            <label class="btn text-xs px-3 py-1 cursor-pointer shrink-0 ml-2">
+              選擇檔案
+              <input type="file" id="flReceiptInput" accept="image/*" class="hidden" onchange="handleReceiptFileSelect(this, 'flReceiptFileName')" />
+            </label>
+          </div>
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">備註</label>
+          <input type="text" id="freelanceNote" class="input mt-1" />
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveFreelance()" class="btn-primary btn flex-1 py-2.5">儲存</button>
+        <button onclick="closeModal('freelanceModal')" class="btn flex-1 py-2.5">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增/編輯固定收支項目（支援 [ 支出 (-) ｜ 收入 (+) ] 切換） -->
+  <div id="fixedModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4" id="fixedModalTitle">新增固定收支項目</h3>
+      <input type="hidden" id="fixedEditId" />
+      <div class="space-y-2 text-xs">
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">名稱</label>
+          <input type="text" id="fixedName" class="input mt-1" />
+        </div>
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label class="font-bold" style="color:var(--text-muted)">金額類型</label>
+            <div class="btn-capsule-group">
+              <button type="button" id="fixedSign_exp" onclick="setFixedSign('exp')" class="btn-capsule-item active">支出 (-)</button>
+              <button type="button" id="fixedSign_inc" onclick="setFixedSign('inc')" class="btn-capsule-item">收入 (+)</button>
+            </div>
+          </div>
+          <input type="number" id="fixedAmount" class="input mt-1 tabular" step="any" placeholder="直接輸入數字，系統自動轉正負" />
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">帳戶</label>
+          <select id="fixedAccount" class="input mt-1"></select>
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">分類</label>
+          <select id="fixedCategory" class="input mt-1">
+            <option value="住">住</option><option value="行">行</option><option value="育">育</option>
+            <option value="樂">樂</option><option value="醫">醫</option><option value="美">美</option>
+            <option value="稅">稅</option><option value="保">保</option><option value="禮">禮</option>
+            <option value="雜">雜</option><option value="收">收</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">備註</label>
+          <input type="text" id="fixedNote" class="input mt-1" />
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveFixed()" class="btn-primary btn flex-1">儲存</button>
+        <button onclick="closeModal('fixedModal')" class="btn flex-1">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 特殊專案快速記一筆彈窗 -->
+  <div id="projectTxModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4">為專案記一筆支出</h3>
+      <input type="hidden" id="projTxProjectId" />
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">所屬專案</label>
+          <input type="text" id="projTxProjectName" class="input mt-1 bg-zinc-100 dark:bg-zinc-800" disabled />
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">日期</label>
+          <input type="date" id="projTxDate" class="input mt-1" />
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">項目名稱</label>
+          <input type="text" id="projTxName" class="input mt-1" placeholder="如：飯店住宿、器材租借..." />
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">支出金額</label>
+          <input type="number" id="projTxAmount" class="input mt-1 tabular" placeholder="正數金額" />
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">扣款帳戶</label>
+          <select id="projTxAccount" class="input mt-1"></select>
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">分類</label>
+          <select id="projTxCategory" class="input mt-1">
+            <option value="樂">樂</option><option value="行">行</option><option value="住">住</option>
+            <option value="食">食</option><option value="衣">衣</option><option value="育">育</option>
+            <option value="雜">雜</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveProjectTx()" class="btn-primary btn flex-1 py-2.5">記錄支出</button>
+        <button onclick="closeModal('projectTxModal')" class="btn flex-1 py-2.5">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新增/編輯特殊專案 -->
+  <div id="projectModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4" id="projectModalTitle">新增專案</h3>
+      <input type="hidden" id="projectEditId" />
+      <div class="space-y-2 text-xs">
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">專案名稱</label>
+          <input type="text" id="projectName" class="input mt-1" />
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">專案總預算</label>
+          <input type="number" id="projectBudget" class="input mt-1 tabular" />
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">狀態</label>
+          <select id="projectStatus" class="input mt-1">
+            <option value="active">進行中（記帳選單中顯示）</option>
+            <option value="archived">已結束/封存（從選單隱藏）</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-bold" style="color:var(--text-muted)">備註</label>
+          <input type="text" id="projectNote" class="input mt-1" />
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveProject()" class="btn-primary btn flex-1">儲存</button>
+        <button onclick="closeModal('projectModal')" class="btn flex-1">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 數位信封彈窗 -->
+  <div id="envelopeModal" class="modal-overlay hidden">
+    <div class="modal">
+      <h3 class="text-base bold mb-4" id="envelopeModalTitle">新增信封</h3>
+      <input type="hidden" id="envelopeEditId" />
+      <div class="space-y-3">
+        <div>
+          <label class="text-xs font-bold" style="color:var(--text-muted)">信封名稱</label>
+          <input type="text" id="envelopeName" class="input mt-1" />
+        </div>
+        <div>
+          <label class="text-xs font-bold" style="color:var(--text-muted)">每月預算</label>
+          <input type="number" id="envelopeBudget" class="input mt-1 tabular" />
+        </div>
+        <div>
+          <label class="text-xs font-bold" style="color:var(--text-muted)">連動分類</label>
+          <select id="envelopeCategory" class="input mt-1">
+            <option value="">不指定</option>
+            <option value="食">食</option><option value="衣">衣</option><option value="住">住</option>
+            <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
+            <option value="醫">醫</option><option value="美">美</option><option value="稅">稅</option>
+            <option value="保">保</option><option value="禮">禮</option><option value="雜">雜</option>
+          </select>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveEnvelope()" class="btn-primary btn flex-1">儲存</button>
+        <button onclick="closeModal('envelopeModal')" class="btn flex-1">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 帳戶管理彈窗 -->
+  <div id="accountModal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="text-base bold">帳戶管理</h3>
+        <span class="text-[11px] font-bold" style="color:var(--text-muted)">按住 ⠿ 可拖曳排序</span>
+      </div>
+      <div id="accountEditFields" class="space-y-2"></div>
+      <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800">
+        <p class="text-xs bold mb-2">外幣持有部位（含網銀外幣與現鈔）</p>
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
+          <div>
+            <label class="text-[11px] font-bold" style="color:var(--text-muted)">美元 (USD)</label>
+            <input type="number" id="fxCashInput_USD" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold" style="color:var(--text-muted)">日幣 (JPY)</label>
+            <input type="number" id="fxCashInput_JPY" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold" style="color:var(--text-muted)">人民幣 (CNY)</label>
+            <input type="number" id="fxCashInput_CNY" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold" style="color:var(--text-muted)">韓元 (KRW)</label>
+            <input type="number" id="fxCashInput_KRW" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold" style="color:var(--text-muted)">歐元 (EUR)</label>
+            <input type="number" id="fxCashInput_EUR" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
+          </div>
+          <div>
+            <label class="text-[11px] font-bold" style="color:var(--text-muted)">英鎊 (GBP)</label>
+            <input type="number" id="fxCashInput_GBP" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
+          </div>
+        </div>
+      </div>
+      <div class="mt-3">
+        <label class="text-xs font-bold" style="color:var(--text-muted)">新增台幣帳戶名稱</label>
+        <div class="flex gap-2 mt-1">
+          <input type="text" id="newAccountName" class="input text-xs" />
+          <button onclick="addNewAccount()" class="btn-primary btn text-xs px-4 whitespace-nowrap">新增</button>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-5">
+        <button onclick="saveAccounts()" class="btn-primary btn flex-1 py-2.5">儲存更新</button>
+        <button onclick="closeModal('accountModal')" class="btn flex-1 py-2.5">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 投資標的編輯 -->
   <div id="holdingEditModal" class="modal-overlay hidden">
     <div class="modal">
       <h3 class="text-base bold mb-4">編輯標的設定</h3>
@@ -920,6 +1351,7 @@
     </div>
   </div>
 
+  <!-- 投資交易流水編輯 -->
   <div id="stxEditModal" class="modal-overlay hidden">
     <div class="modal">
       <h3 class="text-base bold mb-4">編輯交易流水</h3>
@@ -992,276 +1424,6 @@
       <div class="flex gap-2 mt-5">
         <button onclick="saveStockTxEdit()" class="btn-primary btn flex-1 py-2.5">儲存修改</button>
         <button onclick="closeModal('stxEditModal')" class="btn flex-1 py-2.5">取消</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="txEditModal" class="modal-overlay hidden">
-    <div class="modal">
-      <h3 class="text-base bold mb-4">編輯帳務明細</h3>
-      <input type="hidden" id="editTxId" />
-      <div class="space-y-3 text-xs">
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">日期</label>
-          <input type="date" id="editTxDate" class="input mt-1" />
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">項目名稱</label>
-          <input type="text" id="editTxName" class="input mt-1" />
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">金額（支出為負，如 -150）</label>
-          <input type="text" id="editTxAmount" class="input mt-1 tabular" />
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">分類</label>
-          <select id="editTxCategory" class="input mt-1">
-            <option value="食">食</option><option value="衣">衣</option><option value="住">住</option>
-            <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
-            <option value="醫">醫</option><option value="美">美</option><option value="稅">稅</option>
-            <option value="保">保</option><option value="禮">禮</option><option value="雜">雜</option>
-            <option value="轉帳/換匯">轉帳/換匯</option>
-            <option value="投">投</option><option value="息">息</option><option value="折">折</option>
-            <option value="收">收</option><option value="什一">什一</option>
-          </select>
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">帳戶</label>
-          <select id="editTxAccount" class="input mt-1"></select>
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">標籤</label>
-          <select id="editTxNecessary" class="input mt-1">
-            <option value="necessary">必要</option>
-            <option value="non">非必要</option>
-          </select>
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">備註</label>
-          <input type="text" id="editTxNote" class="input mt-1" />
-        </div>
-      </div>
-      <div class="flex gap-2 mt-5">
-        <button onclick="saveTxEdit()" class="btn-primary btn flex-1 py-2.5">儲存修改</button>
-        <button onclick="closeModal('txEditModal')" class="btn flex-1 py-2.5">取消</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="receiptModal" class="modal-overlay hidden">
-    <div class="modal text-center">
-      <h3 class="text-base bold mb-3">單據 / 收據照片</h3>
-      <div class="flex justify-center my-2">
-        <img id="receiptImagePreview" src="" alt="單據照片" class="max-h-[60vh] max-w-full rounded-xl object-contain shadow-sm" />
-      </div>
-      <button onclick="closeModal('receiptModal')" class="btn btn-primary w-full mt-3">關閉</button>
-    </div>
-  </div>
-
-  <div id="scanModal" class="modal-overlay hidden">
-    <div class="modal">
-      <h3 class="text-base bold mb-2">相機掃描條碼 / QR Code</h3>
-      <div id="reader" class="w-full rounded-xl overflow-hidden bg-black min-h-[240px]"></div>
-      <div class="flex gap-2 mt-4">
-        <button onclick="stopScanner()" class="btn btn-primary flex-1">關閉相機</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="accountModal" class="modal-overlay hidden">
-    <div class="modal">
-      <div class="flex items-center justify-between mb-2">
-        <h3 class="text-base bold">帳戶管理</h3>
-        <span class="text-[11px] font-bold" style="color:var(--text-muted)">按住 ⠿ 可拖曳排序</span>
-      </div>
-      <div id="accountEditFields" class="space-y-2"></div>
-      <div class="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800">
-        <p class="text-xs bold mb-2">外幣持有部位（含網銀外幣與現鈔）</p>
-        <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
-          <div>
-            <label class="text-[11px] font-bold" style="color:var(--text-muted)">美元 (USD)</label>
-            <input type="number" id="fxCashInput_USD" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
-          </div>
-          <div>
-            <label class="text-[11px] font-bold" style="color:var(--text-muted)">日幣 (JPY)</label>
-            <input type="number" id="fxCashInput_JPY" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
-          </div>
-          <div>
-            <label class="text-[11px] font-bold" style="color:var(--text-muted)">人民幣 (CNY)</label>
-            <input type="number" id="fxCashInput_CNY" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
-          </div>
-          <div>
-            <label class="text-[11px] font-bold" style="color:var(--text-muted)">韓元 (KRW)</label>
-            <input type="number" id="fxCashInput_KRW" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
-          </div>
-          <div>
-            <label class="text-[11px] font-bold" style="color:var(--text-muted)">歐元 (EUR)</label>
-            <input type="number" id="fxCashInput_EUR" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
-          </div>
-          <div>
-            <label class="text-[11px] font-bold" style="color:var(--text-muted)">英鎊 (GBP)</label>
-            <input type="number" id="fxCashInput_GBP" class="input mt-1 tabular text-xs py-2 px-3" step="any" />
-          </div>
-        </div>
-      </div>
-      <div class="mt-3">
-        <label class="text-xs font-bold" style="color:var(--text-muted)">新增台幣帳戶名稱</label>
-        <div class="flex gap-2 mt-1">
-          <input type="text" id="newAccountName" class="input text-xs" />
-          <button onclick="addNewAccount()" class="btn-primary btn text-xs px-4 whitespace-nowrap">新增</button>
-        </div>
-      </div>
-      <div class="flex gap-2 mt-5">
-        <button onclick="saveAccounts()" class="btn-primary btn flex-1 py-2.5">儲存更新</button>
-        <button onclick="closeModal('accountModal')" class="btn flex-1 py-2.5">取消</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="envelopeModal" class="modal-overlay hidden">
-    <div class="modal">
-      <h3 class="text-base bold mb-4" id="envelopeModalTitle">新增信封</h3>
-      <input type="hidden" id="envelopeEditId" />
-      <div class="space-y-3">
-        <div>
-          <label class="text-xs font-bold" style="color:var(--text-muted)">信封名稱</label>
-          <input type="text" id="envelopeName" class="input mt-1" />
-        </div>
-        <div>
-          <label class="text-xs font-bold" style="color:var(--text-muted)">每月預算</label>
-          <input type="number" id="envelopeBudget" class="input mt-1 tabular" />
-        </div>
-        <div>
-          <label class="text-xs font-bold" style="color:var(--text-muted)">連動分類</label>
-          <select id="envelopeCategory" class="input mt-1">
-            <option value="">不指定</option>
-            <option value="食">食</option><option value="衣">衣</option><option value="住">住</option>
-            <option value="行">行</option><option value="育">育</option><option value="樂">樂</option>
-            <option value="醫">醫</option><option value="美">美</option><option value="稅">稅</option>
-            <option value="保">保</option><option value="禮">禮</option><option value="雜">雜</option>
-          </select>
-        </div>
-      </div>
-      <div class="flex gap-2 mt-5">
-        <button onclick="saveEnvelope()" class="btn-primary btn flex-1">儲存</button>
-        <button onclick="closeModal('envelopeModal')" class="btn flex-1">取消</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="projectModal" class="modal-overlay hidden">
-    <div class="modal">
-      <h3 class="text-base bold mb-4" id="projectModalTitle">新增專案</h3>
-      <input type="hidden" id="projectEditId" />
-      <div class="space-y-2 text-xs">
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">專案名稱</label>
-          <input type="text" id="projectName" class="input mt-1" />
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">專案總預算</label>
-          <input type="number" id="projectBudget" class="input mt-1 tabular" />
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">狀態</label>
-          <select id="projectStatus" class="input mt-1">
-            <option value="active">進行中（記帳選單中顯示）</option>
-            <option value="archived">已結束/封存（從選單隱藏）</option>
-          </select>
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">備註</label>
-          <input type="text" id="projectNote" class="input mt-1" />
-        </div>
-      </div>
-      <div class="flex gap-2 mt-5">
-        <button onclick="saveProject()" class="btn-primary btn flex-1">儲存</button>
-        <button onclick="closeModal('projectModal')" class="btn flex-1">取消</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="freelanceModal" class="modal-overlay hidden">
-    <div class="modal">
-      <h3 class="text-base bold mb-4" id="freelanceModalTitle">新增接案</h3>
-      <input type="hidden" id="freelanceEditId" />
-      <div class="space-y-2 text-xs">
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">案件名稱</label>
-          <input type="text" id="freelanceName" class="input mt-1" />
-        </div>
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="font-bold" style="color:var(--text-muted)">執行日期</label>
-            <input type="date" id="freelanceExecDate" class="input mt-1" />
-          </div>
-          <div>
-            <label class="font-bold" style="color:var(--text-muted)">收款日期</label>
-            <input type="date" id="freelancePayDate" class="input mt-1" placeholder="未填則帶入執行日" />
-          </div>
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">金額</label>
-          <input type="number" id="freelanceAmount" class="input mt-1 tabular" />
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">狀態</label>
-          <select id="freelanceStatus" class="input mt-1">
-            <option value="待收款" selected>待收款</option>
-            <option value="已收訂金">已收訂金</option>
-            <option value="已收款">已收款</option>
-          </select>
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">入帳帳戶</label>
-          <select id="freelanceAccount" class="input mt-1"></select>
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">備註</label>
-          <input type="text" id="freelanceNote" class="input mt-1" />
-        </div>
-      </div>
-      <div class="flex gap-2 mt-5">
-        <button onclick="saveFreelance()" class="btn-primary btn flex-1">儲存</button>
-        <button onclick="closeModal('freelanceModal')" class="btn flex-1">取消</button>
-      </div>
-    </div>
-  </div>
-
-  <div id="fixedModal" class="modal-overlay hidden">
-    <div class="modal">
-      <h3 class="text-base bold mb-4" id="fixedModalTitle">新增固定項目</h3>
-      <input type="hidden" id="fixedEditId" />
-      <div class="space-y-2 text-xs">
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">名稱</label>
-          <input type="text" id="fixedName" class="input mt-1" />
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">金額（支出為負，如 -15000）</label>
-          <input type="number" id="fixedAmount" class="input mt-1 tabular" step="any" />
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">帳戶</label>
-          <select id="fixedAccount" class="input mt-1"></select>
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">分類</label>
-          <select id="fixedCategory" class="input mt-1">
-            <option value="住">住</option><option value="行">行</option><option value="育">育</option>
-            <option value="樂">樂</option><option value="醫">醫</option><option value="美">美</option>
-            <option value="稅">稅</option><option value="保">保</option><option value="禮">禮</option>
-            <option value="雜">雜</option><option value="收">收</option>
-          </select>
-        </div>
-        <div>
-          <label class="font-bold" style="color:var(--text-muted)">備註</label>
-          <input type="text" id="fixedNote" class="input mt-1" />
-        </div>
-      </div>
-      <div class="flex gap-2 mt-5">
-        <button onclick="saveFixed()" class="btn-primary btn flex-1">儲存</button>
-        <button onclick="closeModal('fixedModal')" class="btn flex-1">取消</button>
       </div>
     </div>
   </div>

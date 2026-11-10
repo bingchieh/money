@@ -38,10 +38,10 @@
 .dark {
   --bg: #0c0c0e;
   --card: #1c1c1e;
-  --card-dark: #2c2c2e;
+  --card-dark: #242428; /* 微光澤炭黑，提高對比防死黑 */
   --text: #f5f5f7;
   --text-muted: #a0a0a8;
-  --border: rgba(255, 255, 255, 0.08);
+  --border: rgba(255, 255, 255, 0.12);
   --shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
   --shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.35);
 }
@@ -52,13 +52,12 @@
   font-style: normal;
 }
 
-/* 全站字重門檻：預設基底為 600 SemiBold */
 body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
   font-family: 'GenYoMin', 'Noto Serif TC', 'Songti TC', serif;
-  font-weight: 600;
+  font-weight: 600; /* 全站最低字重門檻，避免明體過細單薄 */
   min-height: 100vh;
   padding-bottom: 96px;
   transition: background 0.3s ease, color 0.3s ease;
@@ -78,10 +77,6 @@ body {
   font-weight: 700;
 }
 
-.semibold {
-  font-weight: 600;
-}
-
 .card {
   background: var(--card);
   border-radius: var(--radius);
@@ -94,6 +89,7 @@ body {
   color: #f5f5f7;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
+  border: 1px solid var(--border);
 }
 
 .pill {
@@ -180,7 +176,6 @@ body {
   color: #ffffff;
 }
 
-/* 旋轉動畫，點擊更新時觸發 */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -203,11 +198,6 @@ input[type="month"]::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.65;
   transition: opacity 0.2s;
-}
-
-input[type="date"]::-webkit-calendar-picker-indicator:hover,
-input[type="month"]::-webkit-calendar-picker-indicator:hover {
-  opacity: 1;
 }
 
 .dark input[type="date"]::-webkit-calendar-picker-indicator,
@@ -341,7 +331,7 @@ select.input {
   background: var(--card);
   border-radius: 22px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-  max-width: 460px;
+  max-width: 480px;
   width: 100%;
   max-height: 88vh;
   overflow-y: auto;
@@ -483,4 +473,25 @@ td {
   top: 0;
   z-index: 20;
   background: var(--card);
+}
+
+.color-picker-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 0 1px var(--border);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.color-picker-dot input[type="color"] {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  width: 44px;
+  height: 44px;
+  opacity: 0;
+  cursor: pointer;
 }
