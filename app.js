@@ -44,10 +44,8 @@ function updateStorageStatus() {
   }
 }
 
-// 預設 10 色色票組（包含莫蘭迪色票組）
-const DEFAULT_PALETTE_CUSTOM1 = ['#8E9A86', '#D1C7BD', '#9FA8A3', '#B0A8A0', '#C5B9AC', '#8C979A', '#D4C2B2', '#7A8288', '#A2AAB0', '#B8AEA5'];
-const DEFAULT_PALETTE_CUSTOM2 = ['#7895B2', '#AEBDCA', '#E8DFCA', '#F5EFE6', '#96A393', '#D6C2B2', '#B5C0D0', '#CCD3CA', '#EED3D9', '#55718C'];
-const DEFAULT_PALETTE_CUSTOM3 = ['#A8D1D1', '#9EA1D4', '#FD8A8A', '#F1F7B5', '#82AAE3', '#91D8E4', '#EAFDFC', '#BFEAF5', '#FFCBCB', '#FFB4B4'];
+// 報表 3 階灰階色彩定義（取自黃點標記高對比階梯）
+const GRAY_PALETTE = ['#8C8C8C', '#595959', '#383838'];
 
 const DEFAULT_ACCOUNTS = ['中信', '國泰', '聯邦', '元大', '富邦莊敬', '富邦仁愛', '現金', '他人支付'];
 const DEFAULT_FREELANCE_CATS = ['演唱會攝影', '平面攝影', '動態錄影', '視訊執行', '剪輯後製', '社群', '其他'];
@@ -69,10 +67,6 @@ const DEFAULT_DATA = {
   showTithe: true,
   chartsIncludeInvest: false,
   chartTimeRange: 'month',
-  chartPalette: 'gray', // 'gray', 'custom1', 'custom2', 'custom3'
-  customPalette1: [...DEFAULT_PALETTE_CUSTOM1],
-  customPalette2: [...DEFAULT_PALETTE_CUSTOM2],
-  customPalette3: [...DEFAULT_PALETTE_CUSTOM3],
   txViewMode: 'card',
   stxViewMode: 'table',
   fxViewMode: 'card',
@@ -91,7 +85,7 @@ const DEFAULT_DATA = {
   showArchivedProjects: false,
   stockPrices: {},
   stockYields: {},
-  holdingOverrides: {}, // { [symbol]: { isLocked: bool, shares: num, cost: num } }
+  holdingOverrides: {},
   fundPrices: {},
   fundRates: {},
   fundCurrencies: {},
@@ -113,14 +107,6 @@ let necessaryChart = null;
 let accountChart = null;
 let currentFixedSign = 'exp';
 let activeReceiptUrl = null;
-
-// 自訂選色器狀態
-let activePickerPaletteKey = 'custom1';
-let activePickerColorIndex = 0;
-let pickerCurrentHue = 0; // 0 - 360
-let pickerCurrentSat = 1; // 0 - 1
-let pickerCurrentVal = 1; // 0 - 1
-let pickerHexValue = '#8E9A86';
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -243,9 +229,6 @@ function loadData() {
       if (!data.freelanceCategories || !data.freelanceCategories.length) data.freelanceCategories = [...DEFAULT_FREELANCE_CATS];
       data.accountList.forEach(a => { if (data.accounts[a] === undefined) data.accounts[a] = 0; });
       if (!data.fxExchanges) data.fxExchanges = [];
-      if (!data.customPalette1 || !data.customPalette1.length) data.customPalette1 = [...DEFAULT_PALETTE_CUSTOM1];
-      if (!data.customPalette2 || !data.customPalette2.length) data.customPalette2 = [...DEFAULT_PALETTE_CUSTOM2];
-      if (!data.customPalette3 || !data.customPalette3.length) data.customPalette3 = [...DEFAULT_PALETTE_CUSTOM3];
       if (!data.holdingOverrides) data.holdingOverrides = {};
       if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, envelopes: true, project: true, freelance: true };
 
@@ -1268,9 +1251,10 @@ function renderFixedSection() {
     if (isCard) {
       document.getElementById('freelanceCardView').innerHTML = freeList.map(f => {
         const isUnpaid = f.status !== '已收款';
+        // 沒照片時完全隱藏留白，有照片才顯示圖示
         const receiptBtn = f.receipt
           ? `<button onclick="viewReceipt('${f.receipt}')" class="text-xs">📸</button>`
-          : `<span class="opacity-20 text-xs">📸</span>`;
+          : '';
         return `
           <div class="pill p-3 space-y-1 text-xs">
             <div class="flex justify-between items-center">
@@ -1297,6 +1281,7 @@ function renderFixedSection() {
     } else {
       document.getElementById('freelanceTableBody').innerHTML = freeList.map(f => {
         const isUnpaid = f.status !== '已收款';
+        // 沒照片時留空 '-'
         const receiptBtn = f.receipt ? `<button onclick="viewReceipt('${f.receipt}')" class="text-xs font-bold">📸</button>` : '-';
         return `
           <tr class="whitespace-nowrap">
@@ -1566,190 +1551,11 @@ function deleteProject(id) {
   populateProjectSelect();
 }
 
-// 報表自訂調色盤（10 色無框自訂）
-function setChartPalette(key) {
-  data.chartPalette = key;
-  saveData();
-  renderCharts();
-}
-
-function openColorPicker(paletteKey, index) {
-  activePickerPaletteKey = paletteKey;
-  activePickerColorIndex = index;
-  const list = data[paletteKey] || DEFAULT_PALETTE_CUSTOM1;
-  const hex = list[index] || '#8E9A86';
-  pickerHexValue = hex.toUpperCase();
-  document.getElementById('pickerHexInput').value = pickerHexValue;
-  document.getElementById('pickerColorPreview').style.backgroundColor = pickerHexValue;
-
-  openModal('proColorPickerModal');
-  setTimeout(initColorPickerCanvases, 50);
-}
-
-function openBatchHexModal() {
-  const pKey = data.chartPalette;
-  if (!pKey.startsWith('custom')) return;
-  const currentList = data[pKey] || [];
-  document.getElementById('batchHexInput').value = currentList.join(', ');
-  openModal('batchHexModal');
-}
-
-function applyBatchHexPalette() {
-  const pKey = data.chartPalette;
-  const text = document.getElementById('batchHexInput').value;
-  const matches = text.match(/#?([0-9a-fA-F]{6}|[0-9a-fA-F]{3})/g);
-  if (!matches || !matches.length) return alert('請輸入有效的 HEX 色碼');
-
-  const formatted = matches.slice(0, 10).map(c => c.startsWith('#') ? c.toUpperCase() : '#' + c.toUpperCase());
-  while (formatted.length < 10) {
-    formatted.push(formatted[formatted.length % formatted.length]);
-  }
-
-  data[pKey] = formatted;
-  saveData();
-  closeModal('batchHexModal');
-  renderCharts();
-}
-
-function resetCurrentCustomPalette() {
-  const pKey = data.chartPalette;
-  if (pKey === 'custom1') data.customPalette1 = [...DEFAULT_PALETTE_CUSTOM1];
-  else if (pKey === 'custom2') data.customPalette2 = [...DEFAULT_PALETTE_CUSTOM2];
-  else if (pKey === 'custom3') data.customPalette3 = [...DEFAULT_PALETTE_CUSTOM3];
-  saveData();
-  renderCharts();
-}
-
-// Canvas 色彩矩陣與色相滑桿邏輯
-function initColorPickerCanvases() {
-  const satCanvas = document.getElementById('pickerSatValCanvas');
-  const hueCanvas = document.getElementById('pickerHueCanvas');
-  if (!satCanvas || !hueCanvas) return;
-
-  satCanvas.width = satCanvas.clientWidth;
-  satCanvas.height = satCanvas.clientHeight;
-  hueCanvas.width = hueCanvas.clientWidth;
-  hueCanvas.height = hueCanvas.clientHeight;
-
-  drawHueBar();
-  drawSatValBox();
-
-  satCanvas.onpointerdown = satCanvas.onpointermove = function(e) {
-    if (e.buttons !== 1) return;
-    const rect = satCanvas.getBoundingClientRect();
-    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
-    const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
-    pickerCurrentSat = x / rect.width;
-    pickerCurrentVal = 1 - (y / rect.height);
-    updateFromPickerHSV();
-  };
-
-  hueCanvas.onpointerdown = hueCanvas.onpointermove = function(e) {
-    if (e.buttons !== 1) return;
-    const rect = hueCanvas.getBoundingClientRect();
-    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
-    pickerCurrentHue = (x / rect.width) * 360;
-    drawSatValBox();
-    updateFromPickerHSV();
-  };
-}
-
-function drawHueBar() {
-  const canvas = document.getElementById('pickerHueCanvas');
-  const ctx = canvas.getContext('2d');
-  const grad = ctx.createLinearGradient(0, 0, canvas.width, 0);
-  for (let i = 0; i <= 360; i += 60) {
-    grad.addColorStop(i / 360, `hsl(${i}, 100%, 50%)`);
-  }
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
-
-function drawSatValBox() {
-  const canvas = document.getElementById('pickerSatValCanvas');
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = `hsl(${pickerCurrentHue}, 100%, 50%)`;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const whiteGrad = ctx.createLinearGradient(0, 0, canvas.width, 0);
-  whiteGrad.addColorStop(0, 'rgba(255,255,255,1)');
-  whiteGrad.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = whiteGrad;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const blackGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-  blackGrad.addColorStop(0, 'rgba(0,0,0,0)');
-  blackGrad.addColorStop(1, 'rgba(0,0,0,1)');
-  ctx.fillStyle = blackGrad;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-}
-
-function hsvToRgb(h, s, v) {
-  let r, g, b;
-  const i = Math.floor(h / 60) % 6;
-  const f = h / 60 - Math.floor(h / 60);
-  const p = v * (1 - s);
-  const q = v * (1 - f * s);
-  const t = v * (1 - (1 - f) * s);
-  switch (i) {
-    case 0: r = v; g = t; b = p; break;
-    case 1: r = q; g = v; b = p; break;
-    case 2: r = p; g = v; b = t; break;
-    case 3: r = p; g = q; b = v; break;
-    case 4: r = t; g = p; b = v; break;
-    case 5: r = v; g = p; b = q; break;
-  }
-  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
-}
-
-function updateFromPickerHSV() {
-  const [r, g, b] = hsvToRgb(pickerCurrentHue, pickerCurrentSat, pickerCurrentVal);
-  pickerHexValue = '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
-  document.getElementById('pickerHexInput').value = pickerHexValue;
-  document.getElementById('pickerColorPreview').style.backgroundColor = pickerHexValue;
-}
-
-function onPickerHexChange(val) {
-  if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
-    pickerHexValue = val.toUpperCase();
-    document.getElementById('pickerColorPreview').style.backgroundColor = pickerHexValue;
-  }
-}
-
-function applyPickedColor() {
-  const pKey = activePickerPaletteKey;
-  if (!data[pKey]) data[pKey] = [...DEFAULT_PALETTE_CUSTOM1];
-  data[pKey][activePickerColorIndex] = pickerHexValue;
-  saveData();
-  closeModal('proColorPickerModal');
-  renderCharts();
-}
-
+// 報表：3 階灰階輪播與純文字點擊連動提示
 function renderCharts() {
   const cm = currentMonthStr();
   const cy = new Date().getFullYear().toString();
   const range = data.chartTimeRange || 'month';
-  const pKey = data.chartPalette || 'gray';
-
-  ['gray', 'custom1', 'custom2', 'custom3'].forEach(k => {
-    const btn = document.getElementById('paletteBtn_' + k);
-    if (btn) btn.classList.toggle('active', k === pKey);
-  });
-
-  const customBar = document.getElementById('customPaletteBar');
-  const actionBtns = document.getElementById('paletteActionBtns');
-
-  if (pKey.startsWith('custom')) {
-    customBar.classList.remove('hidden');
-    actionBtns.classList.remove('hidden');
-    const curPalette = data[pKey] || DEFAULT_PALETTE_CUSTOM1;
-    document.getElementById('colorDotsContainer').innerHTML = curPalette.map((col, idx) => `
-      <div class="color-swatch-dot" style="background:${col}" onclick="openColorPicker('${pKey}', ${idx})" title="點擊換色"></div>
-    `).join('');
-  } else {
-    customBar.classList.add('hidden');
-    actionBtns.classList.add('hidden');
-  }
 
   let txList = data.transactions.filter(t => {
     if (t.amount >= 0) return false;
@@ -1790,7 +1596,6 @@ function renderCharts() {
   if (accountChart) accountChart.destroy();
 
   const isDark = document.documentElement.classList.contains('dark');
-  const textColor = isDark ? '#a0a0a8' : '#1c1c1e';
   const borderColor = isDark ? '#1c1c1e' : '#ffffff';
 
   const sortedCatEntries = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
@@ -1803,17 +1608,9 @@ function renderCharts() {
   const accValues = sortedAccEntries.map(e => e[1]);
   const accTotal = accValues.reduce((s, v) => s + v, 0) || 1;
 
-  let activePalette = [];
-  if (pKey === 'gray') {
-    activePalette = isDark
-      ? ['#383840', '#9E9EA8', '#4E4E58', '#C0C0CB', '#62626E', '#DFDFE8', '#787886']
-      : ['#EAEAEF', '#62626E', '#DFDFE8', '#4E4E58', '#C0C0CB', '#383840', '#9E9EA8'];
-  } else {
-    activePalette = data[pKey] || DEFAULT_PALETTE_CUSTOM1;
-  }
-
-  const catColors = catValues.map((_, i) => activePalette[i % activePalette.length]);
-  const accColors = accValues.map((_, i) => activePalette[i % activePalette.length]);
+  // 使用 3 階灰階循環輪播取色
+  const catColors = catValues.map((_, i) => GRAY_PALETTE[i % GRAY_PALETTE.length]);
+  const accColors = accValues.map((_, i) => GRAY_PALETTE[i % GRAY_PALETTE.length]);
 
   const cleanTooltip = (total) => ({
     title: () => '',
@@ -1838,12 +1635,15 @@ function renderCharts() {
     },
     options: {
       plugins: {
-        legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, weight: 'bold' } } },
+        legend: { display: false },
         tooltip: { callbacks: cleanTooltip(catTotal) }
       },
       cutout: '65%'
     }
   });
+
+  // 渲染純文字圖例流（點擊文字聚焦扇形並彈出 Tooltip）
+  renderTextLegend('categoryTextLegend', catLabels, categoryChart);
 
   accountChart = new Chart(document.getElementById('accountPieChart').getContext('2d'), {
     type: 'doughnut',
@@ -1858,15 +1658,16 @@ function renderCharts() {
     },
     options: {
       plugins: {
-        legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, weight: 'bold' } } },
+        legend: { display: false },
         tooltip: { callbacks: cleanTooltip(accTotal) }
       },
       cutout: '60%'
     }
   });
+  renderTextLegend('accountTextLegend', accLabels, accountChart);
 
   const necTotal = (nec + non) || 1;
-  const necPalette = [activePalette[0] || '#8E9A86', activePalette[1] || '#D1C7BD'];
+  const necPalette = [GRAY_PALETTE[0], GRAY_PALETTE[2]];
 
   necessaryChart = new Chart(document.getElementById('necessaryPieChart').getContext('2d'), {
     type: 'pie',
@@ -1881,10 +1682,47 @@ function renderCharts() {
     },
     options: {
       plugins: {
-        legend: { position: 'bottom', labels: { color: textColor, font: { size: 11, weight: 'bold' } } },
+        legend: { display: false },
         tooltip: { callbacks: cleanTooltip(necTotal) }
       }
     }
+  });
+  renderTextLegend('necessaryTextLegend', ['必要', '非必要'], necessaryChart);
+}
+
+// 產生「食 ｜ 衣 ｜ 住 ｜ 行」純文字互動圖例流
+function renderTextLegend(containerId, labels, chartInstance) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+  if (!labels || !labels.length || (labels.length === 1 && labels[0] === '無支出')) {
+    container.innerHTML = '';
+    return;
+  }
+
+  container.innerHTML = labels.map((label, idx) => {
+    const sep = idx < labels.length - 1 ? '<span class="chart-text-legend-sep">｜</span>' : '';
+    return `
+      <span class="chart-text-legend-item" onclick="focusChartSegment('${containerId}', ${idx})">${label}</span>
+      ${sep}
+    `;
+  }).join('');
+
+  // 儲存實例參照供點擊觸發
+  container._chart = chartInstance;
+}
+
+function focusChartSegment(containerId, index) {
+  const container = document.getElementById(containerId);
+  if (!container || !container._chart) return;
+  const chart = container._chart;
+
+  // 觸發該扇形的 Tooltip 與高亮
+  chart.setActiveElements([{ datasetIndex: 0, index: index }]);
+  chart.tooltip.setActiveElements([{ datasetIndex: 0, index: index }], { x: 0, y: 0 });
+  chart.update();
+
+  container.querySelectorAll('.chart-text-legend-item').forEach((el, i) => {
+    el.classList.toggle('active', i === index);
   });
 }
 
