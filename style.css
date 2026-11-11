@@ -38,7 +38,7 @@
 .dark {
   --bg: #0c0c0e;
   --card: #1c1c1e;
-  --card-dark: #242428; /* 微光澤炭黑，提高深色模式對比 */
+  --card-dark: #FFFFFF; /* 微光澤炭黑，提高深色模式對比 */
   --text: #f5f5f7;
   --text-muted: #a0a0a8;
   --border: rgba(255, 255, 255, 0.12);
