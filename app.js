@@ -44,15 +44,18 @@ function updateStorageStatus() {
   }
 }
 
-// 莫蘭迪色票（提取自你的色票截圖）
-const MORANDI_PALETTE = ['#8E9A86', '#D1C7BD', '#9FA8A3', '#B0A8A0', '#C5B9AC', '#8C979A', '#D4C2B2', '#7A8288'];
-const DEFAULT_CUSTOM1 = ['#8E9A86', '#B0A8A0', '#C5B9AC', '#8C979A', '#D4C2B2', '#7A8288'];
-const DEFAULT_CUSTOM2 = ['#7895B2', '#AEBDCA', '#E8DFCA', '#96A393', '#D6C2B2', '#55718C'];
+// 預設 10 色色票組（包含莫蘭迪色票組）
+const DEFAULT_PALETTE_CUSTOM1 = ['#8E9A86', '#D1C7BD', '#9FA8A3', '#B0A8A0', '#C5B9AC', '#8C979A', '#D4C2B2', '#7A8288', '#A2AAB0', '#B8AEA5'];
+const DEFAULT_PALETTE_CUSTOM2 = ['#7895B2', '#AEBDCA', '#E8DFCA', '#F5EFE6', '#96A393', '#D6C2B2', '#B5C0D0', '#CCD3CA', '#EED3D9', '#55718C'];
+const DEFAULT_PALETTE_CUSTOM3 = ['#A8D1D1', '#9EA1D4', '#FD8A8A', '#F1F7B5', '#82AAE3', '#91D8E4', '#EAFDFC', '#BFEAF5', '#FFCBCB', '#FFB4B4'];
 
 const DEFAULT_ACCOUNTS = ['中信', '國泰', '聯邦', '元大', '富邦莊敬', '富邦仁愛', '現金', '他人支付'];
+const DEFAULT_FREELANCE_CATS = ['演唱會攝影', '平面攝影', '動態錄影', '視訊執行', '剪輯後製', '社群', '其他'];
+
 const DEFAULT_DATA = {
   accounts: Object.fromEntries(DEFAULT_ACCOUNTS.map(a => [a, 0])),
   accountList: [...DEFAULT_ACCOUNTS],
+  freelanceCategories: [...DEFAULT_FREELANCE_CATS],
   fxCash: { USD: 0, JPY: 0, CNY: 0, KRW: 0, EUR: 0, GBP: 0 },
   fxRates: { USD: 32.85, JPY: 0.2075, CNY: 4.91, KRW: 0.0238, EUR: 35.42, GBP: 42.15 },
   jpyCash: 0,
@@ -66,9 +69,10 @@ const DEFAULT_DATA = {
   showTithe: true,
   chartsIncludeInvest: false,
   chartTimeRange: 'month',
-  chartPalette: 'gray',
-  customPalette1: [...DEFAULT_CUSTOM1],
-  customPalette2: [...DEFAULT_CUSTOM2],
+  chartPalette: 'gray', // 'gray', 'custom1', 'custom2', 'custom3'
+  customPalette1: [...DEFAULT_PALETTE_CUSTOM1],
+  customPalette2: [...DEFAULT_PALETTE_CUSTOM2],
+  customPalette3: [...DEFAULT_PALETTE_CUSTOM3],
   txViewMode: 'card',
   stxViewMode: 'table',
   fxViewMode: 'card',
@@ -87,16 +91,13 @@ const DEFAULT_DATA = {
   showArchivedProjects: false,
   stockPrices: {},
   stockYields: {},
-  stockCustomOverrides: {},
+  holdingOverrides: {}, // { [symbol]: { isLocked: bool, shares: num, cost: num } }
   fundPrices: {},
   fundRates: {},
   fundCurrencies: {},
-  fundCustomOverrides: {},
-  ignoredHoldings: [],
   sectionsOpen: { fixed: true, envelopes: true, project: true, freelance: true },
   tithePool: 0,
   titheDonatedThisMonth: 0,
-  lastTitheMonth: '',
   budgetIncludeInvest: false,
   envelopes: [],
   transactions: [],
@@ -110,8 +111,16 @@ let data = JSON.parse(JSON.stringify(DEFAULT_DATA));
 let categoryChart = null;
 let necessaryChart = null;
 let accountChart = null;
-let currentFixedSign = 'exp'; // 'exp' 支出 (-), 'inc' 收入 (+)
+let currentFixedSign = 'exp';
 let activeReceiptUrl = null;
+
+// 自訂選色器狀態
+let activePickerPaletteKey = 'custom1';
+let activePickerColorIndex = 0;
+let pickerCurrentHue = 0; // 0 - 360
+let pickerCurrentSat = 1; // 0 - 1
+let pickerCurrentVal = 1; // 0 - 1
+let pickerHexValue = '#8E9A86';
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
@@ -134,13 +143,10 @@ function formatPLHtml(pl) {
   }
 }
 
-// 短日期格式：26/11/10
 function formatShortDate(dateStr) {
   if (!dateStr || typeof dateStr !== 'string') return '--';
   const p = dateStr.split('-');
-  if (p.length === 3) {
-    return `${p[0].slice(-2)}/${p[1]}/${p[2]}`;
-  }
+  if (p.length === 3) return `${p[0].slice(-2)}/${p[1]}/${p[2]}`;
   return dateStr;
 }
 
@@ -176,7 +182,6 @@ function syncDateFromNative(val) {
   document.getElementById('txDateText').value = val;
 }
 
-// 前端 Canvas 等比壓縮圖片防 LocalStorage 空間溢位
 function compressImage(file, maxWidth = 1200, quality = 0.8) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -235,15 +240,15 @@ function loadData() {
       const p = JSON.parse(raw);
       data = Object.assign({}, DEFAULT_DATA, p);
       if (!data.accountList || !data.accountList.length) data.accountList = [...DEFAULT_ACCOUNTS];
+      if (!data.freelanceCategories || !data.freelanceCategories.length) data.freelanceCategories = [...DEFAULT_FREELANCE_CATS];
       data.accountList.forEach(a => { if (data.accounts[a] === undefined) data.accounts[a] = 0; });
       if (!data.fxExchanges) data.fxExchanges = [];
-      if (!data.customPalette1 || !data.customPalette1.length) data.customPalette1 = [...DEFAULT_CUSTOM1];
-      if (!data.customPalette2 || !data.customPalette2.length) data.customPalette2 = [...DEFAULT_CUSTOM2];
-      if (!data.fxViewMode) data.fxViewMode = 'card';
-      if (!data.freelanceViewMode) data.freelanceViewMode = 'card';
+      if (!data.customPalette1 || !data.customPalette1.length) data.customPalette1 = [...DEFAULT_PALETTE_CUSTOM1];
+      if (!data.customPalette2 || !data.customPalette2.length) data.customPalette2 = [...DEFAULT_PALETTE_CUSTOM2];
+      if (!data.customPalette3 || !data.customPalette3.length) data.customPalette3 = [...DEFAULT_PALETTE_CUSTOM3];
+      if (!data.holdingOverrides) data.holdingOverrides = {};
       if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, envelopes: true, project: true, freelance: true };
 
-      // 補齊時間戳記確保新舊排序 100% 正常運作
       let fixedTimestamps = false;
       (data.fixedItems || []).forEach((f, idx) => {
         if (!f.createdAt) { f.createdAt = Date.now() - (idx * 1000); fixedTimestamps = true; }
@@ -296,6 +301,8 @@ function switchTab(tab) {
 
   populateAllAccountSelects();
   populateProjectSelect();
+  populateFreelanceCategorySelect();
+
   if (tab === 'dashboard') renderDashboard();
   if (tab === 'transactions') {
     populateEnvelopeSelect();
@@ -370,6 +377,14 @@ function populateEnvelopeSelect() {
   sel.value = cur;
 }
 
+function populateFreelanceCategorySelect() {
+  const sel = document.getElementById('freelanceCategorySelect');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = (data.freelanceCategories || DEFAULT_FREELANCE_CATS).map(c => `<option value="${c}">${c}</option>`).join('');
+  if (cur) sel.value = cur;
+}
+
 function onCategoryChange() {
   const cat = document.getElementById('txCategory').value;
   const env = (data.envelopes || []).find(e => e.category === cat);
@@ -382,8 +397,8 @@ function onCategoryChange() {
 function parseTaiwanInvoiceQR(text) {
   if (!text || text.length < 29) return null;
   const invoiceNum = text.slice(0, 10);
-  const rocDate = text.slice(10, 17); // 1151110
-  const hexTotal = text.slice(29, 37); // 16 進位總金額
+  const rocDate = text.slice(10, 17);
+  const hexTotal = text.slice(29, 37);
   
   if (/^[A-Z]{2}\d{8}$/.test(invoiceNum) && /^\d{7}$/.test(rocDate)) {
     const rocYear = parseInt(rocDate.slice(0, 3), 10);
@@ -631,16 +646,16 @@ function renderFxPage() {
   document.getElementById('fxHistoryTableView').classList.toggle('hidden', isCard);
 
   if (isCard) {
-    // 3 行呈現：第1行日期與匯率、第2行金額走向、第3行帳戶不加粗
     document.getElementById('fxHistoryCardView').innerHTML = sortedFx.map(x => {
       const decimals = (x.toCur === 'JPY' || x.toCur === 'KRW') ? 4 : 2;
       return `
         <div class="pill p-3 text-xs space-y-1">
           <div class="flex justify-between items-center">
             <span class="bold tabular">${formatShortDate(x.date)} ｜ 匯率 ${(x.rate || 0).toFixed(decimals)}</span>
-            <div class="flex gap-1.5 shrink-0">
-              <button onclick="openFxEdit('${x.id}')" class="btn text-xs px-2.5 py-0.5">編</button>
-              <button onclick="deleteFxExchange('${x.id}')" class="btn text-xs px-2.5 py-0.5">刪</button>
+            <div class="flex items-center gap-1.5 shrink-0 text-xs font-semibold" style="color:var(--text-muted)">
+              <button onclick="openFxEdit('${x.id}')">編</button>
+              <span>｜</span>
+              <button onclick="deleteFxExchange('${x.id}')">刪</button>
             </div>
           </div>
           <div class="bold text-sm tabular">
@@ -654,7 +669,6 @@ function renderFxPage() {
       `;
     }).join('') || '<p class="text-center py-4 text-xs font-semibold" style="color:var(--text-muted)">尚無換匯紀錄</p>';
   } else {
-    // 表格模式：匯率靠左對齊，表頭精簡
     document.getElementById('fxHistoryTableBody').innerHTML = sortedFx.map(x => {
       const decimals = (x.toCur === 'JPY' || x.toCur === 'KRW') ? 4 : 2;
       const twdCost = x.fromCur === 'TWD' ? x.fromAmt : (x.toCur === 'TWD' ? x.toAmt : Math.round(x.fromAmt * (data.fxRates[x.fromCur] || 1)));
@@ -668,8 +682,9 @@ function renderFxPage() {
           <td class="font-normal text-left" style="color:var(--text-muted)">${x.fromAcc} ➔ ${x.toAcc}</td>
           <td class="text-left" style="color:var(--text-muted)">${x.note || '-'}</td>
           <td class="text-center">
-            <button onclick="openFxEdit('${x.id}')" class="text-xs font-bold mr-1.5" style="color:var(--text-muted)">編</button>
-            <button onclick="deleteFxExchange('${x.id}')" class="btn text-xs px-2 py-0.5">刪</button>
+            <span class="text-xs font-semibold" style="color:var(--text-muted)">
+              <button onclick="openFxEdit('${x.id}')">編</button> ｜ <button onclick="deleteFxExchange('${x.id}')">刪</button>
+            </span>
           </td>
         </tr>
       `;
@@ -677,7 +692,6 @@ function renderFxPage() {
   }
 }
 
-// 頂部刷新現價：最簡 [ ↻ ] 圖示旋轉
 async function refreshAllAssets() {
   const icon = document.getElementById('refreshAssetIcon');
   if (icon) icon.classList.add('spinning');
@@ -712,6 +726,16 @@ function resetStxMonthFilter() {
   const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
   document.getElementById('filterStxDateFrom').value = `${cm}-01`;
   document.getElementById('filterStxDateTo').value = `${cm}-${String(lastDay).padStart(2, '0')}`;
+  renderStockTransactions();
+}
+
+function resetStxFilters() {
+  document.getElementById('filterStxDateFrom').value = '';
+  document.getElementById('filterStxDateTo').value = '';
+  document.getElementById('filterStxType').value = '';
+  document.getElementById('filterStxKeyword').value = '';
+  document.getElementById('stxRange_all').classList.add('active');
+  document.getElementById('stxRange_month').classList.remove('active');
   renderStockTransactions();
 }
 
@@ -775,9 +799,10 @@ function renderStockTransactions() {
             <span class="badge ${t.type === '買入' ? 'badge-nec' : 'badge-non'} ml-1">${t.type}</span>
             <strong class="text-sm bold ml-1.5">${t.symbol}</strong>
           </div>
-          <div class="flex gap-2">
-            <button onclick="openStockTxEditModal('${t.id}')" class="font-bold" style="color:var(--text-muted)">編</button>
-            <button onclick="deleteStockTransaction('${t.id}')" class="font-bold" style="color:var(--text-muted)">刪</button>
+          <div class="flex items-center gap-1.5 font-semibold text-xs" style="color:var(--text-muted)">
+            <button onclick="openStockTxEditModal('${t.id}')">編</button>
+            <span>｜</span>
+            <button onclick="deleteStockTransaction('${t.id}')">刪</button>
           </div>
         </div>
         <div class="flex justify-between items-center tabular font-semibold" style="color:var(--text-muted)">
@@ -801,15 +826,16 @@ function renderStockTransactions() {
         <td class="px-3 tabular text-right">${formatMoney(t.tax)}</td>
         <td class="px-3 tabular bold text-right" style="color:var(--text)">${formatMoney(t.totalCost !== undefined ? t.totalCost : t.total)}</td>
         <td class="px-3 text-center">
-          <button onclick="openStockTxEditModal('${t.id}')" class="text-xs font-bold mr-1.5" style="color:var(--text-muted)">編</button>
-          <button onclick="deleteStockTransaction('${t.id}')" class="btn text-xs px-2 py-0.5">刪</button>
+          <span class="text-xs font-semibold" style="color:var(--text-muted)">
+            <button onclick="openStockTxEditModal('${t.id}')">編</button> ｜ <button onclick="deleteStockTransaction('${t.id}')">刪</button>
+          </span>
         </td>
       </tr>
     `).join('') || '<tr><td colspan="11" class="text-center py-4 text-xs font-semibold" style="color:var(--text-muted)">尚無交易紀錄</td></tr>';
   }
 }
 
-// 固定收支的正負號切換
+// 固定收支
 function setFixedSign(sign) {
   currentFixedSign = sign;
   document.getElementById('fixedSign_exp').classList.toggle('active', sign === 'exp');
@@ -878,7 +904,7 @@ function applyFixed(id) {
   alert('已計入本月帳務');
 }
 
-// 特殊專案「記一筆」
+// 特殊專案
 function openProjectTxModal(projId) {
   const proj = data.projects.find(p => p.id === projId);
   if (!proj) return;
@@ -926,7 +952,6 @@ function saveProjectTx() {
   renderTransactions();
 }
 
-// 排序事件
 function onFreelanceSortChange(val) {
   data.freelanceSortOrder = val;
   saveData();
@@ -988,16 +1013,99 @@ function downloadReceiptImage() {
   a.click();
 }
 
+// 工作類別自訂管理
+function openFreelanceCatModal() {
+  renderFreelanceCatList();
+  openModal('freelanceCatModal');
+}
+
+function renderFreelanceCatList() {
+  const container = document.getElementById('freelanceCatList');
+  container.innerHTML = (data.freelanceCategories || DEFAULT_FREELANCE_CATS).map((cat, idx) => `
+    <div class="flex items-center justify-between p-2 rounded-xl border border-zinc-200 dark:border-zinc-800 drag-item" draggable="true" data-index="${idx}">
+      <div class="flex items-center gap-2">
+        <span class="drag-handle select-none" style="color:var(--text-muted)">⠿</span>
+        <span class="font-bold text-xs">${cat}</span>
+      </div>
+      <button onclick="deleteFreelanceCat('${cat}')" class="text-xs font-bold" style="color:var(--text-muted)">刪除</button>
+    </div>
+  `).join('');
+  setupFreelanceCatDragAndDrop();
+}
+
+function setupFreelanceCatDragAndDrop() {
+  const container = document.getElementById('freelanceCatList');
+  let draggedEl = null;
+
+  container.querySelectorAll('.drag-item').forEach(el => {
+    el.addEventListener('dragstart', (e) => {
+      draggedEl = el;
+      el.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    el.addEventListener('dragend', () => {
+      if (draggedEl) draggedEl.classList.remove('dragging');
+      draggedEl = null;
+    });
+    el.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const target = e.target.closest('.drag-item');
+      if (target && target !== draggedEl) {
+        const rect = target.getBoundingClientRect();
+        const next = (e.clientY - rect.top) / (rect.bottom - rect.top) > 0.5;
+        container.insertBefore(draggedEl, next ? target.nextSibling : target);
+      }
+    });
+  });
+}
+
+function addFreelanceCatItem() {
+  const inp = document.getElementById('newFreelanceCatInput');
+  const val = inp.value.trim();
+  if (!val) return;
+  if (!data.freelanceCategories) data.freelanceCategories = [...DEFAULT_FREELANCE_CATS];
+  if (data.freelanceCategories.includes(val)) return alert('此工作類別已存在');
+  data.freelanceCategories.push(val);
+  inp.value = '';
+  saveData();
+  renderFreelanceCatList();
+  populateFreelanceCategorySelect();
+}
+
+function deleteFreelanceCat(cat) {
+  if (!confirm(`確定刪除類別「${cat}」？`)) return;
+  data.freelanceCategories = data.freelanceCategories.filter(c => c !== cat);
+  saveData();
+  renderFreelanceCatList();
+  populateFreelanceCategorySelect();
+}
+
+function saveFreelanceCats() {
+  const container = document.getElementById('freelanceCatList');
+  const newList = [];
+  container.querySelectorAll('.drag-item').forEach(el => {
+    const nameEl = el.querySelector('.font-bold');
+    if (nameEl) newList.push(nameEl.textContent.trim());
+  });
+  if (newList.length) data.freelanceCategories = newList;
+  saveData();
+  populateFreelanceCategorySelect();
+  closeModal('freelanceCatModal');
+}
+
 function openFreelanceModal(id = null) {
   document.getElementById('freelanceEditId').value = id || '';
   document.getElementById('freelanceModalTitle').textContent = id ? '編輯接案' : '新增接案';
   document.getElementById('flReceiptFileName').textContent = '未選擇任何檔案';
   document.getElementById('flReceiptFileName').style.color = 'var(--text-muted)';
+  populateFreelanceCategorySelect();
+
   if (id) {
     const f = data.freelances.find(x => x.id === id);
     if (f) {
       document.getElementById('freelanceName').value = f.name;
-      document.getElementById('freelanceCategory').value = f.category || '';
+      document.getElementById('freelanceCategorySelect').value = f.category || '';
       document.getElementById('freelanceExecDate').value = f.execDate || '';
       document.getElementById('freelancePayDate').value = f.payDate || '';
       document.getElementById('freelanceAmount').value = f.amount;
@@ -1010,7 +1118,7 @@ function openFreelanceModal(id = null) {
     }
   } else {
     document.getElementById('freelanceName').value = '';
-    document.getElementById('freelanceCategory').value = '平面攝影';
+    document.getElementById('freelanceCategorySelect').value = '平面攝影';
     document.getElementById('freelanceExecDate').value = todayStr();
     document.getElementById('freelancePayDate').value = '';
     document.getElementById('freelanceAmount').value = '';
@@ -1023,7 +1131,7 @@ function openFreelanceModal(id = null) {
 async function saveFreelance() {
   const id = document.getElementById('freelanceEditId').value;
   const name = document.getElementById('freelanceName').value.trim();
-  const category = document.getElementById('freelanceCategory').value.trim() || '其他';
+  const category = document.getElementById('freelanceCategorySelect').value || '其他';
   const execDate = document.getElementById('freelanceExecDate').value;
   const payDate = document.getElementById('freelancePayDate').value;
   const effectiveDate = payDate || execDate || todayStr();
@@ -1109,7 +1217,7 @@ function deleteFreelance(id) {
   renderFixedSection();
 }
 
-// 渲染「專案」總頁籤（順序：接案 ➔ 固定 ➔ 特殊專案 ➔ 數位信封）
+// 專案總頁籤（接案 ➔ 固定 ➔ 特殊專案 ➔ 數位信封）
 function renderFixedSection() {
   if (!data.sectionsOpen) data.sectionsOpen = { fixed: true, envelopes: true, project: true, freelance: true };
 
@@ -1158,12 +1266,11 @@ function renderFixedSection() {
     }
 
     if (isCard) {
-      // 3 行卡片排版：第1行狀態+金額+按鈕、第2行類別+長名稱、第3行金流與日期
       document.getElementById('freelanceCardView').innerHTML = freeList.map(f => {
         const isUnpaid = f.status !== '已收款';
         const receiptBtn = f.receipt
-          ? `<button onclick="viewReceipt('${f.receipt}')" class="btn text-xs px-2 py-0.5">📸</button>`
-          : `<span class="opacity-20 text-xs px-2 py-0.5">📸</span>`;
+          ? `<button onclick="viewReceipt('${f.receipt}')" class="text-xs">📸</button>`
+          : `<span class="opacity-20 text-xs">📸</span>`;
         return `
           <div class="pill p-3 space-y-1 text-xs">
             <div class="flex justify-between items-center">
@@ -1171,14 +1278,15 @@ function renderFixedSection() {
                 <span class="badge ${isUnpaid ? 'badge-nec' : 'badge-non'}">${f.status}</span>
                 <span class="heavy text-sm tabular">${formatMoney(f.amount)}</span>
               </div>
-              <div class="flex gap-1.5 items-center">
+              <div class="flex items-center gap-2 font-semibold text-xs" style="color:var(--text-muted)">
                 ${receiptBtn}
-                <button onclick="openFreelanceModal('${f.id}')" class="btn text-xs px-2 py-0.5">編</button>
-                <button onclick="deleteFreelance('${f.id}')" class="btn text-xs px-2 py-0.5">刪</button>
+                <button onclick="openFreelanceModal('${f.id}')">編</button>
+                <span>｜</span>
+                <button onclick="deleteFreelance('${f.id}')">刪</button>
               </div>
             </div>
             <div class="bold text-sm">
-              <span class="badge badge-non mr-1">〔${f.category || '接案'}〕</span>${f.name}
+              <span class="badge-closed mr-1.5">${f.category || '接案'}</span>${f.name}
             </div>
             <div class="text-[11px] tabular font-normal" style="color:var(--text-muted)">
               執行：${formatShortDate(f.execDate)} · 收款：${formatShortDate(f.payDate || f.execDate)} · ${f.account}
@@ -1194,15 +1302,16 @@ function renderFixedSection() {
           <tr class="whitespace-nowrap">
             <td><span class="badge ${isUnpaid ? 'badge-nec' : 'badge-non'}">${f.status}</span></td>
             <td class="bold">${f.name}</td>
-            <td>${f.category || '其他'}</td>
+            <td><span class="badge-closed">${f.category || '其他'}</span></td>
             <td class="tabular heavy text-right">${formatMoney(f.amount)}</td>
             <td class="tabular">${formatShortDate(f.execDate)}</td>
             <td class="tabular">${formatShortDate(f.payDate || f.execDate)}</td>
             <td>${f.account}</td>
             <td class="text-center">${receiptBtn}</td>
             <td class="text-center">
-              <button onclick="openFreelanceModal('${f.id}')" class="text-xs font-bold mr-1.5" style="color:var(--text-muted)">編</button>
-              <button onclick="deleteFreelance('${f.id}')" class="btn text-xs px-2 py-0.5">刪</button>
+              <span class="text-xs font-semibold" style="color:var(--text-muted)">
+                <button onclick="openFreelanceModal('${f.id}')">編</button> ｜ <button onclick="deleteFreelance('${f.id}')">刪</button>
+              </span>
             </td>
           </tr>
         `;
@@ -1231,10 +1340,12 @@ function renderFixedSection() {
           <span class="tabular heavy ml-2">${formatMoney(f.amount)}</span>
           <span class="ml-2 font-normal" style="color:var(--text-muted)">${f.account} · ${f.category}</span>
         </div>
-        <div class="flex gap-2">
-          <button onclick="applyFixed('${f.id}')" class="bold text-xs">計入本月</button>
-          <button onclick="openFixedModal('${f.id}')" class="font-bold" style="color:var(--text-muted)">編</button>
-          <button onclick="deleteFixed('${f.id}')" class="font-bold" style="color:var(--text-muted)">刪</button>
+        <div class="flex items-center gap-2 font-semibold" style="color:var(--text-muted)">
+          <button onclick="applyFixed('${f.id}')" class="bold text-xs" style="color:var(--text)">計入本月</button>
+          <span>｜</span>
+          <button onclick="openFixedModal('${f.id}')">編</button>
+          <span>｜</span>
+          <button onclick="deleteFixed('${f.id}')">刪</button>
         </div>
       </div>
     `).join('') || '<p class="text-xs font-semibold text-center py-2" style="color:var(--text-muted)">尚無固定收支項目</p>';
@@ -1274,9 +1385,11 @@ function renderFixedSection() {
             <td class="tabular text-right">${formatMoney(spent)}</td>
             <td class="tabular heavy text-right">${formatMoney(remain)}</td>
             <td class="text-center">
-              <button onclick="openProjectTxModal('${p.id}')" class="text-xs font-bold mr-1.5">記一筆</button>
-              <button onclick="openProjectModal('${p.id}')" class="text-xs font-bold mr-1.5" style="color:var(--text-muted)">編</button>
-              <button onclick="deleteProject('${p.id}')" class="btn text-xs px-2 py-0.5">刪</button>
+              <span class="text-xs font-semibold" style="color:var(--text-muted)">
+                <button onclick="openProjectTxModal('${p.id}')" style="color:var(--text)">記一筆</button> ｜ 
+                <button onclick="openProjectModal('${p.id}')">編</button> ｜ 
+                <button onclick="deleteProject('${p.id}')">刪</button>
+              </span>
             </td>
           </tr>
         `;
@@ -1292,10 +1405,12 @@ function renderFixedSection() {
                 <span class="bold text-sm">${p.name}</span>
                 <span class="badge ${p.status === 'archived' ? 'badge-non' : 'badge-nec'} ml-2">${p.status === 'archived' ? '已結束' : '進行中'}</span>
               </div>
-              <div class="flex gap-2">
-                <button onclick="openProjectTxModal('${p.id}')" class="bold text-xs">＋ 記一筆</button>
-                <button onclick="openProjectModal('${p.id}')" class="font-bold" style="color:var(--text-muted)">編</button>
-                <button onclick="deleteProject('${p.id}')" class="font-bold" style="color:var(--text-muted)">刪</button>
+              <div class="flex items-center gap-2 font-semibold" style="color:var(--text-muted)">
+                <button onclick="openProjectTxModal('${p.id}')" class="bold text-xs" style="color:var(--text)">＋ 記一筆</button>
+                <span>｜</span>
+                <button onclick="openProjectModal('${p.id}')">編</button>
+                <span>｜</span>
+                <button onclick="deleteProject('${p.id}')">刪</button>
               </div>
             </div>
             <div class="flex justify-between tabular font-semibold" style="color:var(--text-muted)">
@@ -1307,7 +1422,7 @@ function renderFixedSection() {
     }
   }
 
-  // 4. 數位信封預算折疊
+  // 4. 數位信封預算
   const envOpen = data.sectionsOpen.envelopes !== false;
   document.getElementById('envelopesArrow').textContent = envOpen ? '▼' : '▶';
   document.getElementById('envelopesBody').style.display = envOpen ? 'block' : 'none';
@@ -1341,9 +1456,10 @@ function renderEnvelopes() {
             <span class="bold text-sm">${e.name}</span>
             <span class="text-xs ml-1 font-semibold" style="color:var(--text-muted)">(${e.category || '未指定'})</span>
           </div>
-          <div class="flex gap-2">
-            <button onclick="openEnvelopeModal('${e.id}')" class="text-xs font-bold" style="color:var(--text-muted)">編輯</button>
-            <button onclick="deleteEnvelope('${e.id}')" class="text-xs font-bold" style="color:var(--text-muted)">刪除</button>
+          <div class="flex gap-2 text-xs font-semibold" style="color:var(--text-muted)">
+            <button onclick="openEnvelopeModal('${e.id}')">編</button>
+            <span>｜</span>
+            <button onclick="deleteEnvelope('${e.id}')">刪</button>
           </div>
         </div>
         <div class="progress-track">
@@ -1450,29 +1566,162 @@ function deleteProject(id) {
   populateProjectSelect();
 }
 
-// 報表自訂調色盤
+// 報表自訂調色盤（10 色無框自訂）
 function setChartPalette(key) {
   data.chartPalette = key;
   saveData();
   renderCharts();
 }
 
-function updateCustomPaletteColor(index, colorVal) {
+function openColorPicker(paletteKey, index) {
+  activePickerPaletteKey = paletteKey;
+  activePickerColorIndex = index;
+  const list = data[paletteKey] || DEFAULT_PALETTE_CUSTOM1;
+  const hex = list[index] || '#8E9A86';
+  pickerHexValue = hex.toUpperCase();
+  document.getElementById('pickerHexInput').value = pickerHexValue;
+  document.getElementById('pickerColorPreview').style.backgroundColor = pickerHexValue;
+
+  openModal('proColorPickerModal');
+  setTimeout(initColorPickerCanvases, 50);
+}
+
+function openBatchHexModal() {
   const pKey = data.chartPalette;
-  if (pKey === 'custom1') {
-    data.customPalette1[index] = colorVal;
-  } else if (pKey === 'custom2') {
-    data.customPalette2[index] = colorVal;
+  if (!pKey.startsWith('custom')) return;
+  const currentList = data[pKey] || [];
+  document.getElementById('batchHexInput').value = currentList.join(', ');
+  openModal('batchHexModal');
+}
+
+function applyBatchHexPalette() {
+  const pKey = data.chartPalette;
+  const text = document.getElementById('batchHexInput').value;
+  const matches = text.match(/#?([0-9a-fA-F]{6}|[0-9a-fA-F]{3})/g);
+  if (!matches || !matches.length) return alert('請輸入有效的 HEX 色碼');
+
+  const formatted = matches.slice(0, 10).map(c => c.startsWith('#') ? c.toUpperCase() : '#' + c.toUpperCase());
+  while (formatted.length < 10) {
+    formatted.push(formatted[formatted.length % formatted.length]);
   }
+
+  data[pKey] = formatted;
   saveData();
+  closeModal('batchHexModal');
   renderCharts();
 }
 
 function resetCurrentCustomPalette() {
   const pKey = data.chartPalette;
-  if (pKey === 'custom1') data.customPalette1 = [...DEFAULT_CUSTOM1];
-  else if (pKey === 'custom2') data.customPalette2 = [...DEFAULT_CUSTOM2];
+  if (pKey === 'custom1') data.customPalette1 = [...DEFAULT_PALETTE_CUSTOM1];
+  else if (pKey === 'custom2') data.customPalette2 = [...DEFAULT_PALETTE_CUSTOM2];
+  else if (pKey === 'custom3') data.customPalette3 = [...DEFAULT_PALETTE_CUSTOM3];
   saveData();
+  renderCharts();
+}
+
+// Canvas 色彩矩陣與色相滑桿邏輯
+function initColorPickerCanvases() {
+  const satCanvas = document.getElementById('pickerSatValCanvas');
+  const hueCanvas = document.getElementById('pickerHueCanvas');
+  if (!satCanvas || !hueCanvas) return;
+
+  satCanvas.width = satCanvas.clientWidth;
+  satCanvas.height = satCanvas.clientHeight;
+  hueCanvas.width = hueCanvas.clientWidth;
+  hueCanvas.height = hueCanvas.clientHeight;
+
+  drawHueBar();
+  drawSatValBox();
+
+  satCanvas.onpointerdown = satCanvas.onpointermove = function(e) {
+    if (e.buttons !== 1) return;
+    const rect = satCanvas.getBoundingClientRect();
+    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    const y = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+    pickerCurrentSat = x / rect.width;
+    pickerCurrentVal = 1 - (y / rect.height);
+    updateFromPickerHSV();
+  };
+
+  hueCanvas.onpointerdown = hueCanvas.onpointermove = function(e) {
+    if (e.buttons !== 1) return;
+    const rect = hueCanvas.getBoundingClientRect();
+    const x = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    pickerCurrentHue = (x / rect.width) * 360;
+    drawSatValBox();
+    updateFromPickerHSV();
+  };
+}
+
+function drawHueBar() {
+  const canvas = document.getElementById('pickerHueCanvas');
+  const ctx = canvas.getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, canvas.width, 0);
+  for (let i = 0; i <= 360; i += 60) {
+    grad.addColorStop(i / 360, `hsl(${i}, 100%, 50%)`);
+  }
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function drawSatValBox() {
+  const canvas = document.getElementById('pickerSatValCanvas');
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = `hsl(${pickerCurrentHue}, 100%, 50%)`;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const whiteGrad = ctx.createLinearGradient(0, 0, canvas.width, 0);
+  whiteGrad.addColorStop(0, 'rgba(255,255,255,1)');
+  whiteGrad.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = whiteGrad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  const blackGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  blackGrad.addColorStop(0, 'rgba(0,0,0,0)');
+  blackGrad.addColorStop(1, 'rgba(0,0,0,1)');
+  ctx.fillStyle = blackGrad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+}
+
+function hsvToRgb(h, s, v) {
+  let r, g, b;
+  const i = Math.floor(h / 60) % 6;
+  const f = h / 60 - Math.floor(h / 60);
+  const p = v * (1 - s);
+  const q = v * (1 - f * s);
+  const t = v * (1 - (1 - f) * s);
+  switch (i) {
+    case 0: r = v; g = t; b = p; break;
+    case 1: r = q; g = v; b = p; break;
+    case 2: r = p; g = v; b = t; break;
+    case 3: r = p; g = q; b = v; break;
+    case 4: r = t; g = p; b = v; break;
+    case 5: r = v; g = p; b = q; break;
+  }
+  return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
+}
+
+function updateFromPickerHSV() {
+  const [r, g, b] = hsvToRgb(pickerCurrentHue, pickerCurrentSat, pickerCurrentVal);
+  pickerHexValue = '#' + [r, g, b].map(x => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+  document.getElementById('pickerHexInput').value = pickerHexValue;
+  document.getElementById('pickerColorPreview').style.backgroundColor = pickerHexValue;
+}
+
+function onPickerHexChange(val) {
+  if (/^#[0-9A-Fa-f]{6}$/.test(val)) {
+    pickerHexValue = val.toUpperCase();
+    document.getElementById('pickerColorPreview').style.backgroundColor = pickerHexValue;
+  }
+}
+
+function applyPickedColor() {
+  const pKey = activePickerPaletteKey;
+  if (!data[pKey]) data[pKey] = [...DEFAULT_PALETTE_CUSTOM1];
+  data[pKey][activePickerColorIndex] = pickerHexValue;
+  saveData();
+  closeModal('proColorPickerModal');
   renderCharts();
 }
 
@@ -1482,23 +1731,24 @@ function renderCharts() {
   const range = data.chartTimeRange || 'month';
   const pKey = data.chartPalette || 'gray';
 
-  ['gray', 'morandi', 'custom1', 'custom2'].forEach(k => {
+  ['gray', 'custom1', 'custom2', 'custom3'].forEach(k => {
     const btn = document.getElementById('paletteBtn_' + k);
     if (btn) btn.classList.toggle('active', k === pKey);
   });
 
   const customBar = document.getElementById('customPaletteBar');
-  if (pKey === 'custom1' || pKey === 'custom2') {
+  const actionBtns = document.getElementById('paletteActionBtns');
+
+  if (pKey.startsWith('custom')) {
     customBar.classList.remove('hidden');
-    document.getElementById('customPaletteLabel').textContent = pKey === 'custom1' ? '自訂 1 色彩：' : '自訂 2 色彩：';
-    const curPalette = pKey === 'custom1' ? data.customPalette1 : data.customPalette2;
+    actionBtns.classList.remove('hidden');
+    const curPalette = data[pKey] || DEFAULT_PALETTE_CUSTOM1;
     document.getElementById('colorDotsContainer').innerHTML = curPalette.map((col, idx) => `
-      <div class="color-picker-dot" style="background:${col}">
-        <input type="color" value="${col}" onchange="updateCustomPaletteColor(${idx}, this.value)" />
-      </div>
+      <div class="color-swatch-dot" style="background:${col}" onclick="openColorPicker('${pKey}', ${idx})" title="點擊換色"></div>
     `).join('');
   } else {
     customBar.classList.add('hidden');
+    actionBtns.classList.add('hidden');
   }
 
   let txList = data.transactions.filter(t => {
@@ -1558,12 +1808,8 @@ function renderCharts() {
     activePalette = isDark
       ? ['#383840', '#9E9EA8', '#4E4E58', '#C0C0CB', '#62626E', '#DFDFE8', '#787886']
       : ['#EAEAEF', '#62626E', '#DFDFE8', '#4E4E58', '#C0C0CB', '#383840', '#9E9EA8'];
-  } else if (pKey === 'morandi') {
-    activePalette = MORANDI_PALETTE;
-  } else if (pKey === 'custom1') {
-    activePalette = data.customPalette1;
-  } else if (pKey === 'custom2') {
-    activePalette = data.customPalette2;
+  } else {
+    activePalette = data[pKey] || DEFAULT_PALETTE_CUSTOM1;
   }
 
   const catColors = catValues.map((_, i) => activePalette[i % activePalette.length]);
@@ -1605,7 +1851,7 @@ function renderCharts() {
       labels: accLabels.length ? accLabels : ['無支出'],
       datasets: [{
         data: accValues.length ? accValues : [1],
-        backgroundColor: accLabels.length ? catColors : ['#8e8e93'],
+        backgroundColor: accLabels.length ? accColors : ['#8e8e93'],
         borderColor: borderColor,
         borderWidth: 2
       }]
@@ -1642,7 +1888,7 @@ function renderCharts() {
   });
 }
 
-// 記帳與編輯補傳單據
+// 記帳明細
 async function addTransaction() {
   const date = document.getElementById('txDateText').value.trim() || todayStr();
   const name = document.getElementById('txName').value.trim();
@@ -1762,6 +2008,18 @@ function resetTxMonthFilter() {
   renderTransactions();
 }
 
+function resetTxFilters() {
+  document.getElementById('filterDateFrom').value = '';
+  document.getElementById('filterDateTo').value = '';
+  document.getElementById('filterCategory').value = '';
+  document.getElementById('filterAccount').value = '';
+  document.getElementById('filterNecessary').value = '';
+  document.getElementById('filterKeyword').value = '';
+  document.getElementById('txRange_all').classList.add('active');
+  document.getElementById('txRange_month').classList.remove('active');
+  renderTransactions();
+}
+
 function setTxViewMode(mode) {
   data.txViewMode = mode;
   document.getElementById('txView_card').classList.toggle('active', mode === 'card');
@@ -1828,10 +2086,11 @@ function renderTransactions() {
           </div>
           <div class="flex justify-between items-center text-[11px] font-semibold" style="color:var(--text-muted)">
             <span>${t.account} · ${t.necessary === 'necessary' ? '必要' : '非必要'} ${tag ? `· ${tag}` : ''}</span>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-1.5 text-xs font-semibold">
               ${receiptBtn}
-              <button onclick="openTxEditModal('${t.id}')" class="text-xs font-bold ml-1" style="color:var(--text-muted)">編</button>
-              <button onclick="deleteTransaction('${t.id}')" class="btn text-xs px-2 py-0.5">刪</button>
+              <button onclick="openTxEditModal('${t.id}')">編</button>
+              <span>｜</span>
+              <button onclick="deleteTransaction('${t.id}')">刪</button>
             </div>
           </div>
           ${t.note ? `<div class="text-[11px] font-semibold pt-0.5" style="color:var(--text-muted)">備註：${t.note}</div>` : ''}
@@ -1843,7 +2102,7 @@ function renderTransactions() {
       const env = data.envelopes.find(e => e.id === t.envelopeId);
       const proj = data.projects.find(p => p.id === t.projectId);
       const tag = proj ? `[專] ${proj.name}` : (env ? env.name : '');
-      const receiptBtn = t.receipt ? `<button onclick="viewReceipt('${t.receipt}')" class="text-xs px-2 py-0.5 rounded-full border border-zinc-300 dark:border-zinc-700 font-bold">📸</button>` : '-';
+      const receiptBtn = t.receipt ? `<button onclick="viewReceipt('${t.receipt}')" class="text-xs font-bold">📸</button>` : '-';
       return `
         <tr class="whitespace-nowrap">
           <td class="tabular font-bold" style="color:var(--text-muted)">${formatShortDate(t.date)}</td>
@@ -1856,8 +2115,9 @@ function renderTransactions() {
           <td class="text-center">${receiptBtn}</td>
           <td style="color:var(--text-muted)">${t.note || ''}</td>
           <td class="text-center">
-            <button onclick="openTxEditModal('${t.id}')" class="text-xs font-bold mr-1.5" style="color:var(--text-muted)">編</button>
-            <button onclick="deleteTransaction('${t.id}')" class="btn text-xs px-2 py-0.5">刪</button>
+            <span class="text-xs font-semibold" style="color:var(--text-muted)">
+              <button onclick="openTxEditModal('${t.id}')">編</button> ｜ <button onclick="deleteTransaction('${t.id}')">刪</button>
+            </span>
           </td>
         </tr>`;
     }).join('') || '<tr><td colspan="10" class="text-center py-6 text-xs font-semibold" style="color:var(--text-muted)">尚無明細紀錄</td></tr>';
@@ -1921,10 +2181,10 @@ function getCurrencyRate(cur, customRate) {
   return (data.fxRates && data.fxRates[cur]) || DEFAULT_DATA.fxRates[cur] || 1;
 }
 
+// 投資波段結算與成本隔離
 function computePortfolioFromTransactions() {
   const stocks = {};
   const funds = {};
-  const ignored = new Set(data.ignoredHoldings || []);
   const oneYearAgo = new Date();
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
   const oneYearAgoStr = oneYearAgo.toISOString().slice(0, 10);
@@ -1933,7 +2193,7 @@ function computePortfolioFromTransactions() {
 
   sortedTxs.forEach(t => {
     const sym = (t.symbol || '').trim();
-    if (!sym || ignored.has(sym)) return;
+    if (!sym) return;
 
     const shares = Math.abs(t.shares || 0);
     const cost = Math.abs(t.totalCost !== undefined ? t.totalCost : (t.total + (t.fee || 0) + (t.tax || 0)));
@@ -1944,13 +2204,13 @@ function computePortfolioFromTransactions() {
       if (!funds[sym]) {
         funds[sym] = {
           name: sym, currency: cur, units: 0, costTotal: 0,
-          totalBoughtCost: 0, totalSoldIncome: 0, totalDividend: 0, latestPrice: t.price || 0,
-          lastTxDate: t.date || ''
+          totalBoughtCost: 0, totalSoldIncome: 0, totalDividend: 0,
+          latestPrice: t.price || 0, lastTxDate: t.date || ''
         };
       }
       funds[sym].lastTxDate = t.date || '';
       if (t.type === '買入') {
-        if (funds[sym].units === 0) funds[sym].costTotal = 0;
+        if (funds[sym].units === 0) funds[sym].costTotal = 0; // 波段成本歸零隔離
         funds[sym].units += shares;
         funds[sym].costTotal += cost;
         funds[sym].totalBoughtCost += cost;
@@ -1974,7 +2234,7 @@ function computePortfolioFromTransactions() {
       }
       stocks[sym].lastTxDate = t.date || '';
       if (t.type === '買入') {
-        if (stocks[sym].shares === 0) stocks[sym].costTotal = 0;
+        if (stocks[sym].shares === 0) stocks[sym].costTotal = 0; // 波段成本歸零隔離
         stocks[sym].shares += shares;
         stocks[sym].costTotal += cost;
         stocks[sym].totalBoughtCost += cost;
@@ -2011,14 +2271,18 @@ function renderDashboard() {
   let invest = 0;
 
   Object.values(computed.stocks).forEach(s => {
+    const override = data.holdingOverrides[s.symbol];
+    const shares = (override && override.isLocked) ? override.shares : s.shares;
     const price = data.stockPrices[s.symbol] !== undefined ? data.stockPrices[s.symbol] : (s.latestPrice || 0);
-    invest += s.shares * price;
+    invest += shares * price;
   });
 
   Object.values(computed.funds).forEach(f => {
+    const override = data.holdingOverrides[f.name];
+    const units = (override && override.isLocked) ? override.shares : f.units;
     const price = data.fundPrices[f.name] !== undefined ? data.fundPrices[f.name] : (f.latestPrice || 0);
     const rate = getCurrencyRate(f.currency, data.fundRates[f.name]);
-    invest += f.units * price * rate;
+    invest += units * price * rate;
   });
 
   const cm = currentMonthStr();
@@ -2084,7 +2348,7 @@ function renderDashboard() {
   accDiv.innerHTML = twdCards + fxCards;
 }
 
-// 投資標的清單渲染
+// 投資清單與殖利率換算
 function renderInvestments() {
   const computed = computePortfolioFromTransactions();
   const stocks = Object.values(computed.stocks);
@@ -2101,38 +2365,71 @@ function renderInvestments() {
   else if (sOrder === 'name_desc') sortedStocks.sort((a, b) => b.symbol.localeCompare(a.symbol));
   else if (sOrder === 'mv_desc') {
     sortedStocks.sort((a, b) => {
-      const mvA = a.shares * (data.stockPrices[a.symbol] || a.latestPrice || 0);
-      const mvB = b.shares * (data.stockPrices[b.symbol] || b.latestPrice || 0);
-      return mvB - mvA;
+      const getMv = x => {
+        const ov = data.holdingOverrides[x.symbol];
+        const sh = (ov && ov.isLocked) ? ov.shares : x.shares;
+        return sh * (data.stockPrices[x.symbol] || x.latestPrice || 0);
+      };
+      return getMv(b) - getMv(a);
     });
-  } else if (sOrder === 'shares_desc') sortedStocks.sort((a, b) => b.shares - a.shares);
-  else if (sOrder === 'recent_tx') sortedStocks.sort((a, b) => (b.lastTxDate || '').localeCompare(a.lastTxDate || ''));
+  } else if (sOrder === 'shares_desc') {
+    sortedStocks.sort((a, b) => {
+      const shA = (data.holdingOverrides[a.symbol]?.isLocked) ? data.holdingOverrides[a.symbol].shares : a.shares;
+      const shB = (data.holdingOverrides[b.symbol]?.isLocked) ? data.holdingOverrides[b.symbol].shares : b.shares;
+      return shB - shA;
+    });
+  } else if (sOrder === 'recent_tx') sortedStocks.sort((a, b) => (b.lastTxDate || '').localeCompare(a.lastTxDate || ''));
 
-  if (!data.showClosedStocks) sortedStocks = sortedStocks.filter(s => s.shares > 0);
+  if (!data.showClosedStocks) {
+    sortedStocks = sortedStocks.filter(s => {
+      const ov = data.holdingOverrides[s.symbol];
+      const sh = (ov && ov.isLocked) ? ov.shares : s.shares;
+      return sh > 0;
+    });
+  }
 
   document.getElementById('stocksTableBody').innerHTML = sortedStocks.map(s => {
+    const ov = data.holdingOverrides[s.symbol];
+    const isLocked = ov && ov.isLocked;
+    const shares = isLocked ? ov.shares : s.shares;
+    const costTotal = isLocked ? ov.cost : s.costTotal;
+
     const price = data.stockPrices[s.symbol] !== undefined ? data.stockPrices[s.symbol] : (s.latestPrice || 0);
-    const avgCost = s.shares > 0 ? (s.costTotal / s.shares) : 0;
-    const mv = s.shares * price;
+    const avgCost = shares > 0 ? (costTotal / shares) : 0;
+    const mv = shares * price;
     totalStockMv += mv;
-    const pl = mv - s.costTotal;
-    const yld = data.stockYields[s.symbol] || 0;
-    if (s.shares > 0) {
+
+    let pl = 0;
+    if (shares === 0) {
+      // 結清標的顯示波段已實現損益
+      pl = s.totalSoldIncome + s.totalDividend - s.totalBoughtCost;
+    } else {
+      pl = mv - costTotal;
+    }
+
+    // 殖利率計算：手動輸入優先，否則取年化配息 ÷ 市值
+    let yld = data.stockYields[s.symbol] || 0;
+    if (yld === 0 && mv > 0 && s.recentOneYearDividend > 0) {
+      yld = (s.recentOneYearDividend / mv) * 100;
+    }
+    if (shares > 0) {
       if (yld > 0) estTotalYearlyDividend += mv * (yld / 100);
       else estTotalYearlyDividend += s.recentOneYearDividend;
     }
 
     return `
-      <tr class="whitespace-nowrap ${s.shares === 0 ? 'opacity-40' : ''}">
-        <td class="bold">${s.symbol}</td>
-        <td class="tabular text-right">${s.shares.toLocaleString()}</td>
+      <tr class="whitespace-nowrap ${shares === 0 ? 'opacity-40' : ''}">
+        <td class="bold">
+          ${s.symbol} ${isLocked ? '<span class="text-xs" title="手動鎖定模式">🔒</span>' : ''}
+        </td>
+        <td class="tabular text-right">${shares.toLocaleString()}</td>
         <td class="tabular text-right">${avgCost.toFixed(2)}</td>
         <td class="tabular text-right">${price.toFixed(2)}</td>
         <td class="tabular heavy text-right">${formatMoney(mv)}</td>
         <td class="tabular text-right">${formatPLHtml(pl)}</td>
         <td class="tabular text-right">${yld > 0 ? yld.toFixed(2) + '%' : '--'}</td>
         <td class="text-center">
-          <button onclick="openHoldingEditModal('${s.symbol}', '股票')" class="text-xs font-bold" style="color:var(--text-muted)">設定</button>
+          <button onclick="openHoldingEditModal('${s.symbol}', '股票')" class="text-xs font-semibold" style="color:var(--text-muted)">設定</button>
         </td>
       </tr>
     `;
@@ -2147,35 +2444,62 @@ function renderInvestments() {
   else if (fOrder === 'name_desc') sortedFunds.sort((a, b) => b.name.localeCompare(a.name));
   else if (fOrder === 'mv_desc') {
     sortedFunds.sort((a, b) => {
-      const mvA = a.units * (data.fundPrices[a.name] || a.latestPrice || 0) * getCurrencyRate(a.currency, data.fundRates[a.name]);
-      const mvB = b.units * (data.fundPrices[b.name] || b.latestPrice || 0) * getCurrencyRate(b.currency, data.fundRates[b.name]);
-      return mvB - mvA;
+      const getMv = x => {
+        const ov = data.holdingOverrides[x.name];
+        const un = (ov && ov.isLocked) ? ov.shares : x.units;
+        return un * (data.fundPrices[x.name] || x.latestPrice || 0) * getCurrencyRate(x.currency, data.fundRates[x.name]);
+      };
+      return getMv(b) - getMv(a);
     });
-  } else if (fOrder === 'units_desc') sortedFunds.sort((a, b) => b.units - a.units);
-  else if (fOrder === 'recent_tx') sortedFunds.sort((a, b) => (b.lastTxDate || '').localeCompare(a.lastTxDate || ''));
+  } else if (fOrder === 'units_desc') {
+    sortedFunds.sort((a, b) => {
+      const unA = (data.holdingOverrides[a.name]?.isLocked) ? data.holdingOverrides[a.name].shares : a.units;
+      const unB = (data.holdingOverrides[b.name]?.isLocked) ? data.holdingOverrides[b.name].shares : b.units;
+      return unB - unA;
+    });
+  } else if (fOrder === 'recent_tx') sortedFunds.sort((a, b) => (b.lastTxDate || '').localeCompare(a.lastTxDate || ''));
 
-  if (!data.showClosedFunds) sortedFunds = sortedFunds.filter(f => f.units > 0);
+  if (!data.showClosedFunds) {
+    sortedFunds = sortedFunds.filter(f => {
+      const ov = data.holdingOverrides[f.name];
+      const un = (ov && ov.isLocked) ? ov.shares : f.units;
+      return un > 0;
+    });
+  }
 
   document.getElementById('fundsTableBody').innerHTML = sortedFunds.map(f => {
+    const ov = data.holdingOverrides[f.name];
+    const isLocked = ov && ov.isLocked;
+    const units = isLocked ? ov.shares : f.units;
+    const costTotal = isLocked ? ov.cost : f.costTotal;
+
     const price = data.fundPrices[f.name] !== undefined ? data.fundPrices[f.name] : (f.latestPrice || 0);
     const rate = getCurrencyRate(f.currency, data.fundRates[f.name]);
-    const avgCost = f.units > 0 ? (f.costTotal / f.units) : 0;
-    const mv = f.units * price * rate;
+    const avgCost = units > 0 ? (costTotal / units) : 0;
+    const mv = units * price * rate;
     totalFundMv += mv;
-    const pl = mv - f.costTotal;
+
+    let pl = 0;
+    if (units === 0) {
+      pl = f.totalSoldIncome + f.totalDividend - f.totalBoughtCost;
+    } else {
+      pl = mv - costTotal;
+    }
 
     return `
-      <tr class="whitespace-nowrap ${f.units === 0 ? 'opacity-40' : ''}">
-        <td class="bold">${f.name}</td>
+      <tr class="whitespace-nowrap ${units === 0 ? 'opacity-40' : ''}">
+        <td class="bold">
+          ${f.name} ${isLocked ? '<span class="text-xs" title="手動鎖定模式">🔒</span>' : ''}
+        </td>
         <td>${f.currency}</td>
-        <td class="tabular text-right">${f.units.toFixed(2)}</td>
+        <td class="tabular text-right">${units.toFixed(2)}</td>
         <td class="tabular text-right">${avgCost.toFixed(2)}</td>
         <td class="tabular text-right">${price.toFixed(2)}</td>
         <td class="tabular text-right">${rate.toFixed(2)}</td>
         <td class="tabular heavy text-right">${formatMoney(mv)}</td>
         <td class="tabular text-right">${formatPLHtml(pl)}</td>
         <td class="text-center">
-          <button onclick="openHoldingEditModal('${f.name}', '基金')" class="text-xs font-bold" style="color:var(--text-muted)">設定</button>
+          <button onclick="openHoldingEditModal('${f.name}', '基金')" class="text-xs font-semibold" style="color:var(--text-muted)">設定</button>
         </td>
       </tr>
     `;
@@ -2183,7 +2507,6 @@ function renderInvestments() {
 
   document.getElementById('fundsTotalValue').textContent = formatMoney(totalFundMv);
 
-  // 股息目標進度
   const estMonthly = Math.round(estTotalYearlyDividend / 12);
   const goal = data.dividendGoal || 10000;
   const pct = goal > 0 ? Math.min(100, Math.round((estMonthly / goal) * 100)) : 0;
@@ -2220,7 +2543,40 @@ function toggleShowClosedFunds(checked) {
   renderInvestments();
 }
 
-// 投資標的編輯彈窗
+// 標的設定彈窗與手動覆蓋邏輯
+function setHoldingOverrideMode(isManual) {
+  document.getElementById('overrideBtn_manual').classList.toggle('active', isManual);
+  document.getElementById('overrideBtn_auto').classList.toggle('active', !isManual);
+
+  const sharesInput = document.getElementById('editHoldingShares');
+  const costInput = document.getElementById('editHoldingCost');
+  const refText = document.getElementById('holdingLedgerRefText');
+
+  sharesInput.disabled = !isManual;
+  costInput.disabled = !isManual;
+
+  if (isManual) {
+    refText.textContent = '🔒 已鎖定為手動自訂數值（現價與匯率仍自動更新）';
+    refText.style.color = 'var(--text)';
+  } else {
+    refText.textContent = '🔓 目前跟隨交易流水帳自動累算';
+    refText.style.color = 'var(--text-muted)';
+    // 還原為流水帳原始值
+    const sym = document.getElementById('editHoldingSymbol').value;
+    const type = document.getElementById('editHoldingType').value;
+    const computed = computePortfolioFromTransactions();
+    if (type === '股票') {
+      const s = computed.stocks[sym] || { shares: 0, costTotal: 0 };
+      sharesInput.value = s.shares;
+      costInput.value = s.costTotal;
+    } else {
+      const f = computed.funds[sym] || { units: 0, costTotal: 0 };
+      sharesInput.value = f.units;
+      costInput.value = f.costTotal;
+    }
+  }
+}
+
 function openHoldingEditModal(symbol, type) {
   document.getElementById('editHoldingSymbol').value = symbol;
   document.getElementById('editHoldingType').value = type;
@@ -2232,24 +2588,28 @@ function openHoldingEditModal(symbol, type) {
   document.getElementById('holdingCurrencyField').classList.toggle('hidden', isStock);
 
   document.getElementById('editHoldingSharesLabel').textContent = isStock ? '持有股數' : '持有單位數';
-  document.getElementById('editHoldingCostLabel').textContent = isStock ? '均價成本' : '均價成本 (原幣)';
+  document.getElementById('editHoldingCostLabel').textContent = '總投入成本 (台幣)';
   document.getElementById('editHoldingPriceLabel').textContent = isStock ? '現價' : '現價 (原幣淨值)';
 
   const computed = computePortfolioFromTransactions();
+  const ov = data.holdingOverrides[symbol] || { isLocked: false, shares: 0, cost: 0 };
+
   if (isStock) {
     const s = computed.stocks[symbol] || { shares: 0, costTotal: 0, latestPrice: 0 };
-    document.getElementById('editHoldingShares').value = s.shares;
-    document.getElementById('editHoldingCost').value = s.shares > 0 ? (s.costTotal / s.shares).toFixed(2) : 0;
+    document.getElementById('editHoldingShares').value = ov.isLocked ? ov.shares : s.shares;
+    document.getElementById('editHoldingCost').value = ov.isLocked ? ov.cost : s.costTotal;
     document.getElementById('editHoldingPrice').value = data.stockPrices[symbol] || s.latestPrice || 0;
     document.getElementById('editHoldingYield').value = data.stockYields[symbol] || '';
   } else {
     const f = computed.funds[symbol] || { units: 0, costTotal: 0, latestPrice: 0, currency: 'USD' };
-    document.getElementById('editHoldingShares').value = f.units;
-    document.getElementById('editHoldingCost').value = f.units > 0 ? (f.costTotal / f.units).toFixed(2) : 0;
+    document.getElementById('editHoldingShares').value = ov.isLocked ? ov.shares : f.units;
+    document.getElementById('editHoldingCost').value = ov.isLocked ? ov.cost : f.costTotal;
     document.getElementById('editHoldingPrice').value = data.fundPrices[symbol] || f.latestPrice || 0;
     document.getElementById('editHoldingRate').value = data.fundRates[symbol] || getCurrencyRate(f.currency);
     document.getElementById('editHoldingCurrency').value = data.fundCurrencies[symbol] || f.currency || 'USD';
   }
+
+  setHoldingOverrideMode(ov.isLocked);
   openModal('holdingEditModal');
 }
 
@@ -2260,6 +2620,17 @@ function onEditModalCurrencyChange(cur) {
 function saveHoldingEdit() {
   const sym = document.getElementById('editHoldingSymbol').value;
   const type = document.getElementById('editHoldingType').value;
+  const isManual = document.getElementById('overrideBtn_manual').classList.contains('active');
+
+  if (isManual) {
+    const sh = parseFloat(document.getElementById('editHoldingShares').value) || 0;
+    const co = parseFloat(document.getElementById('editHoldingCost').value) || 0;
+    data.holdingOverrides[sym] = { isLocked: true, shares: sh, cost: co };
+  } else {
+    if (data.holdingOverrides[sym]) {
+      data.holdingOverrides[sym].isLocked = false;
+    }
+  }
 
   if (type === '股票') {
     const price = parseFloat(document.getElementById('editHoldingPrice').value);
@@ -2274,13 +2645,14 @@ function saveHoldingEdit() {
     if (!isNaN(rate)) data.fundRates[sym] = rate;
     if (cur) data.fundCurrencies[sym] = cur;
   }
+
   saveData();
   closeModal('holdingEditModal');
   renderInvestments();
   renderDashboard();
 }
 
-// 投資交易試算
+// 投資交易
 function onAssetTypeChange() {
   const isFund = document.getElementById('stxAssetType').value === '基金';
   document.getElementById('stxTax').value = isFund ? '0' : '0';
@@ -2338,7 +2710,6 @@ function addStockTransaction() {
     id: uid(), date, account, assetType, type, symbol, shares, price, fee, tax, total, totalCost, note, linkedTxId
   });
 
-  // 自動寫入主帳務記帳
   let txAmt = 0;
   let txCat = '投';
   if (type === '買入') {
@@ -2426,7 +2797,6 @@ function saveStockTxEdit() {
   const newTotalCost = parseFloat(document.getElementById('editStxTotalCost').value) || 0;
   const newNote = document.getElementById('editStxNote').value.trim();
 
-  // 回滾關聯的主記帳明細
   const linkedTx = data.transactions.find(x => t.linkedTxId && x.id === t.linkedTxId);
   if (linkedTx) {
     data.accounts[linkedTx.account] = (data.accounts[linkedTx.account] || 0) - linkedTx.amount;
@@ -2596,7 +2966,6 @@ function saveAccounts() {
   renderDashboard();
 }
 
-// 外部匯入 CSV 發票與匯出
 function importInvoiceCSV(event) {
   const file = event.target.files[0];
   if (!file) return;
@@ -2749,6 +3118,7 @@ function importData(event) {
       loadData();
       populateAllAccountSelects();
       populateProjectSelect();
+      populateFreelanceCategorySelect();
       switchTab('dashboard');
       alert('已依照匯入檔案完全覆蓋更新！所有接案與帳戶餘額已完整還原！');
     } catch (err) {
@@ -2765,15 +3135,16 @@ function resetAllData() {
   saveData();
   populateAllAccountSelects();
   populateProjectSelect();
+  populateFreelanceCategorySelect();
   switchTab('dashboard');
   alert('已重置為初始狀態');
 }
 
-// 系統初始化
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   loadData();
   populateAllAccountSelects();
   populateProjectSelect();
+  populateFreelanceCategorySelect();
   switchTab('dashboard');
 });
