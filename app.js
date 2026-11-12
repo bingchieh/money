@@ -44,7 +44,7 @@ function updateStorageStatus() {
   }
 }
 
-// 報表 3 階灰階色彩定義（取自黃點標記高對比階梯）
+// 報表 3 階灰階色彩定義（高對比輪播階梯）
 const GRAY_PALETTE = ['#8C8C8C', '#595959', '#383838'];
 
 const DEFAULT_ACCOUNTS = ['中信', '國泰', '聯邦', '元大', '富邦莊敬', '富邦仁愛', '現金', '他人支付'];
@@ -294,24 +294,51 @@ function switchTab(tab) {
       document.getElementById('txDateText').value = tday;
       document.getElementById('txDateNative').value = tday;
     }
+    // 同步卡片/表格膠囊狀態
+    const isCard = (data.txViewMode || 'card') === 'card';
+    document.getElementById('txView_card')?.classList.toggle('active', isCard);
+    document.getElementById('txView_table')?.classList.toggle('active', !isCard);
+    document.getElementById('txCardView')?.classList.toggle('hidden', !isCard);
+    document.getElementById('txTableView')?.classList.toggle('hidden', isCard);
+
     if (!document.getElementById('filterDateFrom').value) {
       resetTxMonthFilter();
     } else {
       renderTransactions();
     }
   }
-  if (tab === 'investments') renderInvestments();
+  if (tab === 'investments') {
+    // 嚴格校準已結清核取方塊與底層資料狀態
+    const stockChk = document.getElementById('showClosedStocksCheck');
+    if (stockChk) stockChk.checked = !!data.showClosedStocks;
+    const fundChk = document.getElementById('showClosedFundsCheck');
+    if (fundChk) fundChk.checked = !!data.showClosedFunds;
+    renderInvestments();
+  }
   if (tab === 'stockTx') {
     if (!document.getElementById('stxDate').value) {
       document.getElementById('stxDate').value = todayStr();
     }
+    const isCard = (data.stxViewMode || 'table') === 'card';
+    document.getElementById('stxView_card')?.classList.toggle('active', isCard);
+    document.getElementById('stxView_table')?.classList.toggle('active', !isCard);
+    document.getElementById('stxCardView')?.classList.toggle('hidden', !isCard);
+    document.getElementById('stxTableView')?.classList.toggle('hidden', isCard);
+
     if (!document.getElementById('filterStxDateFrom').value) {
       resetStxMonthFilter();
     } else {
       renderStockTransactions();
     }
   }
-  if (tab === 'fx') renderFxPage();
+  if (tab === 'fx') {
+    const isCard = (data.fxViewMode || 'card') === 'card';
+    document.getElementById('fxView_card')?.classList.toggle('active', isCard);
+    document.getElementById('fxView_table')?.classList.toggle('active', !isCard);
+    document.getElementById('fxHistoryCardView')?.classList.toggle('hidden', !isCard);
+    document.getElementById('fxHistoryTableView')?.classList.toggle('hidden', isCard);
+    renderFxPage();
+  }
   if (tab === 'fixed') {
     renderEnvelopes();
     renderFixedSection();
@@ -594,8 +621,8 @@ function deleteFxExchange(id) {
 
 function setFxViewMode(mode) {
   data.fxViewMode = mode;
-  document.getElementById('fxView_card').classList.toggle('active', mode === 'card');
-  document.getElementById('fxView_table').classList.toggle('active', mode === 'table');
+  document.getElementById('fxView_card')?.classList.toggle('active', mode === 'card');
+  document.getElementById('fxView_table')?.classList.toggle('active', mode === 'table');
   saveData();
   renderFxPage();
 }
@@ -724,8 +751,8 @@ function resetStxFilters() {
 
 function setStxViewMode(mode) {
   data.stxViewMode = mode;
-  document.getElementById('stxView_card').classList.toggle('active', mode === 'card');
-  document.getElementById('stxView_table').classList.toggle('active', mode === 'table');
+  document.getElementById('stxView_card')?.classList.toggle('active', mode === 'card');
+  document.getElementById('stxView_table')?.classList.toggle('active', mode === 'table');
   saveData();
   renderStockTransactions();
 }
@@ -955,16 +982,16 @@ function onProjectSortChange(val) {
 
 function setFreelanceViewMode(mode) {
   data.freelanceViewMode = mode;
-  document.getElementById('flView_card').classList.toggle('active', mode === 'card');
-  document.getElementById('flView_table').classList.toggle('active', mode === 'table');
+  document.getElementById('flView_card')?.classList.toggle('active', mode === 'card');
+  document.getElementById('flView_table')?.classList.toggle('active', mode === 'table');
   saveData();
   renderFixedSection();
 }
 
 function setProjectViewMode(mode) {
   data.projectViewMode = mode;
-  document.getElementById('projView_card').classList.toggle('active', mode === 'card');
-  document.getElementById('projView_table').classList.toggle('active', mode === 'table');
+  document.getElementById('projView_card')?.classList.toggle('active', mode === 'card');
+  document.getElementById('projView_table')?.classList.toggle('active', mode === 'table');
   saveData();
   renderFixedSection();
 }
@@ -1217,9 +1244,9 @@ function renderFixedSection() {
       if (btn) btn.classList.toggle('active', k === filter);
     });
 
-    const isCard = data.freelanceViewMode === 'card';
-    document.getElementById('flView_card').classList.toggle('active', isCard);
-    document.getElementById('flView_table').classList.toggle('active', !isCard);
+    const isCard = (data.freelanceViewMode || 'card') === 'card';
+    document.getElementById('flView_card')?.classList.toggle('active', isCard);
+    document.getElementById('flView_table')?.classList.toggle('active', !isCard);
     document.getElementById('freelanceCardView').classList.toggle('hidden', !isCard);
     document.getElementById('freelanceTableView').classList.toggle('hidden', isCard);
 
@@ -1251,7 +1278,6 @@ function renderFixedSection() {
     if (isCard) {
       document.getElementById('freelanceCardView').innerHTML = freeList.map(f => {
         const isUnpaid = f.status !== '已收款';
-        // 沒照片時完全隱藏留白，有照片才顯示圖示
         const receiptBtn = f.receipt
           ? `<button onclick="viewReceipt('${f.receipt}')" class="text-xs">📸</button>`
           : '';
@@ -1281,7 +1307,6 @@ function renderFixedSection() {
     } else {
       document.getElementById('freelanceTableBody').innerHTML = freeList.map(f => {
         const isUnpaid = f.status !== '已收款';
-        // 沒照片時留空 '-'
         const receiptBtn = f.receipt ? `<button onclick="viewReceipt('${f.receipt}')" class="text-xs font-bold">📸</button>` : '-';
         return `
           <tr class="whitespace-nowrap">
@@ -1341,9 +1366,9 @@ function renderFixedSection() {
   document.getElementById('projectArrow').textContent = projOpen ? '▼' : '▶';
   document.getElementById('projectBody').style.display = projOpen ? 'block' : 'none';
   if (projOpen) {
-    const isTable = data.projectViewMode === 'table';
-    document.getElementById('projView_card').classList.toggle('active', !isTable);
-    document.getElementById('projView_table').classList.toggle('active', isTable);
+    const isTable = (data.projectViewMode || 'card') === 'table';
+    document.getElementById('projView_card')?.classList.toggle('active', !isTable);
+    document.getElementById('projView_table')?.classList.toggle('active', isTable);
     document.getElementById('projectsTableView').classList.toggle('hidden', !isTable);
     document.getElementById('projectsCardView').classList.toggle('hidden', isTable);
 
@@ -1608,7 +1633,6 @@ function renderCharts() {
   const accValues = sortedAccEntries.map(e => e[1]);
   const accTotal = accValues.reduce((s, v) => s + v, 0) || 1;
 
-  // 使用 3 階灰階循環輪播取色
   const catColors = catValues.map((_, i) => GRAY_PALETTE[i % GRAY_PALETTE.length]);
   const accColors = accValues.map((_, i) => GRAY_PALETTE[i % GRAY_PALETTE.length]);
 
@@ -1642,7 +1666,6 @@ function renderCharts() {
     }
   });
 
-  // 渲染純文字圖例流（點擊文字聚焦扇形並彈出 Tooltip）
   renderTextLegend('categoryTextLegend', catLabels, categoryChart);
 
   accountChart = new Chart(document.getElementById('accountPieChart').getContext('2d'), {
@@ -1690,7 +1713,6 @@ function renderCharts() {
   renderTextLegend('necessaryTextLegend', ['必要', '非必要'], necessaryChart);
 }
 
-// 產生「食 ｜ 衣 ｜ 住 ｜ 行」純文字互動圖例流
 function renderTextLegend(containerId, labels, chartInstance) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -1707,7 +1729,6 @@ function renderTextLegend(containerId, labels, chartInstance) {
     `;
   }).join('');
 
-  // 儲存實例參照供點擊觸發
   container._chart = chartInstance;
 }
 
@@ -1716,7 +1737,6 @@ function focusChartSegment(containerId, index) {
   if (!container || !container._chart) return;
   const chart = container._chart;
 
-  // 觸發該扇形的 Tooltip 與高亮
   chart.setActiveElements([{ datasetIndex: 0, index: index }]);
   chart.tooltip.setActiveElements([{ datasetIndex: 0, index: index }], { x: 0, y: 0 });
   chart.update();
@@ -1860,8 +1880,8 @@ function resetTxFilters() {
 
 function setTxViewMode(mode) {
   data.txViewMode = mode;
-  document.getElementById('txView_card').classList.toggle('active', mode === 'card');
-  document.getElementById('txView_table').classList.toggle('active', mode === 'table');
+  document.getElementById('txView_card')?.classList.toggle('active', mode === 'card');
+  document.getElementById('txView_table')?.classList.toggle('active', mode === 'table');
   saveData();
   renderTransactions();
 }
@@ -2048,7 +2068,7 @@ function computePortfolioFromTransactions() {
       }
       funds[sym].lastTxDate = t.date || '';
       if (t.type === '買入') {
-        if (funds[sym].units === 0) funds[sym].costTotal = 0; // 波段成本歸零隔離
+        if (funds[sym].units === 0) funds[sym].costTotal = 0;
         funds[sym].units += shares;
         funds[sym].costTotal += cost;
         funds[sym].totalBoughtCost += cost;
@@ -2072,7 +2092,7 @@ function computePortfolioFromTransactions() {
       }
       stocks[sym].lastTxDate = t.date || '';
       if (t.type === '買入') {
-        if (stocks[sym].shares === 0) stocks[sym].costTotal = 0; // 波段成本歸零隔離
+        if (stocks[sym].shares === 0) stocks[sym].costTotal = 0;
         stocks[sym].shares += shares;
         stocks[sym].costTotal += cost;
         stocks[sym].totalBoughtCost += cost;
@@ -2186,7 +2206,7 @@ function renderDashboard() {
   accDiv.innerHTML = twdCards + fxCards;
 }
 
-// 投資清單與殖利率換算
+// 投資清單與殖利率換算（修正結清顯示條件）
 function renderInvestments() {
   const computed = computePortfolioFromTransactions();
   const stocks = Object.values(computed.stocks);
@@ -2195,6 +2215,16 @@ function renderInvestments() {
   let estTotalYearlyDividend = 0;
   let totalStockMv = 0;
   let totalFundMv = 0;
+
+  // 雙向確保 checkbox 勾選狀態與資料狀態吻合
+  const stockChk = document.getElementById('showClosedStocksCheck');
+  if (stockChk) {
+    data.showClosedStocks = stockChk.checked;
+  }
+  const fundChk = document.getElementById('showClosedFundsCheck');
+  if (fundChk) {
+    data.showClosedFunds = fundChk.checked;
+  }
 
   // 股票排序
   const sOrder = data.stocksSortOrder || 'custom';
@@ -2218,6 +2248,7 @@ function renderInvestments() {
     });
   } else if (sOrder === 'recent_tx') sortedStocks.sort((a, b) => (b.lastTxDate || '').localeCompare(a.lastTxDate || ''));
 
+  // 嚴格過濾：沒勾選時絕不渲染股數為 0 的標的
   if (!data.showClosedStocks) {
     sortedStocks = sortedStocks.filter(s => {
       const ov = data.holdingOverrides[s.symbol];
@@ -2239,13 +2270,11 @@ function renderInvestments() {
 
     let pl = 0;
     if (shares === 0) {
-      // 結清標的顯示波段已實現損益
       pl = s.totalSoldIncome + s.totalDividend - s.totalBoughtCost;
     } else {
       pl = mv - costTotal;
     }
 
-    // 殖利率計算：手動輸入優先，否則取年化配息 ÷ 市值
     let yld = data.stockYields[s.symbol] || 0;
     if (yld === 0 && mv > 0 && s.recentOneYearDividend > 0) {
       yld = (s.recentOneYearDividend / mv) * 100;
@@ -2297,6 +2326,7 @@ function renderInvestments() {
     });
   } else if (fOrder === 'recent_tx') sortedFunds.sort((a, b) => (b.lastTxDate || '').localeCompare(a.lastTxDate || ''));
 
+  // 嚴格過濾：沒勾選時絕不渲染單位數為 0 的標的
   if (!data.showClosedFunds) {
     sortedFunds = sortedFunds.filter(f => {
       const ov = data.holdingOverrides[f.name];
@@ -2399,7 +2429,6 @@ function setHoldingOverrideMode(isManual) {
   } else {
     refText.textContent = '🔓 目前跟隨交易流水帳自動累算';
     refText.style.color = 'var(--text-muted)';
-    // 還原為流水帳原始值
     const sym = document.getElementById('editHoldingSymbol').value;
     const type = document.getElementById('editHoldingType').value;
     const computed = computePortfolioFromTransactions();
