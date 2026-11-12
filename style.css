@@ -38,7 +38,7 @@
 .dark {
   --bg: #0c0c0e;
   --card: #1c1c1e;
-  --card-dark: #ffffff; /* 深色模式淨資產反轉純白底 */
+  --card-dark: #ffffff;
   --text: #f5f5f7;
   --text-muted: #a0a0a8;
   --border: rgba(255, 255, 255, 0.12);
@@ -84,7 +84,6 @@ body {
   border: 1px solid var(--border);
 }
 
-/* 淨資產卡片：深色模式純白底 #ffffff，文字 #000000 強制高對比反轉 */
 .card-dark {
   background: var(--card-dark);
   color: #f5f5f7;
@@ -188,6 +187,17 @@ body {
   color: #ffffff;
 }
 
+/* 接案追蹤與表單控制列 36px 統一高度規範 */
+.action-h9 {
+  height: 36px !important;
+  min-height: 36px !important;
+  max-height: 36px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -205,7 +215,6 @@ input[type="number"] {
   -moz-appearance: textfield;
 }
 
-/* iPad / iOS Safari 原生日曆重置，避免渲染為置中中文膠囊 */
 input[type="date"] {
   -webkit-appearance: none;
   -moz-appearance: none;
@@ -407,7 +416,6 @@ td {
   color: var(--text-muted);
 }
 
-/* 工作類別與已結清共用的微型無框底色標籤 */
 .badge-closed {
   display: inline-block;
   padding: 2px 7px;
@@ -498,7 +506,7 @@ td {
   background: var(--card);
 }
 
-/* 純文字圖例流（無方塊色票、無邊框） */
+/* 純文字圖例流 */
 .chart-text-legend {
   display: flex;
   flex-wrap: wrap;
