@@ -3000,12 +3000,10 @@ function importInvoiceCSV(event) {
   const file = event.target.files[0];
   if (!file) return;
 
-  // 優先嘗試用 Big5 讀取（財政部大平台預設編碼），若偵測到 UTF-8 BOM 或無亂碼則自動切換
   const reader = new FileReader();
   reader.onload = function(e) {
     const buffer = e.target.result;
     let text = new TextDecoder('utf-8').decode(buffer);
-    // 若包含亂碼替換字元 \uFFFD，改用 Big5 解碼
     if (text.includes('\uFFFD')) {
       text = new TextDecoder('big5').decode(buffer);
     }
@@ -3013,17 +3011,13 @@ function importInvoiceCSV(event) {
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     let count = 0;
 
-    // 輔助函式：將各種日期格式統一轉為 YYYY-MM-DD
     const normalizeDate = (raw) => {
       if (!raw) return null;
       const s = raw.replace(/["'\s]/g, '');
-      // 1. YYYY-MM-DD 或 YYYY/MM/DD
       let m = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
       if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
-      // 2. YYYYMMDD (財政部大平台常見)
       m = s.match(/^(\d{4})(\d{2})(\d{2})$/);
       if (m) return `${m[1]}-${m[2]}-${m[3]}`;
-      // 3. 民國年 YYY/MM/DD 或 YYY-MM-DD 或 YYYMMDD
       m = s.match(/^(\d{2,3})[-/](\d{1,2})[-/](\d{1,2})$/);
       if (m) return `${parseInt(m[1], 10) + 1911}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
       m = s.match(/^(\d{3})(\d{2})(\d{2})$/);
@@ -3031,7 +3025,6 @@ function importInvoiceCSV(event) {
       return null;
     };
 
-    // 輔助函式：切割 CSV 欄位並去除引號
     const splitCSV = (line) => {
       const cols = [];
       let cur = '', inQuotes = false;
@@ -3044,7 +3037,12 @@ function importInvoiceCSV(event) {
       return cols.map(c => c.replace(/^["']|["']$/g, '').trim());
     };
 
-    // 判斷是否為財政部大平台 M / D 雙層格式
+    // 過濾非商店/品項的系統狀態字眼
+    const IGNORE_WORDS = new Set([
+      '手機條碼', '悠遊卡', '一卡通', '信用卡', '跨境電商電子郵件', '自然人憑證',
+      '開立', '開立已確認', '已確認', '作廢', '無', '載具名稱', '發票狀態'
+    ]);
+
     const isMDFormat = lines.some(l => l.startsWith('M,') || l.startsWith('"M",'));
 
     if (isMDFormat) {
@@ -3055,11 +3053,7 @@ function importInvoiceCSV(event) {
         const cols = splitCSV(line);
         if (cols[0] === 'M') {
           if (currentInvoice) invoiceList.push(currentInvoice);
-          // 財政部 M 列常見位置：M, 載具名稱, 載具號碼, 發票日期, 商店統編, 商店名稱, 發票號碼, 總金額, 發票狀態
-          let foundDate = null;
-          let foundAmt = 0;
-          let storeName = '';
-          let invNum = '';
+          let foundDate = null, foundAmt = 0, storeName = '', invNum = '';
 
           for (let i = 1; i < cols.length; i++) {
             const d = normalizeDate(cols[i]);
@@ -3070,14 +3064,13 @@ function importInvoiceCSV(event) {
               if (val > 0 && foundAmt === 0) foundAmt = val;
             }
           }
-          // 商店名稱通常在日期與發票號碼之間（非純數字、非統編）
-          for (let i = 3; i < cols.length; i++) {
-            if (cols[i] && !normalizeDate(cols[i]) && !/^\d{8}$/.test(cols[i]) && !/^[A-Z]{2}\d{8}$/.test(cols[i]) && !/^\d+(\.\d+)?$/.test(cols[i]) && cols[i] !== '開立' && cols[i] !== '作廢') {
-              storeName = cols[i];
+          for (let i = 1; i < cols.length; i++) {
+            const val = cols[i];
+            if (val && !IGNORE_WORDS.has(val) && !normalizeDate(val) && !/^\d{8}$/.test(val) && !/^[A-Z]{2}\d{8}$/.test(val) && !/^\d+(\.\d+)?$/.test(val) && !val.startsWith('/')) {
+              storeName = val;
               break;
             }
           }
-
           currentInvoice = {
             date: foundDate,
             store: storeName || invNum || '電子發票',
@@ -3087,7 +3080,6 @@ function importInvoiceCSV(event) {
             valid: !cols.includes('作廢')
           };
         } else if (cols[0] === 'D' && currentInvoice) {
-          // 財政部 D 列常見位置：D, 發票號碼, 小計, 品名
           const itemName = cols[3] || cols[2] || '';
           if (itemName && !/^\d+(\.\d+)?$/.test(itemName)) {
             currentInvoice.items.push(itemName);
@@ -3103,49 +3095,89 @@ function importInvoiceCSV(event) {
           : inv.store;
 
         data.transactions.push({
-          id: uid(),
-          date: inv.date,
-          name: displayName,
-          amount: -Math.abs(inv.total),
-          category: '雜',
-          account: '現金',
-          necessary: 'necessary',
-          note: inv.invNum ? `發票 ${inv.invNum}` : '財政部發票匯入',
-          envelopeId: '',
-          projectId: '',
-          receipt: ''
+          id: uid(), date: inv.date, name: displayName,
+          amount: -Math.abs(inv.total), category: '雜', account: '現金',
+          necessary: 'necessary', note: inv.invNum ? `發票 ${inv.invNum}` : '財政部發票匯入',
+          envelopeId: '', projectId: '', receipt: ''
         });
         data.accounts['現金'] = (data.accounts['現金'] || 0) - Math.abs(inv.total);
         count++;
       }
     } else {
-      // 一般表頭格式（自動偵測日期欄、金額欄、品名/商店欄）
-      for (let i = 0; i < lines.length; i++) {
+      // 一般表頭明細格式：先偵測標題列索引
+      let startIdx = 0;
+      let colDate = -1, colStore = -1, colItem = -1, colAmt = -1, colInv = -1;
+
+      if (lines.length > 0) {
+        const header = splitCSV(lines[0]);
+        header.forEach((h, idx) => {
+          if (h.includes('日期')) colDate = idx;
+          else if (h.includes('商店名稱') || h.includes('賣方名稱') || h.includes('商家')) colStore = idx;
+          else if (h.includes('品名') || h.includes('明細') || h.includes('項目')) colItem = idx;
+          else if (h.includes('總金額') || h.includes('金額') || h.includes('小計')) colAmt = idx;
+          else if (h.includes('發票號碼')) colInv = idx;
+        });
+        if (colDate !== -1 || colAmt !== -1 || colStore !== -1) {
+          startIdx = 1; // 跳過表頭列
+        }
+      }
+
+      for (let i = startIdx; i < lines.length; i++) {
         const cols = splitCSV(lines[i]);
-        if (cols.length < 2) continue;
+        if (cols.length < 2 || cols.includes('作廢')) continue;
 
-        let foundDate = null;
+        let foundDate = colDate !== -1 ? normalizeDate(cols[colDate]) : null;
         let foundAmt = null;
-        let nameParts = [];
+        let invNum = colInv !== -1 ? cols[colInv] : '';
 
-        for (let c of cols) {
-          const d = normalizeDate(c);
-          if (d && !foundDate) {
-            foundDate = d;
-            continue;
+        if (colAmt !== -1 && cols[colAmt]) {
+          const parsed = parseFloat(cols[colAmt].replace(/,/g, ''));
+          if (!isNaN(parsed) && parsed > 0) foundAmt = Math.abs(parsed);
+        }
+
+        // 若表頭未明確指定日期或金額，自動智慧搜尋該列
+        if (!foundDate) {
+          for (let c of cols) {
+            const d = normalizeDate(c);
+            if (d) { foundDate = d; break; }
           }
-          const num = parseFloat(c.replace(/,/g, ''));
-          if (!isNaN(num) && /^-?\d[\d,.]*$/.test(c) && foundAmt === null && Math.abs(num) > 0 && Math.abs(num) < 10000000 && !/^\d{8}$/.test(c)) {
-            foundAmt = Math.abs(num);
-            continue;
-          }
-          if (c && !/^[A-Z]{2}\d{8}$/.test(c) && c !== '開立' && c !== '作廢') {
-            nameParts.push(c);
+        }
+        if (foundAmt === null) {
+          for (let c of cols) {
+            const num = parseFloat(c.replace(/,/g, ''));
+            if (!isNaN(num) && /^-?\d[\d,.]*$/.test(c) && Math.abs(num) > 0 && Math.abs(num) < 10000000 && !/^\d{8}$/.test(c)) {
+              foundAmt = Math.abs(num);
+              break;
+            }
           }
         }
 
-        if (foundDate && foundAmt !== null && foundAmt > 0 && !cols.includes('作廢')) {
-          const title = nameParts.slice(0, 2).join(' - ') || '電子發票';
+        // 組合名稱（優先取商店名稱＋品項明細，並嚴格過濾「手機條碼」、「開立已確認」等系統字）
+        let storeText = colStore !== -1 ? (cols[colStore] || '') : '';
+        let itemText = colItem !== -1 ? (cols[colItem] || '') : '';
+
+        if (!storeText && !itemText) {
+          const cleanWords = cols.filter(c =>
+            c &&
+            !IGNORE_WORDS.has(c) &&
+            !normalizeDate(c) &&
+            !/^\d{8}$/.test(c) &&
+            !/^[A-Z]{2}\d{8}$/.test(c) &&
+            !/^-?\d[\d,.]*$/.test(c) &&
+            !c.startsWith('/')
+          );
+          storeText = cleanWords[0] || '';
+          itemText = cleanWords[1] || '';
+        }
+
+        let title = '電子發票';
+        if (storeText && itemText && storeText !== itemText) {
+          title = `${storeText}（${itemText}）`;
+        } else {
+          title = storeText || itemText || invNum || '電子發票';
+        }
+
+        if (foundDate && foundAmt !== null && foundAmt > 0) {
           data.transactions.push({
             id: uid(),
             date: foundDate,
@@ -3154,7 +3186,7 @@ function importInvoiceCSV(event) {
             category: '雜',
             account: '現金',
             necessary: 'necessary',
-            note: '發票CSV匯入',
+            note: invNum ? `發票 ${invNum}` : '發票CSV匯入',
             envelopeId: '',
             projectId: '',
             receipt: ''
@@ -3173,7 +3205,6 @@ function importInvoiceCSV(event) {
   reader.readAsArrayBuffer(file);
   event.target.value = '';
 }
-
 async function updateFxRates() {
   try {
     const res = await fetch('https://open.er-api.com/v6/latest/USD');
