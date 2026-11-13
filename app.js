@@ -44,7 +44,6 @@ function updateStorageStatus() {
   }
 }
 
-// 報表 3 階灰階色彩定義（高對比輪播階梯）
 const GRAY_PALETTE = ['#8C8C8C', '#595959', '#383838'];
 
 const DEFAULT_ACCOUNTS = ['中信', '國泰', '聯邦', '元大', '富邦莊敬', '富邦仁愛', '現金', '他人支付'];
@@ -67,7 +66,10 @@ const DEFAULT_DATA = {
   showTithe: true,
   chartsIncludeInvest: false,
   chartTimeRange: 'month',
+  txSubtotalIncludeInvest: false,
   txViewMode: 'card',
+  stocksViewMode: 'table',
+  fundsViewMode: 'table',
   stxViewMode: 'table',
   fxViewMode: 'card',
   freelanceViewMode: 'card',
@@ -294,12 +296,15 @@ function switchTab(tab) {
       document.getElementById('txDateText').value = tday;
       document.getElementById('txDateNative').value = tday;
     }
-    // 同步卡片/表格膠囊狀態
     const isCard = (data.txViewMode || 'card') === 'card';
     document.getElementById('txView_card')?.classList.toggle('active', isCard);
     document.getElementById('txView_table')?.classList.toggle('active', !isCard);
     document.getElementById('txCardView')?.classList.toggle('hidden', !isCard);
     document.getElementById('txTableView')?.classList.toggle('hidden', isCard);
+
+    const incInv = !!data.txSubtotalIncludeInvest;
+    document.getElementById('txSub_daily')?.classList.toggle('active', !incInv);
+    document.getElementById('txSub_invest')?.classList.toggle('active', incInv);
 
     if (!document.getElementById('filterDateFrom').value) {
       resetTxMonthFilter();
@@ -308,7 +313,6 @@ function switchTab(tab) {
     }
   }
   if (tab === 'investments') {
-    // 嚴格校準已結清核取方塊與底層資料狀態
     const stockChk = document.getElementById('showClosedStocksCheck');
     if (stockChk) stockChk.checked = !!data.showClosedStocks;
     const fundChk = document.getElementById('showClosedFundsCheck');
@@ -356,7 +360,7 @@ function populateAllAccountSelects() {
     (data.accountList || DEFAULT_ACCOUNTS).forEach(acc => {
       sel.innerHTML += `<option value="${acc}">${acc}</option>`;
     });
-    if (id === 'fxFromAccount' || id === 'fxToAccount') {
+    if (id === 'fxFromAccount' || id === 'fxToAccount' || id === 'stxAccount' || id === 'editStxAccount') {
       FX_CURRENCIES.forEach(c => {
         sel.innerHTML += `<option value="${FX_NAMES[c]}現金">${FX_NAMES[c]}現金 (${c})</option>`;
       });
@@ -469,6 +473,26 @@ function stopScanner() {
   } else {
     closeModal('scanModal');
   }
+}
+
+// 取得外幣持有成本均價（真實換匯平均匯率，若無則取即時匯率）
+function getFxAvgCostRate(cur) {
+  if (!cur || cur === 'TWD') return 1;
+  const twdSpent = (data.fxExchanges || []).filter(x => x.toCur === cur && x.fromCur === 'TWD').reduce((s, x) => s + x.fromAmt, 0);
+  const curGot = (data.fxExchanges || []).filter(x => x.toCur === cur && x.fromCur === 'TWD').reduce((s, x) => s + x.toAmt, 0);
+  if (curGot > 0) return twdSpent / curGot;
+  return getCurrencyRate(cur);
+}
+
+// 根據帳戶名稱辨識幣別
+function detectAccountCurrency(accName) {
+  if (!accName) return 'TWD';
+  for (let c of FX_CURRENCIES) {
+    if (accName === `${FX_NAMES[c]}現金` || accName.includes(`(${c})`)) {
+      return c;
+    }
+  }
+  return 'TWD';
 }
 
 // 換匯計算與歷史記錄
@@ -1576,7 +1600,7 @@ function deleteProject(id) {
   populateProjectSelect();
 }
 
-// 報表：3 階灰階輪播與純文字點擊連動提示
+// 報表：3 階灰階輪播與無方格 Tooltip
 function renderCharts() {
   const cm = currentMonthStr();
   const cy = new Date().getFullYear().toString();
@@ -1637,6 +1661,7 @@ function renderCharts() {
   const accColors = accValues.map((_, i) => GRAY_PALETTE[i % GRAY_PALETTE.length]);
 
   const cleanTooltip = (total) => ({
+    displayColors: false,
     title: () => '',
     label: function(context) {
       const label = context.label || '';
@@ -1660,7 +1685,7 @@ function renderCharts() {
     options: {
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: cleanTooltip(catTotal) }
+        tooltip: { displayColors: false, callbacks: cleanTooltip(catTotal) }
       },
       cutout: '65%'
     }
@@ -1682,7 +1707,7 @@ function renderCharts() {
     options: {
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: cleanTooltip(accTotal) }
+        tooltip: { displayColors: false, callbacks: cleanTooltip(accTotal) }
       },
       cutout: '60%'
     }
@@ -1706,7 +1731,7 @@ function renderCharts() {
     options: {
       plugins: {
         legend: { display: false },
-        tooltip: { callbacks: cleanTooltip(necTotal) }
+        tooltip: { displayColors: false, callbacks: cleanTooltip(necTotal) }
       }
     }
   });
@@ -1841,6 +1866,14 @@ async function saveTxEdit() {
   renderFixedSection();
 }
 
+function setTxSubtotalMode(includeInvest) {
+  data.txSubtotalIncludeInvest = includeInvest;
+  document.getElementById('txSub_daily')?.classList.toggle('active', !includeInvest);
+  document.getElementById('txSub_invest')?.classList.toggle('active', includeInvest);
+  saveData();
+  renderTransactions();
+}
+
 function setTxFilterRange(range) {
   const btnMonth = document.getElementById('txRange_month');
   const btnAll = document.getElementById('txRange_all');
@@ -1917,7 +1950,11 @@ function renderTransactions() {
   const arrowEl = document.getElementById('txSortArrow');
   if (arrowEl) arrowEl.textContent = data.txDateSortAsc ? '▲' : '▼';
 
-  const subtotal = list.reduce((s, t) => s + t.amount, 0);
+  // 小計計算：若未開啟「含投資」，則排除分類為 '投' 的買入支出
+  const subtotalList = data.txSubtotalIncludeInvest
+    ? list
+    : list.filter(t => t.category !== '投');
+  const subtotal = subtotalList.reduce((s, t) => s + t.amount, 0);
   document.getElementById('txSubtotal').textContent = formatMoney(subtotal);
 
   const isCard = data.txViewMode === 'card';
@@ -2004,9 +2041,16 @@ function isExcludedFromDailyExpense(t) {
 
 function calcMonthSpent() {
   const cm = currentMonthStr();
-  return data.transactions
-    .filter(t => t.date && t.date.startsWith(cm) && t.amount < 0 && !isExcludedFromDailyExpense(t) && (!t.projectId || t.note?.includes('專案同步扣款')))
+  let total = data.transactions
+    .filter(t => t.date && t.date.startsWith(cm) && t.amount < 0 && !isExcludedFromDailyExpense(t) && t.category !== '投' && (!t.projectId || t.note?.includes('專案同步扣款')))
     .reduce((sum, t) => sum + Math.abs(t.amount), 0);
+
+  if (data.budgetIncludeInvest) {
+    total += data.stockTransactions
+      .filter(t => t.date && t.date.startsWith(cm) && t.type === '買入')
+      .reduce((sum, t) => sum + Math.abs(t.totalCost !== undefined ? t.totalCost : t.total), 0);
+  }
+  return total;
 }
 
 function calcTitheShould() {
@@ -2206,7 +2250,23 @@ function renderDashboard() {
   accDiv.innerHTML = twdCards + fxCards;
 }
 
-// 投資清單與殖利率換算（修正結清顯示條件）
+function setStocksViewMode(mode) {
+  data.stocksViewMode = mode;
+  document.getElementById('stocksView_card')?.classList.toggle('active', mode === 'card');
+  document.getElementById('stocksView_table')?.classList.toggle('active', mode === 'table');
+  saveData();
+  renderInvestments();
+}
+
+function setFundsViewMode(mode) {
+  data.fundsViewMode = mode;
+  document.getElementById('fundsView_card')?.classList.toggle('active', mode === 'card');
+  document.getElementById('fundsView_table')?.classList.toggle('active', mode === 'table');
+  saveData();
+  renderInvestments();
+}
+
+// 投資清單與殖利率換算（支援卡片／表格切換）
 function renderInvestments() {
   const computed = computePortfolioFromTransactions();
   const stocks = Object.values(computed.stocks);
@@ -2216,15 +2276,17 @@ function renderInvestments() {
   let totalStockMv = 0;
   let totalFundMv = 0;
 
-  // 雙向確保 checkbox 勾選狀態與資料狀態吻合
   const stockChk = document.getElementById('showClosedStocksCheck');
-  if (stockChk) {
-    data.showClosedStocks = stockChk.checked;
-  }
+  if (stockChk) data.showClosedStocks = stockChk.checked;
   const fundChk = document.getElementById('showClosedFundsCheck');
-  if (fundChk) {
-    data.showClosedFunds = fundChk.checked;
-  }
+  if (fundChk) data.showClosedFunds = fundChk.checked;
+
+  // 股票視圖同步
+  const sIsCard = (data.stocksViewMode || 'table') === 'card';
+  document.getElementById('stocksView_card')?.classList.toggle('active', sIsCard);
+  document.getElementById('stocksView_table')?.classList.toggle('active', !sIsCard);
+  document.getElementById('stocksCardView')?.classList.toggle('hidden', !sIsCard);
+  document.getElementById('stocksTableView')?.classList.toggle('hidden', sIsCard);
 
   // 股票排序
   const sOrder = data.stocksSortOrder || 'custom';
@@ -2248,7 +2310,6 @@ function renderInvestments() {
     });
   } else if (sOrder === 'recent_tx') sortedStocks.sort((a, b) => (b.lastTxDate || '').localeCompare(a.lastTxDate || ''));
 
-  // 嚴格過濾：沒勾選時絕不渲染股數為 0 的標的
   if (!data.showClosedStocks) {
     sortedStocks = sortedStocks.filter(s => {
       const ov = data.holdingOverrides[s.symbol];
@@ -2257,7 +2318,7 @@ function renderInvestments() {
     });
   }
 
-  document.getElementById('stocksTableBody').innerHTML = sortedStocks.map(s => {
+  const processedStocks = sortedStocks.map(s => {
     const ov = data.holdingOverrides[s.symbol];
     const isLocked = ov && ov.isLocked;
     const shares = isLocked ? ov.shares : s.shares;
@@ -2269,11 +2330,8 @@ function renderInvestments() {
     totalStockMv += mv;
 
     let pl = 0;
-    if (shares === 0) {
-      pl = s.totalSoldIncome + s.totalDividend - s.totalBoughtCost;
-    } else {
-      pl = mv - costTotal;
-    }
+    if (shares === 0) pl = s.totalSoldIncome + s.totalDividend - s.totalBoughtCost;
+    else pl = mv - costTotal;
 
     let yld = data.stockYields[s.symbol] || 0;
     if (yld === 0 && mv > 0 && s.recentOneYearDividend > 0) {
@@ -2284,25 +2342,54 @@ function renderInvestments() {
       else estTotalYearlyDividend += s.recentOneYearDividend;
     }
 
-    return `
-      <tr class="whitespace-nowrap ${shares === 0 ? 'opacity-40' : ''}">
+    return { symbol: s.symbol, isLocked, shares, avgCost, price, mv, pl, yld };
+  });
+
+  if (sIsCard) {
+    document.getElementById('stocksCardView').innerHTML = processedStocks.map(s => `
+      <div class="pill p-3.5 space-y-1.5 text-xs ${s.shares === 0 ? 'opacity-40' : ''}">
+        <div class="flex justify-between items-center">
+          <div class="bold text-sm">
+            ${s.symbol} ${s.isLocked ? '<span class="text-xs ml-1" title="手動數值">🔓</span>' : ''}
+          </div>
+          <button onclick="openHoldingEditModal('${s.symbol}', '股票')" class="text-xs font-semibold" style="color:var(--text-muted)">設定</button>
+        </div>
+        <div class="flex justify-between items-center tabular">
+          <span class="heavy text-base">${formatMoney(s.mv)}</span>
+          <div>${formatPLHtml(s.pl)}</div>
+        </div>
+        <div class="text-[11px] tabular font-semibold" style="color:var(--text-muted)">
+          股數 ${s.shares.toLocaleString()} · 均價 $${s.avgCost.toFixed(2)} · 現價 $${s.price.toFixed(2)} · 殖利率 ${s.yld > 0 ? s.yld.toFixed(2) + '%' : '--'}
+        </div>
+      </div>
+    `).join('') || '<p class="text-center py-4 text-xs font-semibold" style="color:var(--text-muted)">尚無股票部位</p>';
+  } else {
+    document.getElementById('stocksTableBody').innerHTML = processedStocks.map(s => `
+      <tr class="whitespace-nowrap ${s.shares === 0 ? 'opacity-40' : ''}">
         <td class="bold">
-          ${s.symbol} ${isLocked ? '<span class="text-xs" title="手動鎖定模式">🔒</span>' : ''}
+          ${s.symbol} ${s.isLocked ? '<span class="text-xs" title="手動數值">🔓</span>' : ''}
         </td>
-        <td class="tabular text-right">${shares.toLocaleString()}</td>
-        <td class="tabular text-right">${avgCost.toFixed(2)}</td>
-        <td class="tabular text-right">${price.toFixed(2)}</td>
-        <td class="tabular heavy text-right">${formatMoney(mv)}</td>
-        <td class="tabular text-right">${formatPLHtml(pl)}</td>
-        <td class="tabular text-right">${yld > 0 ? yld.toFixed(2) + '%' : '--'}</td>
+        <td class="tabular text-right">${s.shares.toLocaleString()}</td>
+        <td class="tabular text-right">${s.avgCost.toFixed(2)}</td>
+        <td class="tabular text-right">${s.price.toFixed(2)}</td>
+        <td class="tabular heavy text-right">${formatMoney(s.mv)}</td>
+        <td class="tabular text-right">${formatPLHtml(s.pl)}</td>
+        <td class="tabular text-right">${s.yld > 0 ? s.yld.toFixed(2) + '%' : '--'}</td>
         <td class="text-center">
           <button onclick="openHoldingEditModal('${s.symbol}', '股票')" class="text-xs font-semibold" style="color:var(--text-muted)">設定</button>
         </td>
       </tr>
-    `;
-  }).join('') || '<tr><td colspan="8" class="text-center py-4 text-xs font-semibold" style="color:var(--text-muted)">尚無股票部位</td></tr>';
+    `).join('') || '<tr><td colspan="8" class="text-center py-4 text-xs font-semibold" style="color:var(--text-muted)">尚無股票部位</td></tr>';
+  }
 
   document.getElementById('stocksTotalValue').textContent = formatMoney(totalStockMv);
+
+  // 基金視圖同步
+  const fIsCard = (data.fundsViewMode || 'table') === 'card';
+  document.getElementById('fundsView_card')?.classList.toggle('active', fIsCard);
+  document.getElementById('fundsView_table')?.classList.toggle('active', !fIsCard);
+  document.getElementById('fundsCardView')?.classList.toggle('hidden', !fIsCard);
+  document.getElementById('fundsTableView')?.classList.toggle('hidden', fIsCard);
 
   // 基金排序
   const fOrder = data.fundsSortOrder || 'custom';
@@ -2326,7 +2413,6 @@ function renderInvestments() {
     });
   } else if (fOrder === 'recent_tx') sortedFunds.sort((a, b) => (b.lastTxDate || '').localeCompare(a.lastTxDate || ''));
 
-  // 嚴格過濾：沒勾選時絕不渲染單位數為 0 的標的
   if (!data.showClosedFunds) {
     sortedFunds = sortedFunds.filter(f => {
       const ov = data.holdingOverrides[f.name];
@@ -2335,7 +2421,7 @@ function renderInvestments() {
     });
   }
 
-  document.getElementById('fundsTableBody').innerHTML = sortedFunds.map(f => {
+  const processedFunds = sortedFunds.map(f => {
     const ov = data.holdingOverrides[f.name];
     const isLocked = ov && ov.isLocked;
     const units = isLocked ? ov.shares : f.units;
@@ -2348,30 +2434,49 @@ function renderInvestments() {
     totalFundMv += mv;
 
     let pl = 0;
-    if (units === 0) {
-      pl = f.totalSoldIncome + f.totalDividend - f.totalBoughtCost;
-    } else {
-      pl = mv - costTotal;
-    }
+    if (units === 0) pl = f.totalSoldIncome + f.totalDividend - f.totalBoughtCost;
+    else pl = mv - costTotal;
 
-    return `
-      <tr class="whitespace-nowrap ${units === 0 ? 'opacity-40' : ''}">
+    return { name: f.name, currency: f.currency, isLocked, units, avgCost, price, rate, mv, pl };
+  });
+
+  if (fIsCard) {
+    document.getElementById('fundsCardView').innerHTML = processedFunds.map(f => `
+      <div class="pill p-3.5 space-y-1.5 text-xs ${f.units === 0 ? 'opacity-40' : ''}">
+        <div class="flex justify-between items-center">
+          <div class="bold text-sm">
+            ${f.name} <span class="badge-closed ml-1">${f.currency}</span> ${f.isLocked ? '<span class="text-xs ml-1" title="手動數值">🔓</span>' : ''}
+          </div>
+          <button onclick="openHoldingEditModal('${f.name}', '基金')" class="text-xs font-semibold" style="color:var(--text-muted)">設定</button>
+        </div>
+        <div class="flex justify-between items-center tabular">
+          <span class="heavy text-base">${formatMoney(f.mv)}</span>
+          <div>${formatPLHtml(f.pl)}</div>
+        </div>
+        <div class="text-[11px] tabular font-semibold" style="color:var(--text-muted)">
+          單位 ${f.units.toFixed(2)} · 均價 $${f.avgCost.toFixed(2)} · 現價 ${f.price.toFixed(2)} · 匯率 ${f.rate.toFixed(4)}
+        </div>
+      </div>
+    `).join('') || '<p class="text-center py-4 text-xs font-semibold" style="color:var(--text-muted)">尚無基金部位</p>';
+  } else {
+    document.getElementById('fundsTableBody').innerHTML = processedFunds.map(f => `
+      <tr class="whitespace-nowrap ${f.units === 0 ? 'opacity-40' : ''}">
         <td class="bold">
-          ${f.name} ${isLocked ? '<span class="text-xs" title="手動鎖定模式">🔒</span>' : ''}
+          ${f.name} ${f.isLocked ? '<span class="text-xs" title="手動數值">🔓</span>' : ''}
         </td>
         <td>${f.currency}</td>
-        <td class="tabular text-right">${units.toFixed(2)}</td>
-        <td class="tabular text-right">${avgCost.toFixed(2)}</td>
-        <td class="tabular text-right">${price.toFixed(2)}</td>
-        <td class="tabular text-right">${rate.toFixed(2)}</td>
-        <td class="tabular heavy text-right">${formatMoney(mv)}</td>
-        <td class="tabular text-right">${formatPLHtml(pl)}</td>
+        <td class="tabular text-right">${f.units.toFixed(2)}</td>
+        <td class="tabular text-right">${f.avgCost.toFixed(2)}</td>
+        <td class="tabular text-right">${f.price.toFixed(2)}</td>
+        <td class="tabular text-right">${f.rate.toFixed(2)}</td>
+        <td class="tabular heavy text-right">${formatMoney(f.mv)}</td>
+        <td class="tabular text-right">${formatPLHtml(f.pl)}</td>
         <td class="text-center">
           <button onclick="openHoldingEditModal('${f.name}', '基金')" class="text-xs font-semibold" style="color:var(--text-muted)">設定</button>
         </td>
       </tr>
-    `;
-  }).join('') || '<tr><td colspan="9" class="text-center py-4 text-xs font-semibold" style="color:var(--text-muted)">尚無基金部位</td></tr>';
+    `).join('') || '<tr><td colspan="9" class="text-center py-4 text-xs font-semibold" style="color:var(--text-muted)">尚無基金部位</td></tr>';
+  }
 
   document.getElementById('fundsTotalValue').textContent = formatMoney(totalFundMv);
 
@@ -2411,10 +2516,10 @@ function toggleShowClosedFunds(checked) {
   renderInvestments();
 }
 
-// 標的設定彈窗與手動覆蓋邏輯
+// 標的設定彈窗：改為一般人直覺（🔒 鎖定系統計算 / 🔓 手動輸入）
 function setHoldingOverrideMode(isManual) {
-  document.getElementById('overrideBtn_manual').classList.toggle('active', isManual);
   document.getElementById('overrideBtn_auto').classList.toggle('active', !isManual);
+  document.getElementById('overrideBtn_manual').classList.toggle('active', isManual);
 
   const sharesInput = document.getElementById('editHoldingShares');
   const costInput = document.getElementById('editHoldingCost');
@@ -2424,10 +2529,10 @@ function setHoldingOverrideMode(isManual) {
   costInput.disabled = !isManual;
 
   if (isManual) {
-    refText.textContent = '🔒 已鎖定為手動自訂數值（現價與匯率仍自動更新）';
+    refText.textContent = '🔓 已解除鎖定，可自由填寫歷史單位數與總投入台幣成本';
     refText.style.color = 'var(--text)';
   } else {
-    refText.textContent = '🔓 目前跟隨交易流水帳自動累算';
+    refText.textContent = '🔒 欄位已鎖定防誤觸（跟隨交易流水帳自動累算）';
     refText.style.color = 'var(--text-muted)';
     const sym = document.getElementById('editHoldingSymbol').value;
     const type = document.getElementById('editHoldingType').value;
@@ -2519,10 +2624,9 @@ function saveHoldingEdit() {
   renderDashboard();
 }
 
-// 投資交易
+// 投資交易計算（支援外幣現金自動依持有均價換算台幣成本）
 function onAssetTypeChange() {
-  const isFund = document.getElementById('stxAssetType').value === '基金';
-  document.getElementById('stxTax').value = isFund ? '0' : '0';
+  document.getElementById('stxTax').value = '0';
   calcStockInputs();
 }
 
@@ -2544,15 +2648,23 @@ function calcStockInputs() {
   const fee = parseFloat(document.getElementById('stxFee').value) || 0;
   const tax = parseFloat(document.getElementById('stxTax').value) || 0;
   const type = document.getElementById('stxType').value;
+  const account = document.getElementById('stxAccount').value;
+  const accCur = detectAccountCurrency(account);
 
   const total = Math.round(shares * price);
   document.getElementById('stxTotal').value = total;
 
-  let cost = total;
-  if (type === '買入') cost = total + fee;
-  else if (type === '賣出') cost = total - fee - tax;
-  else if (type === '配息') cost = total - fee;
-  document.getElementById('stxTotalCost').value = Math.max(0, cost);
+  let origNet = total;
+  if (type === '買入') origNet = total + fee;
+  else if (type === '賣出') origNet = total - fee - tax;
+  else if (type === '配息') origNet = total - fee;
+
+  if (accCur !== 'TWD') {
+    const rate = getFxAvgCostRate(accCur);
+    document.getElementById('stxTotalCost').value = Math.max(0, Math.round(origNet * rate));
+  } else {
+    document.getElementById('stxTotalCost').value = Math.max(0, origNet);
+  }
 }
 
 function addStockTransaction() {
@@ -2572,28 +2684,40 @@ function addStockTransaction() {
   if (!symbol) return alert('請輸入標的代號或名稱');
   if (shares <= 0 && type !== '配息') return alert('請輸入有效股數');
 
+  const accCur = detectAccountCurrency(account);
+  let origNet = total;
+  if (type === '買入') origNet = total + fee;
+  else if (type === '賣出') origNet = total - fee - tax;
+  else if (type === '配息') origNet = total - fee;
+
   const linkedTxId = uid();
   data.stockTransactions.push({
-    id: uid(), date, account, assetType, type, symbol, shares, price, fee, tax, total, totalCost, note, linkedTxId
+    id: uid(), date, account, assetType, type, symbol, shares, price, fee, tax, total, totalCost, origNet, accCur, note, linkedTxId
   });
 
-  let txAmt = 0;
-  let txCat = '投';
-  if (type === '買入') {
-    txAmt = -totalCost;
-    txCat = '投';
-  } else if (type === '賣出') {
-    txAmt = totalCost;
-    txCat = '折';
-  } else if (type === '配息') {
-    txAmt = totalCost;
-    txCat = '息';
+  if (accCur !== 'TWD' && data.fxCash && data.fxCash[accCur] !== undefined) {
+    if (type === '買入') {
+      data.fxCash[accCur] = Math.max(0, (data.fxCash[accCur] || 0) - origNet);
+    } else {
+      data.fxCash[accCur] = (data.fxCash[accCur] || 0) + origNet;
+    }
+    if (assetType === '基金' && !data.fundCurrencies[symbol]) {
+      data.fundCurrencies[symbol] = accCur;
+    }
+  } else {
+    let txAmt = type === '買入' ? -totalCost : totalCost;
+    data.accounts[account] = (data.accounts[account] || 0) + txAmt;
   }
 
-  data.accounts[account] = (data.accounts[account] || 0) + txAmt;
+  let txAmt = type === '買入' ? -totalCost : totalCost;
+  let txCat = type === '買入' ? '投' : (type === '賣出' ? '折' : '息');
+
   data.transactions.push({
     id: linkedTxId, date, name: `${symbol}（${type}）`,
-    amount: txAmt, category: txCat, account, necessary: 'necessary', note: `${shares}股 @ $${price} ${note}`,
+    amount: accCur !== 'TWD' ? 0 : txAmt,
+    category: accCur !== 'TWD' ? '轉帳/換匯' : txCat,
+    account, necessary: 'necessary',
+    note: `${shares}股 @ ${price} ${accCur} ${note}`,
     envelopeId: '', projectId: '', receipt: ''
   });
 
@@ -2635,21 +2759,41 @@ function calcEditStockInputs() {
   const fee = parseFloat(document.getElementById('editStxFee').value) || 0;
   const tax = parseFloat(document.getElementById('editStxTax').value) || 0;
   const type = document.getElementById('editStxType').value;
+  const account = document.getElementById('editStxAccount').value;
+  const accCur = detectAccountCurrency(account);
 
   const total = Math.round(shares * price);
   document.getElementById('editStxTotal').value = total;
 
-  let cost = total;
-  if (type === '買入') cost = total + fee;
-  else if (type === '賣出') cost = total - fee - tax;
-  else if (type === '配息') cost = total - fee;
-  document.getElementById('editStxTotalCost').value = Math.max(0, cost);
+  let origNet = total;
+  if (type === '買入') origNet = total + fee;
+  else if (type === '賣出') origNet = total - fee - tax;
+  else if (type === '配息') origNet = total - fee;
+
+  if (accCur !== 'TWD') {
+    const rate = getFxAvgCostRate(accCur);
+    document.getElementById('editStxTotalCost').value = Math.max(0, Math.round(origNet * rate));
+  } else {
+    document.getElementById('editStxTotalCost').value = Math.max(0, origNet);
+  }
 }
 
 function saveStockTxEdit() {
   const id = document.getElementById('editStxId').value;
   const t = data.stockTransactions.find(x => x.id === id);
   if (!t) return;
+
+  // 回滾舊紀錄對餘額影響
+  const oldCur = t.accCur || detectAccountCurrency(t.account);
+  const oldOrigNet = t.origNet !== undefined ? t.origNet : t.total;
+  if (oldCur !== 'TWD' && data.fxCash && data.fxCash[oldCur] !== undefined) {
+    if (t.type === '買入') data.fxCash[oldCur] = (data.fxCash[oldCur] || 0) + oldOrigNet;
+    else data.fxCash[oldCur] = Math.max(0, (data.fxCash[oldCur] || 0) - oldOrigNet);
+  } else {
+    const oldCost = t.totalCost !== undefined ? t.totalCost : t.total;
+    const oldAmt = t.type === '買入' ? -oldCost : oldCost;
+    data.accounts[t.account] = (data.accounts[t.account] || 0) - oldAmt;
+  }
 
   const newDate = document.getElementById('editStxDate').value || todayStr();
   const newAccount = document.getElementById('editStxAccount').value;
@@ -2664,22 +2808,31 @@ function saveStockTxEdit() {
   const newTotalCost = parseFloat(document.getElementById('editStxTotalCost').value) || 0;
   const newNote = document.getElementById('editStxNote').value.trim();
 
+  const newCur = detectAccountCurrency(newAccount);
+  let newOrigNet = newTotal;
+  if (newType === '買入') newOrigNet = newTotal + newFee;
+  else if (newType === '賣出') newOrigNet = newTotal - newFee - newTax;
+  else if (newType === '配息') newOrigNet = newTotal - newFee;
+
+  if (newCur !== 'TWD' && data.fxCash && data.fxCash[newCur] !== undefined) {
+    if (newType === '買入') data.fxCash[newCur] = Math.max(0, (data.fxCash[newCur] || 0) - newOrigNet);
+    else data.fxCash[newCur] = (data.fxCash[newCur] || 0) + newOrigNet;
+  } else {
+    const newTxAmt = newType === '買入' ? -newTotalCost : newTotalCost;
+    data.accounts[newAccount] = (data.accounts[newAccount] || 0) + newTxAmt;
+  }
+
   const linkedTx = data.transactions.find(x => t.linkedTxId && x.id === t.linkedTxId);
   if (linkedTx) {
-    data.accounts[linkedTx.account] = (data.accounts[linkedTx.account] || 0) - linkedTx.amount;
-    let newTxAmt = 0;
-    let newCat = '投';
-    if (newType === '買入') { newTxAmt = -newTotalCost; newCat = '投'; }
-    else if (newType === '賣出') { newTxAmt = newTotalCost; newCat = '折'; }
-    else if (newType === '配息') { newTxAmt = newTotalCost; newCat = '息'; }
+    let newTxAmt = newType === '買入' ? -newTotalCost : newTotalCost;
+    let newCat = newType === '買入' ? '投' : (newType === '賣出' ? '折' : '息');
 
     linkedTx.date = newDate;
     linkedTx.account = newAccount;
     linkedTx.name = `${newSymbol}（${newType}）`;
-    linkedTx.amount = newTxAmt;
-    linkedTx.category = newCat;
-    linkedTx.note = `${newShares}股 @ $${newPrice} ${newNote}`;
-    data.accounts[newAccount] = (data.accounts[newAccount] || 0) + newTxAmt;
+    linkedTx.amount = newCur !== 'TWD' ? 0 : newTxAmt;
+    linkedTx.category = newCur !== 'TWD' ? '轉帳/換匯' : newCat;
+    linkedTx.note = `${newShares}股 @ ${newPrice} ${newCur} ${newNote}`;
   }
 
   t.date = newDate;
@@ -2693,6 +2846,8 @@ function saveStockTxEdit() {
   t.tax = newTax;
   t.total = newTotal;
   t.totalCost = newTotalCost;
+  t.origNet = newOrigNet;
+  t.accCur = newCur;
   t.note = newNote;
 
   saveData();
@@ -2707,12 +2862,20 @@ function deleteStockTransaction(id) {
   if (!confirm('確定刪除此交易？關聯的記帳明細將同步刪除且帳戶回滾')) return;
   const t = data.stockTransactions.find(x => x.id === id);
   if (!t) return;
+
+  const oldCur = t.accCur || detectAccountCurrency(t.account);
+  const oldOrigNet = t.origNet !== undefined ? t.origNet : t.total;
+  if (oldCur !== 'TWD' && data.fxCash && data.fxCash[oldCur] !== undefined) {
+    if (t.type === '買入') data.fxCash[oldCur] = (data.fxCash[oldCur] || 0) + oldOrigNet;
+    else data.fxCash[oldCur] = Math.max(0, (data.fxCash[oldCur] || 0) - oldOrigNet);
+  } else {
+    const oldCost = t.totalCost !== undefined ? t.totalCost : t.total;
+    const oldAmt = t.type === '買入' ? -oldCost : oldCost;
+    data.accounts[t.account] = (data.accounts[t.account] || 0) - oldAmt;
+  }
+
   if (t.linkedTxId) {
-    const linkedTx = data.transactions.find(x => x.id === t.linkedTxId);
-    if (linkedTx) {
-      data.accounts[linkedTx.account] = (data.accounts[linkedTx.account] || 0) - linkedTx.amount;
-      data.transactions = data.transactions.filter(x => x.id !== t.linkedTxId);
-    }
+    data.transactions = data.transactions.filter(x => x.id !== t.linkedTxId);
   }
   data.stockTransactions = data.stockTransactions.filter(x => x.id !== id);
   saveData();
@@ -2837,31 +3000,177 @@ function importInvoiceCSV(event) {
   const file = event.target.files[0];
   if (!file) return;
 
+  // 優先嘗試用 Big5 讀取（財政部大平台預設編碼），若偵測到 UTF-8 BOM 或無亂碼則自動切換
   const reader = new FileReader();
   reader.onload = function(e) {
-    const lines = e.target.result.split('\n');
+    const buffer = e.target.result;
+    let text = new TextDecoder('utf-8').decode(buffer);
+    // 若包含亂碼替換字元 \uFFFD，改用 Big5 解碼
+    if (text.includes('\uFFFD')) {
+      text = new TextDecoder('big5').decode(buffer);
+    }
+
+    const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     let count = 0;
-    for (let line of lines) {
-      const parts = line.split(',');
-      if (parts.length >= 3) {
-        const date = parts[0].trim();
-        const name = parts[1].trim();
-        const amt = parseFloat(parts[2].trim());
-        if (/^\d{4}-\d{2}-\d{2}$/.test(date) && name && !isNaN(amt)) {
+
+    // 輔助函式：將各種日期格式統一轉為 YYYY-MM-DD
+    const normalizeDate = (raw) => {
+      if (!raw) return null;
+      const s = raw.replace(/["'\s]/g, '');
+      // 1. YYYY-MM-DD 或 YYYY/MM/DD
+      let m = s.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})$/);
+      if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+      // 2. YYYYMMDD (財政部大平台常見)
+      m = s.match(/^(\d{4})(\d{2})(\d{2})$/);
+      if (m) return `${m[1]}-${m[2]}-${m[3]}`;
+      // 3. 民國年 YYY/MM/DD 或 YYY-MM-DD 或 YYYMMDD
+      m = s.match(/^(\d{2,3})[-/](\d{1,2})[-/](\d{1,2})$/);
+      if (m) return `${parseInt(m[1], 10) + 1911}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+      m = s.match(/^(\d{3})(\d{2})(\d{2})$/);
+      if (m) return `${parseInt(m[1], 10) + 1911}-${m[2]}-${m[3]}`;
+      return null;
+    };
+
+    // 輔助函式：切割 CSV 欄位並去除引號
+    const splitCSV = (line) => {
+      const cols = [];
+      let cur = '', inQuotes = false;
+      for (let ch of line) {
+        if (ch === '"') { inQuotes = !inQuotes; }
+        else if (ch === ',' && !inQuotes) { cols.push(cur.trim()); cur = ''; }
+        else { cur += ch; }
+      }
+      cols.push(cur.trim());
+      return cols.map(c => c.replace(/^["']|["']$/g, '').trim());
+    };
+
+    // 判斷是否為財政部大平台 M / D 雙層格式
+    const isMDFormat = lines.some(l => l.startsWith('M,') || l.startsWith('"M",'));
+
+    if (isMDFormat) {
+      let currentInvoice = null;
+      const invoiceList = [];
+
+      for (let line of lines) {
+        const cols = splitCSV(line);
+        if (cols[0] === 'M') {
+          if (currentInvoice) invoiceList.push(currentInvoice);
+          // 財政部 M 列常見位置：M, 載具名稱, 載具號碼, 發票日期, 商店統編, 商店名稱, 發票號碼, 總金額, 發票狀態
+          let foundDate = null;
+          let foundAmt = 0;
+          let storeName = '';
+          let invNum = '';
+
+          for (let i = 1; i < cols.length; i++) {
+            const d = normalizeDate(cols[i]);
+            if (d && !foundDate) { foundDate = d; continue; }
+            if (/^[A-Z]{2}\d{8}$/.test(cols[i])) { invNum = cols[i]; continue; }
+            if (/^\d+(\.\d+)?$/.test(cols[i]) && i >= 6) {
+              const val = parseFloat(cols[i]);
+              if (val > 0 && foundAmt === 0) foundAmt = val;
+            }
+          }
+          // 商店名稱通常在日期與發票號碼之間（非純數字、非統編）
+          for (let i = 3; i < cols.length; i++) {
+            if (cols[i] && !normalizeDate(cols[i]) && !/^\d{8}$/.test(cols[i]) && !/^[A-Z]{2}\d{8}$/.test(cols[i]) && !/^\d+(\.\d+)?$/.test(cols[i]) && cols[i] !== '開立' && cols[i] !== '作廢') {
+              storeName = cols[i];
+              break;
+            }
+          }
+
+          currentInvoice = {
+            date: foundDate,
+            store: storeName || invNum || '電子發票',
+            invNum,
+            total: foundAmt,
+            items: [],
+            valid: !cols.includes('作廢')
+          };
+        } else if (cols[0] === 'D' && currentInvoice) {
+          // 財政部 D 列常見位置：D, 發票號碼, 小計, 品名
+          const itemName = cols[3] || cols[2] || '';
+          if (itemName && !/^\d+(\.\d+)?$/.test(itemName)) {
+            currentInvoice.items.push(itemName);
+          }
+        }
+      }
+      if (currentInvoice) invoiceList.push(currentInvoice);
+
+      for (let inv of invoiceList) {
+        if (!inv.valid || !inv.date || inv.total <= 0) continue;
+        const displayName = inv.items.length
+          ? `${inv.store}（${inv.items.slice(0, 2).join('、')}${inv.items.length > 2 ? '...' : ''}）`
+          : inv.store;
+
+        data.transactions.push({
+          id: uid(),
+          date: inv.date,
+          name: displayName,
+          amount: -Math.abs(inv.total),
+          category: '雜',
+          account: '現金',
+          necessary: 'necessary',
+          note: inv.invNum ? `發票 ${inv.invNum}` : '財政部發票匯入',
+          envelopeId: '',
+          projectId: '',
+          receipt: ''
+        });
+        data.accounts['現金'] = (data.accounts['現金'] || 0) - Math.abs(inv.total);
+        count++;
+      }
+    } else {
+      // 一般表頭格式（自動偵測日期欄、金額欄、品名/商店欄）
+      for (let i = 0; i < lines.length; i++) {
+        const cols = splitCSV(lines[i]);
+        if (cols.length < 2) continue;
+
+        let foundDate = null;
+        let foundAmt = null;
+        let nameParts = [];
+
+        for (let c of cols) {
+          const d = normalizeDate(c);
+          if (d && !foundDate) {
+            foundDate = d;
+            continue;
+          }
+          const num = parseFloat(c.replace(/,/g, ''));
+          if (!isNaN(num) && /^-?\d[\d,.]*$/.test(c) && foundAmt === null && Math.abs(num) > 0 && Math.abs(num) < 10000000 && !/^\d{8}$/.test(c)) {
+            foundAmt = Math.abs(num);
+            continue;
+          }
+          if (c && !/^[A-Z]{2}\d{8}$/.test(c) && c !== '開立' && c !== '作廢') {
+            nameParts.push(c);
+          }
+        }
+
+        if (foundDate && foundAmt !== null && foundAmt > 0 && !cols.includes('作廢')) {
+          const title = nameParts.slice(0, 2).join(' - ') || '電子發票';
           data.transactions.push({
-            id: uid(), date, name, amount: -Math.abs(amt), category: '雜', account: '現金', necessary: 'necessary', note: 'CSV匯入', envelopeId: '', projectId: '', receipt: ''
+            id: uid(),
+            date: foundDate,
+            name: title,
+            amount: -foundAmt,
+            category: '雜',
+            account: '現金',
+            necessary: 'necessary',
+            note: '發票CSV匯入',
+            envelopeId: '',
+            projectId: '',
+            receipt: ''
           });
-          data.accounts['現金'] = (data.accounts['現金'] || 0) - Math.abs(amt);
+          data.accounts['現金'] = (data.accounts['現金'] || 0) - foundAmt;
           count++;
         }
       }
     }
+
     saveData();
     renderTransactions();
     renderDashboard();
-    alert(`成功匯入 ${count} 筆發票資料！`);
+    alert(`🎉 成功匯入 ${count} 筆發票資料！`);
   };
-  reader.readAsText(file);
+  reader.readAsArrayBuffer(file);
   event.target.value = '';
 }
 
