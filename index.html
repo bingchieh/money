@@ -276,7 +276,13 @@
           </div>
         </div>
         
-        <div class="text-xs bold mb-3">小計：<span id="txSubtotal" class="tabular heavy text-sm">$0</span></div>
+        <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+          <div class="text-xs bold">小計：<span id="txSubtotal" class="tabular heavy text-sm">$0</span></div>
+          <div class="btn-capsule-group">
+            <button id="txSub_daily" onclick="setTxSubtotalMode(false)" class="btn-capsule-item active">純日常</button>
+            <button id="txSub_invest" onclick="setTxSubtotalMode(true)" class="btn-capsule-item">含投資</button>
+          </div>
+        </div>
 
         <div id="txTableView" class="hidden overflow-x-auto">
           <table class="w-full">
@@ -329,8 +335,12 @@
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h2 class="bold text-base">ETF / 股票</h2>
-          <div class="flex items-center gap-3">
-            <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer select-none" style="color:var(--text-muted)">
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="btn-capsule-group">
+              <button id="stocksView_card" onclick="setStocksViewMode('card')" class="btn-capsule-item">卡片</button>
+              <button id="stocksView_table" onclick="setStocksViewMode('table')" class="btn-capsule-item active">表格</button>
+            </div>
+            <label class="flex items-center gap-1 text-xs font-bold cursor-pointer select-none" style="color:var(--text-muted)">
               <input type="checkbox" id="showClosedStocksCheck" onchange="toggleShowClosedStocks(this.checked)" /> 顯示已結清
             </label>
             <select id="stocksSortOrder" class="input text-xs py-1 px-2.5 w-auto" onchange="onStockSortChange(this.value)">
@@ -343,7 +353,9 @@
             </select>
           </div>
         </div>
-        <div class="overflow-x-auto">
+
+        <div id="stocksCardView" class="hidden space-y-2.5"></div>
+        <div id="stocksTableView" class="overflow-x-auto">
           <table class="w-full">
             <thead>
               <tr class="whitespace-nowrap">
@@ -367,8 +379,12 @@
       <div class="card p-5">
         <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
           <h2 class="bold text-base">基金</h2>
-          <div class="flex items-center gap-3">
-            <label class="flex items-center gap-1.5 text-xs font-bold cursor-pointer select-none" style="color:var(--text-muted)">
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="btn-capsule-group">
+              <button id="fundsView_card" onclick="setFundsViewMode('card')" class="btn-capsule-item">卡片</button>
+              <button id="fundsView_table" onclick="setFundsViewMode('table')" class="btn-capsule-item active">表格</button>
+            </div>
+            <label class="flex items-center gap-1 text-xs font-bold cursor-pointer select-none" style="color:var(--text-muted)">
               <input type="checkbox" id="showClosedFundsCheck" onchange="toggleShowClosedFunds(this.checked)" /> 顯示已結清
             </label>
             <select id="fundsSortOrder" class="input text-xs py-1 px-2.5 w-auto" onchange="onFundSortChange(this.value)">
@@ -381,7 +397,9 @@
             </select>
           </div>
         </div>
-        <div class="overflow-x-auto">
+
+        <div id="fundsCardView" class="hidden space-y-2.5"></div>
+        <div id="fundsTableView" class="overflow-x-auto">
           <table class="w-full">
             <thead>
               <tr class="whitespace-nowrap">
@@ -414,7 +432,7 @@
           </div>
           <div>
             <label class="text-xs font-bold" style="color:var(--text-muted)">扣款 / 入帳帳戶</label>
-            <select id="stxAccount" class="input mt-1"></select>
+            <select id="stxAccount" class="input mt-1" onchange="calcStockInputs()"></select>
           </div>
           <div>
             <label class="text-xs font-bold" style="color:var(--text-muted)">資產類別</label>
@@ -452,11 +470,11 @@
             <input type="number" id="stxTax" class="input mt-1 tabular" step="any" value="0" oninput="calcStockInputs()" />
           </div>
           <div>
-            <label class="text-xs font-bold" style="color:var(--text-muted)">價金總額</label>
+            <label class="text-xs font-bold" style="color:var(--text-muted)">價金總額（原幣）</label>
             <input type="number" id="stxTotal" class="input mt-1 tabular" step="any" />
           </div>
           <div class="sm:col-span-2">
-            <label class="text-xs font-bold" style="color:var(--text-muted)">實扣 / 實收台幣</label>
+            <label class="text-xs font-bold" style="color:var(--text-muted)">實扣 / 實收台幣（外幣帳戶自動依成本均價換算）</label>
             <input type="number" id="stxTotalCost" class="input mt-1 tabular font-bold" step="any" />
           </div>
           <div class="sm:col-span-2 md:col-span-4">
@@ -678,25 +696,20 @@
     <section id="tab-fixed" class="tab-content space-y-4">
       <!-- 1. 接案追蹤 -->
       <div class="card p-5 space-y-3">
-        <!-- 第一行：標題靠左，[卡片｜表格] [類別] [新增] 嚴格 h-9 水平齊平靠右 -->
         <div class="flex items-center justify-between flex-wrap gap-2">
           <button onclick="toggleSection('freelance')" class="flex items-center gap-1.5 bold text-base text-left">
             <span id="freelanceArrow">▼</span> 接案追蹤
           </button>
           <div class="flex items-center gap-2">
-            <!-- 1. 卡片｜表格 膠囊 -->
             <div class="btn-capsule-group action-h9 p-1">
               <button id="flView_card" onclick="setFreelanceViewMode('card')" class="btn-capsule-item h-full flex items-center active">卡片</button>
               <button id="flView_table" onclick="setFreelanceViewMode('table')" class="btn-capsule-item h-full flex items-center">表格</button>
             </div>
-            <!-- 2. 類別 -->
             <button onclick="openFreelanceCatModal()" class="btn text-xs px-3 action-h9">類別</button>
-            <!-- 3. 新增 -->
             <button onclick="openFreelanceModal()" class="btn-primary btn text-xs px-3.5 action-h9">＋ 新增</button>
           </div>
         </div>
 
-        <!-- 第二行：[全部｜待收款｜已收款] [搜尋案件名稱、帳戶...] [日期(新➔舊)▼] -->
         <div id="freelanceBody" class="space-y-2.5">
           <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center pt-1">
             <div class="sm:col-span-4">
@@ -1079,7 +1092,7 @@
     </div>
   </div>
 
-  <!-- 接案工作類別管理彈窗（支援拖曳排序、新增、刪除） -->
+  <!-- 接案工作類別管理彈窗 -->
   <div id="freelanceCatModal" class="modal-overlay hidden">
     <div class="modal">
       <div class="flex items-center justify-between mb-2">
@@ -1304,7 +1317,7 @@
     </div>
   </div>
 
-  <!-- 投資標的編輯 -->
+  <!-- 投資標的編輯（鎖頭邏輯改回一般人直覺：🔒 鎖定系統計算 / 🔓 手動輸入） -->
   <div id="holdingEditModal" class="modal-overlay hidden">
     <div class="modal">
       <h3 class="text-base bold mb-4">編輯標的設定</h3>
@@ -1314,24 +1327,24 @@
       <div class="mb-5 space-y-1.5 text-center">
         <div class="flex justify-center">
           <div class="btn-capsule-group inline-flex">
-            <button type="button" id="overrideBtn_manual" onclick="setHoldingOverrideMode(true)" class="btn-capsule-item flex items-center justify-center gap-1.5 py-1.5 px-3">
-              <span>手動數值</span>
+            <button type="button" id="overrideBtn_auto" onclick="setHoldingOverrideMode(false)" class="btn-capsule-item active flex items-center justify-center gap-1.5 py-1.5 px-3">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
               </svg>
+              <span>鎖定系統計算</span>
             </button>
-            <button type="button" id="overrideBtn_auto" onclick="setHoldingOverrideMode(false)" class="btn-capsule-item active flex items-center justify-center gap-1.5 py-1.5 px-3">
+            <button type="button" id="overrideBtn_manual" onclick="setHoldingOverrideMode(true)" class="btn-capsule-item flex items-center justify-center gap-1.5 py-1.5 px-3">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                 <path d="M7 11V7a5 5 0 0 1 9.9-1"></path>
               </svg>
-              <span>系統計算</span>
+              <span>手動輸入</span>
             </button>
           </div>
         </div>
         <p id="holdingLedgerRefText" class="text-[11px] font-semibold text-center" style="color:var(--text-muted)">
-          目前跟隨交易流水帳自動累算
+          🔒 欄位已鎖定防誤觸（跟隨交易流水帳自動累算）
         </p>
       </div>
 
@@ -1346,7 +1359,7 @@
             <input type="number" id="editHoldingShares" class="input mt-1 tabular" step="any" />
           </div>
           <div>
-            <label id="editHoldingCostLabel" class="font-bold" style="color:var(--text-muted)">總投入成本</label>
+            <label id="editHoldingCostLabel" class="font-bold" style="color:var(--text-muted)">總投入成本 (台幣)</label>
             <input type="number" id="editHoldingCost" class="input mt-1 tabular" step="any" />
           </div>
         </div>
