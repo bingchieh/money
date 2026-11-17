@@ -3109,27 +3109,6 @@ function importInvoiceCSV(event) {
   reader.readAsArrayBuffer(file);
   event.target.value = '';
 }
-async function updateStockPrices() {
-  const computed = computePortfolioFromTransactions();
-  const symbols = Object.keys(computed.stocks);
-  if (!symbols.length) return true;
-
-  for (let sym of symbols) {
-    try {
-      const targetUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${sym}.TW`;
-      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-      const res = await fetch(proxyUrl);
-      const json = await res.json();
-      const curPrice = json?.chart?.result?.[0]?.meta?.regularMarketPrice;
-      if (curPrice) { data.stockPrices[sym] = curPrice; }
-    } catch (err) {}
-  }
-  saveData();
-  renderInvestments();
-  renderDashboard();
-  return true;
-}
-
 function promptDividendGoal() {
   const cur = data.dividendGoal || 10000;
   const input = prompt('請輸入每月預估股息目標金額：', cur);
