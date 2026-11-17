@@ -3009,7 +3009,22 @@ function importInvoiceCSV(event) {
     }
 
     const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    let count = 0;
+    if (lines.length < 2) {
+      alert('檔案內容為空');
+      return;
+    }
+
+    const splitCSV = (line) => {
+      const cols = [];
+      let cur = '', inQuotes = false;
+      for (let ch of line) {
+        if (ch === '"') { inQuotes = !inQuotes; }
+        else if (ch === ',' && !inQuotes) { cols.push(cur.trim()); cur = ''; }
+        else { cur += ch; }
+      }
+      cols.push(cur.trim());
+      return cols.map(c => c.replace(/^["']|["']$/g, '').trim());
+    };
 
     const normalizeDate = (raw) => {
       if (!raw) return null;
@@ -3025,62 +3040,28 @@ function importInvoiceCSV(event) {
       return null;
     };
 
-    const splitCSV = (line) => {
-      const cols = [];
-      let cur = '', inQuotes = false;
-      for (let ch of line) {
-        if (ch === '"') { inQuotes = !inQuotes; }
-        else if (ch === ',' && !inQuotes) { cols.push(cur.trim()); cur = ''; }
-        else { cur += ch; }
-      }
-      cols.push(cur.trim());
-      return cols.map(c => c.replace(/^["']|["']$/g, '').trim());
-    };
-
-    if (lines.length < 2) {
-      alert('檔案內容為空');
-      return;
-    }
-
-    // 精準偵測 A~O 表頭索引
-    const header = splitCSV(lines[0]);
-    let colDate = header.findIndex(h => h.includes('發票日期'));
-    let colInv = header.findIndex(h => h.includes('發票號碼'));
-    let colAmt = header.findIndex(h => h.includes('發票金額'));
-    let colStatus = header.findIndex(h => h.includes('發票狀態'));
-    let colStore = header.findIndex(h => h.includes('賣方名稱'));
-    let colItem = header.findIndex(h => h.includes('品名'));
-
-    // 若表頭因特殊編碼未匹配，直接套用財政部 A~O 標準欄位座標
-    if (colDate === -1) colDate = 1;   // B 欄
-    if (colInv === -1) colInv = 2;     // C 欄
-    if (colAmt === -1) colAmt = 3;     // D 欄
-    if (colStatus === -1) colStatus = 4; // E 欄
-    if (colStore === -1) colStore = 7; // H 欄
-    if (colItem === -1) colItem = 14;  // O 欄
-
-    // 以「發票號碼」為 Key 進行分組（避免同一張發票多個品項重複計算發票總金額）
+    // 直接對準你截圖裡的 15 欄位置（B=日期, C=號碼, D=金額, E=狀態, H=賣方名稱, O=品名）
     const invoiceMap = new Map();
 
     for (let i = 1; i < lines.length; i++) {
       const cols = splitCSV(lines[i]);
-      if (cols.length <= colAmt) continue;
+      if (cols.length < 8) continue;
 
-      const status = cols[colStatus] || '';
+      const status = cols[4] || '';
       if (status.includes('作廢')) continue;
 
-      const date = normalizeDate(cols[colDate]);
-      const invNum = cols[colInv] || `ROW_${i}`;
-      const amt = Math.abs(parseFloat((cols[colAmt] || '0').replace(/,/g, ''))) || 0;
-      const store = cols[colStore] || '';
-      const item = cols[colItem] || '';
+      const date = normalizeDate(cols[1]);
+      const invNum = cols[2] || `ROW_${i}`;
+      const amt = Math.abs(parseFloat((cols[3] || '0').replace(/,/g, ''))) || 0;
+      const store = cols[7] || '';
+      const item = cols[14] || '';
 
       if (!date || amt <= 0) continue;
 
       if (!invoiceMap.has(invNum)) {
         invoiceMap.set(invNum, {
           date,
-          invNum: cols[colInv] || '',
+          invNum: cols[2] || '',
           amount: amt,
           store,
           items: item ? [item] : []
@@ -3093,6 +3074,7 @@ function importInvoiceCSV(event) {
       }
     }
 
+    let count = 0;
     for (let inv of invoiceMap.values()) {
       let title = '電子發票';
       if (inv.store && inv.items.length) {
@@ -3122,30 +3104,11 @@ function importInvoiceCSV(event) {
     saveData();
     renderTransactions();
     renderDashboard();
-    alert(`🎉 成功匯入 ${count} 筆發票資料！`);
+    alert(`【新版發票匯入】成功匯入 ${count} 筆發票資料！`);
   };
   reader.readAsArrayBuffer(file);
   event.target.value = '';
-}async function updateFxRates() {
-  try {
-    const res = await fetch('https://open.er-api.com/v6/latest/USD');
-    const json = await res.json();
-    if (json && json.rates && json.rates.TWD) {
-      const usdToTwd = json.rates.TWD;
-      if (!data.fxRates) data.fxRates = {};
-      data.fxRates.USD = usdToTwd;
-      ['JPY', 'CNY', 'KRW', 'EUR', 'GBP'].forEach(c => {
-        if (json.rates[c]) data.fxRates[c] = usdToTwd / json.rates[c];
-      });
-      saveData();
-      renderFxPage();
-      renderDashboard();
-      return true;
-    }
-  } catch (e) {}
-  return false;
 }
-
 async function updateStockPrices() {
   const computed = computePortfolioFromTransactions();
   const symbols = Object.keys(computed.stocks);
